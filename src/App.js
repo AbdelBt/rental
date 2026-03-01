@@ -1,25 +1,35 @@
-import logo from './logo.svg';
-import './App.css';
+import "./styles/globals.css";
 
-function App() {
+import Navbar from "./components/Navbar";
+import Hero from "./components/Hero";
+import OffersStrip from "./components/OffersStrip";
+import FleetSection from "./components/FleetSection";
+import BrandsSection from "./components/BrandsSection";
+import WhyUs from "./components/WhyUs";
+import FAQSection from "./components/FAQSection";
+import CTASection from "./components/CTASection";
+import Footer from "./components/Footer";
+
+export default function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div
+      style={{
+        fontFamily: "'Sora', sans-serif",
+        background: "#0a0a0f",
+        color: "#f0eeea",
+        minHeight: "100vh",
+        overflowX: "hidden",
+      }}
+    >
+      <Navbar />
+      <Hero />
+      <OffersStrip />
+      <FleetSection />
+      <BrandsSection />
+      <WhyUs />
+      <FAQSection />
+      <CTASection />
+      <Footer />
     </div>
   );
 }
-
-export default App;
