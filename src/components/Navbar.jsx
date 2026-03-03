@@ -1,19 +1,29 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Logo from "./Logo";
 
 const NAV_LINKS = [
+  { label: "Accueil", href: "/" },
   { label: "Véhicules", href: "/cars" },
-  { label: "Luxe", href: "/cars?category=Luxe" },
-  { label: "Longue durée", href: "/cars" },
-  { label: "Blog", href: "#" },
-  { label: "FAQ", href: "/#faq" },
+];
+
+const SUBMENU_LINKS = [
+  { label: "FAQ", href: "/info/faq", icon: "❓" },
+  { label: "Pourquoi nous ?", href: "/info/pourquoi-nous", icon: "⭐" },
+  { label: "Conduire au Maroc", href: "/info/maroc-infos", icon: "🇲🇦" },
+  {
+    label: "Solutions sur mesure",
+    href: "/info/solutions-sur-mesure",
+    icon: "💡",
+  },
+  { label: "Paiement sécurisé", href: "/info/paiement-securise", icon: "🔐" },
 ];
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -90,12 +100,69 @@ export default function Navbar() {
 
         {/* Desktop links */}
         {!isMobile && (
-          <div style={{ display: "flex", gap: "32px", alignItems: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              gap: "32px",
+              alignItems: "center",
+              position: "relative",
+            }}
+          >
+            {" "}
             {NAV_LINKS.map((l) => (
               <Link key={l.label} to={l.href} className="nav-link">
                 {l.label}
               </Link>
             ))}
+            <div
+              style={{ position: "relative" }}
+              onMouseEnter={() => setInfoOpen(true)}
+              onMouseLeave={() => setInfoOpen(false)}
+            >
+              <div className="nav-link" style={{ cursor: "pointer" }}>
+                Infos ▾
+              </div>
+
+              <div
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  background: "rgba(15,15,20,0.98)",
+                  backdropFilter: "blur(20px)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: "12px",
+                  padding: "12px 0",
+                  minWidth: "220px",
+                  display: infoOpen ? "flex" : "none",
+                  flexDirection: "column",
+                  gap: "4px",
+                }}
+              >
+                {SUBMENU_LINKS.map((l) => (
+                  <Link
+                    key={l.label}
+                    to={l.href}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = "#d4a853";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = "rgba(240,238,234,0.8)";
+                    }}
+                    style={{
+                      padding: "10px 18px",
+                      textDecoration: "none",
+                      color: "rgba(240,238,234,0.8)",
+                      transition: "color 0.2s ease",
+                      fontSize: "14px",
+                      display: "block",
+                    }}
+                  >
+                    {l.icon} {l.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
             <button
               className="btn-primary"
               style={{ padding: "10px 22px", fontSize: "12px" }}
@@ -173,7 +240,7 @@ export default function Navbar() {
           }}
         >
           <nav style={{ flex: 1 }}>
-            {NAV_LINKS.map((l, i) => (
+            {[...NAV_LINKS, ...SUBMENU_LINKS].map((l, i) => (
               <Link
                 key={l.label}
                 to={l.href}

@@ -275,7 +275,26 @@ export const footerColumns = [
   { title: "Légal", links: ["CGU", "Confidentialité", "Cookies", "Contact"] },
 ];
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+export const cities = [
+  { name: "Casablanca", count: 48, x: 22, y: 37, desc: "Capitale économique" },
+  { name: "Marrakech", count: 63, x: 30, y: 54, desc: "Ville Ocre" },
+  { name: "Agadir", count: 35, x: 18, y: 65, desc: "Côte Atlantique" },
+  { name: "Tanger", count: 27, x: 27, y: 10, desc: "Porte de l'Europe" },
+];
+
+export const reviews = [
+  { name: "Sophie M.", city: "Bruxelles", rating: 5, car: "BMW Série 5", text: "Service impeccable ! Livraison à l'aéroport de Marrakech exactement à l'heure. Aucun souci pendant tout le séjour.", avatar: "SM", date: "Mars 2025" },
+  { name: "Thomas B.", city: "Paris", rating: 5, car: "Tesla Model 3", text: "J'avais peur de louer au Maroc mais Drivo m'a rassuré. Tout transparent, paiement sécurisé, voiture parfaite.", avatar: "TB", date: "Fév. 2025" },
+  { name: "Karim A.", city: "Amsterdam", rating: 5, car: "Dacia Duster", text: "Idéal pour nos excursions dans le désert. Je recommande à tous les Marocains de la diaspora !", avatar: "KA", date: "Jan. 2025" },
+  { name: "Marie L.", city: "Lyon", rating: 4, car: "Toyota Corolla", text: "Très bonne expérience. Processus simple, voiture propre. Seul bémol : livraison avec 20 min de retard.", avatar: "ML", date: "Déc. 2024" },
+  { name: "Youssef D.", city: "Liège", rating: 5, car: "Mercedes GLE", text: "Utilisé pour un mariage à Marrakech. Résultat parfait, chauffeur pro, voiture magnifique.", avatar: "YD", date: "Nov. 2024" },
+  { name: "Anna K.", city: "Berlin", rating: 5, car: "Nissan X-Trail", text: "Avec 3 enfants on avait besoin de place. X-Trail parfait pour visiter Agadir et l'Anti-Atlas.", avatar: "AK", date: "Oct. 2024" },
+];
+
+export const recentCars = [...cars]
+  .sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt))
+  .slice(0, 6);
+
 export function addDays(d, n) {
   const r = new Date(d);
   r.setDate(r.getDate() + n);

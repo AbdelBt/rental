@@ -18,17 +18,32 @@ function useBreakpoint() {
 
 export default function OffersStrip() {
   const { isMobile, isTablet } = useBreakpoint();
-
-  // mobile: 2×2 grid  |  tablet: 2×2 grid  |  desktop: 1×4 row
   const cols = isMobile || isTablet ? "repeat(2, 1fr)" : "repeat(4, 1fr)";
 
   return (
     <section
       style={{
-        padding: `0 clamp(20px, 4vw, 40px)`,
-        marginBottom: "80px",
+        background: "#07070c",
+        borderTop: "1px solid rgba(212,168,83,0.15)",
+        padding: `clamp(36px, 5vw, 56px) clamp(20px, 4vw, 40px)`,
+        position: "relative",
       }}
     >
+      {/* Subtle gold glow along the top border */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: "60%",
+          height: "1px",
+          background:
+            "linear-gradient(90deg, transparent, rgba(212,168,83,0.5), transparent)",
+          pointerEvents: "none",
+        }}
+      />
+
       <div
         style={{
           maxWidth: "1200px",
@@ -50,19 +65,21 @@ function OfferCard({ icon, label, sub, isMobile }) {
   return (
     <div
       style={{
-        background: "linear-gradient(135deg, #13131a, #1a1a24)",
-        border: "1px solid rgba(255,255,255,0.06)",
+        background: "rgba(255,255,255,0.04)",
+        border: "1px solid rgba(255,255,255,0.08)",
         borderRadius: "14px",
         padding: isMobile ? "18px 16px" : "24px",
         cursor: "pointer",
         transition: "all 0.25s",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = "rgba(212,168,83,0.4)";
+        e.currentTarget.style.borderColor = "rgba(212,168,83,0.45)";
+        e.currentTarget.style.background = "rgba(212,168,83,0.07)";
         e.currentTarget.style.transform = "translateY(-4px)";
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
+        e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+        e.currentTarget.style.background = "rgba(255,255,255,0.04)";
         e.currentTarget.style.transform = "none";
       }}
     >

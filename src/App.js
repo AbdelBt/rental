@@ -5,6 +5,7 @@ import "./styles/globals.css";
 import HomePage from "./pages/HomePage";
 import ResultsPage from "./pages/ResultsPage";
 import CarDetailPage from "./pages/CarDetailPage";
+import InfoPage from "./pages/InfoPage";
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/cars" element={<ResultsPage />} />
           <Route path="/car/:id" element={<CarDetailPage />} />
+          <Route path="/info/:slug" element={<InfoPage />} />
         </Routes>
       </div>
     </BrowserRouter>
