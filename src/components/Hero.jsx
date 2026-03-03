@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import SearchWidget from "./SearchWidget";
 
 const RECENT = [
@@ -269,212 +270,282 @@ export default function Hero() {
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
         >
-          {/* Main image */}
+          {/* ── Titre ── */}
           <div
             style={{
-              borderRadius: "20px",
-              overflow: "hidden",
-              position: "relative",
-              boxShadow:
-                "0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,168,83,0.15)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-end",
+              marginBottom: "16px",
             }}
           >
-            <img
-              key={RECENT[slide].id}
-              src={RECENT[slide].img}
-              alt={RECENT[slide].name}
-              style={{
-                width: "100%",
-                height: isMobile ? "240px" : isTablet ? "300px" : "380px",
-                objectFit: "cover",
-                display: "block",
-                transition: "opacity 0.4s ease",
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                background:
-                  "linear-gradient(to top, rgba(10,10,15,0.92) 0%, transparent 55%)",
-              }}
-            />
-
-            {/* Nouveau badge */}
-            {RECENT[slide].badge && (
-              <div style={{ position: "absolute", top: "14px", left: "14px" }}>
-                <span
-                  style={{
-                    background: "#d4a853",
-                    color: "#0a0a0f",
-                    padding: "4px 12px",
-                    borderRadius: "20px",
-                    fontSize: "10px",
-                    fontWeight: "800",
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  ✦ {RECENT[slide].badge}
-                </span>
-              </div>
-            )}
-
-            {/* City */}
-            <div style={{ position: "absolute", top: "14px", right: "14px" }}>
-              <span
-                style={{
-                  background: "rgba(10,10,15,0.7)",
-                  backdropFilter: "blur(8px)",
-                  color: "rgba(240,238,234,0.8)",
-                  padding: "5px 12px",
-                  borderRadius: "20px",
-                  fontSize: "11px",
-                  fontWeight: "600",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                }}
-              >
-                📍 {RECENT[slide].city}
-              </span>
-            </div>
-
-            {/* Car info overlay */}
-            <div
-              style={{
-                position: "absolute",
-                bottom: "18px",
-                left: "18px",
-                right: "18px",
-              }}
-            >
+            <div>
               <div
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-end",
+                  width: "32px",
+                  height: "2px",
+                  background: "#d4a853",
+                  borderRadius: "2px",
+                  marginBottom: "10px",
+                }}
+              />
+              <div
+                style={{
+                  fontFamily: "'Playfair Display',serif",
+                  fontSize: isMobile ? "18px" : "22px",
+                  fontWeight: "700",
                 }}
               >
-                <div>
-                  <div
+                Récemment ajoutés
+              </div>
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: "rgba(240,238,234,0.4)",
+                  marginTop: "3px",
+                }}
+              >
+                Les dernières arrivées sur la plateforme
+              </div>
+            </div>
+            <Link
+              to="/cars"
+              style={{
+                fontSize: "12px",
+                color: "#d4a853",
+                textDecoration: "none",
+                fontWeight: "600",
+                opacity: 0.8,
+                transition: "opacity 0.2s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.8")}
+            >
+              Voir tout →
+            </Link>
+          </div>
+
+          {/* ── Image principale — cliquable ── */}
+          <Link
+            to={`/car/${RECENT[slide].id}`}
+            style={{
+              textDecoration: "none",
+              color: "inherit",
+              display: "block",
+            }}
+          >
+            <div
+              style={{
+                borderRadius: "20px",
+                overflow: "hidden",
+                position: "relative",
+                boxShadow:
+                  "0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,168,83,0.15)",
+                cursor: "pointer",
+              }}
+            >
+              <img
+                key={RECENT[slide].id}
+                src={RECENT[slide].img}
+                alt={RECENT[slide].name}
+                style={{
+                  width: "100%",
+                  height: isMobile ? "240px" : isTablet ? "300px" : "380px",
+                  objectFit: "cover",
+                  display: "block",
+                  transition: "opacity 0.4s ease",
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background:
+                    "linear-gradient(to top, rgba(10,10,15,0.92) 0%, transparent 55%)",
+                }}
+              />
+
+              {/* Badge */}
+              {RECENT[slide].badge && (
+                <div
+                  style={{ position: "absolute", top: "14px", left: "14px" }}
+                >
+                  <span
                     style={{
+                      background: "#d4a853",
+                      color: "#0a0a0f",
+                      padding: "4px 12px",
+                      borderRadius: "20px",
                       fontSize: "10px",
-                      color: "#d4a853",
-                      fontWeight: "600",
-                      letterSpacing: "0.15em",
-                      textTransform: "uppercase",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    {RECENT[slide].category} · {RECENT[slide].brand}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: isMobile ? "16px" : "20px",
-                      fontWeight: "700",
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    {RECENT[slide].name}
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "10px",
-                      marginTop: "6px",
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    {[
-                      `👤 ${RECENT[slide].seats}p`,
-                      `⚙️ ${RECENT[slide].transmission}`,
-                      `⛽ ${RECENT[slide].fuel}`,
-                    ].map((s) => (
-                      <span
-                        key={s}
-                        style={{
-                          fontSize: "11px",
-                          color: "rgba(240,238,234,0.55)",
-                        }}
-                      >
-                        {s}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div style={{ textAlign: "right", flexShrink: 0 }}>
-                  <div
-                    style={{
-                      fontSize: "10px",
-                      color: "rgba(240,238,234,0.45)",
-                      marginBottom: "2px",
-                    }}
-                  >
-                    à partir de
-                  </div>
-                  <div
-                    style={{
-                      fontSize: isMobile ? "22px" : "26px",
                       fontWeight: "800",
-                      color: "#d4a853",
-                      lineHeight: 1,
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
                     }}
                   >
-                    {RECENT[slide].price}€
+                    ✦ {RECENT[slide].badge}
+                  </span>
+                </div>
+              )}
+
+              {/* City */}
+              <div style={{ position: "absolute", top: "14px", right: "14px" }}>
+                <span
+                  style={{
+                    background: "rgba(10,10,15,0.7)",
+                    backdropFilter: "blur(8px)",
+                    color: "rgba(240,238,234,0.8)",
+                    padding: "5px 12px",
+                    borderRadius: "20px",
+                    fontSize: "11px",
+                    fontWeight: "600",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                  }}
+                >
+                  📍 {RECENT[slide].city}
+                </span>
+              </div>
+
+              {/* Car info overlay */}
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: "18px",
+                  left: "18px",
+                  right: "18px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-end",
+                  }}
+                >
+                  <div>
+                    <div
+                      style={{
+                        fontSize: "10px",
+                        color: "#d4a853",
+                        fontWeight: "600",
+                        letterSpacing: "0.15em",
+                        textTransform: "uppercase",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      {RECENT[slide].category} · {RECENT[slide].brand}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: isMobile ? "16px" : "20px",
+                        fontWeight: "700",
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {RECENT[slide].name}
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "10px",
+                        marginTop: "6px",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      {[
+                        `👤 ${RECENT[slide].seats}p`,
+                        `⚙️ ${RECENT[slide].transmission}`,
+                        `⛽ ${RECENT[slide].fuel}`,
+                      ].map((s) => (
+                        <span
+                          key={s}
+                          style={{
+                            fontSize: "11px",
+                            color: "rgba(240,238,234,0.55)",
+                          }}
+                        >
+                          {s}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                  <div
-                    style={{ fontSize: "10px", color: "rgba(240,238,234,0.4)" }}
-                  >
-                    / jour
+                  <div style={{ textAlign: "right", flexShrink: 0 }}>
+                    <div
+                      style={{
+                        fontSize: "10px",
+                        color: "rgba(240,238,234,0.45)",
+                        marginBottom: "2px",
+                      }}
+                    >
+                      à partir de
+                    </div>
+                    <div
+                      style={{
+                        fontSize: isMobile ? "22px" : "26px",
+                        fontWeight: "800",
+                        color: "#d4a853",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {RECENT[slide].price}€
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "10px",
+                        color: "rgba(240,238,234,0.4)",
+                      }}
+                    >
+                      / jour
+                    </div>
                   </div>
                 </div>
               </div>
+
+              {["‹", "›"].map((arrow, idx) => (
+                <button
+                  key={arrow}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setSlide((i) =>
+                      idx === 0
+                        ? (i - 1 + RECENT.length) % RECENT.length
+                        : (i + 1) % RECENT.length,
+                    );
+                  }}
+                  style={{
+                    position: "absolute",
+                    top: "50%",
+                    [idx === 0 ? "left" : "right"]: "10px",
+                    transform: "translateY(-50%)",
+                    background: "rgba(10,10,15,0.65)",
+                    backdropFilter: "blur(4px)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    color: "#f0eeea",
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "50%",
+                    cursor: "pointer",
+                    fontSize: "18px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transition: "all 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "#d4a853";
+                    e.currentTarget.style.color = "#0a0a0f";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(10,10,15,0.65)";
+                    e.currentTarget.style.color = "#f0eeea";
+                  }}
+                >
+                  {arrow}
+                </button>
+              ))}
             </div>
+          </Link>
 
-            {/* Arrow nav */}
-            {["‹", "›"].map((arrow, idx) => (
-              <button
-                key={arrow}
-                onClick={() =>
-                  setSlide((i) =>
-                    idx === 0
-                      ? (i - 1 + RECENT.length) % RECENT.length
-                      : (i + 1) % RECENT.length,
-                  )
-                }
-                style={{
-                  position: "absolute",
-                  top: "50%",
-                  [idx === 0 ? "left" : "right"]: "10px",
-                  transform: "translateY(-50%)",
-                  background: "rgba(10,10,15,0.65)",
-                  backdropFilter: "blur(4px)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  color: "#f0eeea",
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "50%",
-                  cursor: "pointer",
-                  fontSize: "18px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  transition: "all 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#d4a853";
-                  e.currentTarget.style.color = "#0a0a0f";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "rgba(10,10,15,0.65)";
-                  e.currentTarget.style.color = "#f0eeea";
-                }}
-              >
-                {arrow}
-              </button>
-            ))}
-          </div>
-
-          {/* Dot indicators */}
+          {/* Dots */}
           <div
             style={{
               display: "flex",
@@ -501,7 +572,7 @@ export default function Hero() {
             ))}
           </div>
 
-          {/* Thumbnail strip */}
+          {/* Thumbnails — bug fix: width (pas "with") */}
           <div
             style={{
               display: "flex",
