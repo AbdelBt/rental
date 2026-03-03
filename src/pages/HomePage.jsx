@@ -1,6 +1,5 @@
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
-import RecentSlideshow from "../components/RecentSlideshow";
 import OffersStrip from "../components/OffersStrip";
 import FleetSection from "../components/FleetSection";
 import MoroccoMap from "../components/MoroccoMap";

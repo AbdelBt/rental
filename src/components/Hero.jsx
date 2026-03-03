@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import SearchWidget from "./SearchWidget";
 
 const RECENT = [
@@ -159,7 +158,7 @@ export default function Hero() {
 
       <div
         style={{
-          maxWidth: "1200px",
+          maxWidth: "1500px",
           margin: "0 auto",
           width: "100%",
           display: "grid",

@@ -4,7 +4,7 @@ import CarCard from "./CarCard";
 
 function useBreakpoint() {
   const [width, setWidth] = useState(
-    typeof window !== "undefined" ? window.innerWidth : 1200
+    typeof window !== "undefined" ? window.innerWidth : 1200,
   );
   useEffect(() => {
     const fn = () => setWidth(window.innerWidth);
@@ -20,35 +20,31 @@ function useBreakpoint() {
 
 export default function FleetSection() {
   const [activeCategory, setActiveCategory] = useState("Toutes");
-  const [searchQuery, setSearchQuery]         = useState("");
-  const { isMobile, isTablet }                = useBreakpoint();
+  const [searchQuery, setSearchQuery] = useState("");
+  const { isMobile, isTablet } = useBreakpoint();
 
   const days = Math.max(
     1,
-    Math.round((addDays(new Date(), 5) - addDays(new Date(), 2)) / 86400000)
+    Math.round((addDays(new Date(), 5) - addDays(new Date(), 2)) / 86400000),
   );
 
   const filtered = cars.filter(
     (c) =>
       (activeCategory === "Toutes" || c.category === activeCategory) &&
       (searchQuery === "" ||
-        c.name.toLowerCase().includes(searchQuery.toLowerCase()))
+        c.name.toLowerCase().includes(searchQuery.toLowerCase())),
   );
 
   // Grid columns: 1 on mobile, 2 on tablet, auto-fill on desktop
   const gridCols = isMobile
     ? "1fr"
     : isTablet
-    ? "repeat(2, 1fr)"
-    : "repeat(auto-fill, minmax(280px, 1fr))";
+      ? "repeat(2, 1fr)"
+      : "repeat(auto-fill, minmax(280px, 1fr))";
 
   return (
-    <section
-      id="fleet"
-      style={{ padding: `0 clamp(20px, 4vw, 40px) 80px` }}
-    >
+    <section id="fleet" style={{ padding: `0 clamp(20px, 4vw, 40px) 80px` }}>
       <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-
         {/* ── Header row ── */}
         <div
           style={{
@@ -113,7 +109,8 @@ export default function FleetSection() {
               fontWeight: "500",
             }}
           >
-            {filtered.length} véhicule{filtered.length > 1 ? "s" : ""} disponible
+            {filtered.length} véhicule{filtered.length > 1 ? "s" : ""}{" "}
+            disponible
             {filtered.length > 1 ? "s" : ""}
           </p>
         )}
@@ -125,10 +122,24 @@ export default function FleetSection() {
               display: "grid",
               gridTemplateColumns: gridCols,
               gap: isMobile ? "16px" : "20px",
+              alignItems: "start",
             }}
           >
             {filtered.map((car, i) => (
-              <CarCard key={car.id} car={car} days={days} index={i} isMobile={isMobile} />
+              <div
+                key={car.id}
+                style={{
+                  position: "relative", // <-- nécessaire pour le hover en absolute
+                }}
+              >
+                <CarCard
+                  key={car.id}
+                  car={car}
+                  days={days}
+                  index={i}
+                  isMobile={isMobile}
+                />
+              </div>
             ))}
           </div>
         ) : (

@@ -199,16 +199,19 @@ export default function CarCard({
             </button>
           </div>
 
-          {/* Hover total (desktop only — no hover on touch) */}
           {hovered && !horizontal && (
             <div
               style={{
-                marginTop: "12px",
-                paddingTop: "12px",
+                position: "absolute",
+                top: "50%",
                 borderTop: "1px solid rgba(255,255,255,0.06)",
                 color: "#d4a853",
                 fontSize: "13px",
                 fontWeight: "500",
+                height: hovered && !horizontal ? "auto" : "0px",
+                opacity: hovered && !horizontal ? 1 : 0,
+                overflow: "hidden",
+                transition: "opacity 0.25s ease, height 0.25s ease",
               }}
             >
               Total estimé : <strong>{car.price * days}€</strong> pour {days}{" "}
