@@ -16,7 +16,7 @@ const PAGES = {
       {
         icon: "💳",
         title: "Paiement sécurisé",
-        body: "Vous payez uniquement l'acompte (10%) sur notre plateforme. Le reste est réglé directement au loueur sur place. Zéro mauvaise surprise.",
+        body: "Vous payez uniquement l'acompte (40%) sur notre plateforme. Le reste est réglé directement au loueur sur place. Zéro mauvaise surprise.",
       },
       {
         icon: "🔍",
@@ -82,28 +82,28 @@ const PAGES = {
     sections: [
       {
         icon: "1️⃣",
-        title: "Réservation simple",
-        body: "Choisissez votre véhicule et vos dates. Tous les paiements sont sécurisés via notre plateforme.",
+        title: "Étape 1 : Réservation en ligne",
+        body: "Choisissez votre véhicule et vos dates. Payez uniquement l'acompte (40% du total) sur notre plateforme sécurisée via Stripe.",
       },
       {
         icon: "2️⃣",
-        title: "Confirmation immédiate",
-        body: "Vous recevez immédiatement un email de confirmation avec tous les détails : véhicule, dates, loueur et montant.",
+        title: "Étape 2 : Confirmation immédiate",
+        body: "Vous recevez immédiatement un email de confirmation avec tous les détails : véhicule, dates, loueur, montant restant à payer sur place.",
       },
       {
         icon: "3️⃣",
-        title: "Paiement sécurisé",
-        body: "Le paiement se fait entièrement via notre plateforme, de manière sécurisée et transparente.",
+        title: "Étape 3 : Paiement sur place",
+        body: "Le jour J, vous payez le solde directement au loueur (espèces ou carte selon disponibilité). Le loueur vous remet une quittance officielle.",
       },
       {
         icon: "🧾",
         title: "Preuves de paiement",
-        body: "Pour chaque transaction, vous recevez un reçu officiel. Conservez-le pendant toute la durée de votre séjour.",
+        body: "Pour chaque transaction, vous recevez un reçu de notre plateforme ET une quittance du loueur. Conservez-les pendant toute la durée de votre séjour.",
       },
       {
         icon: "⚠️",
         title: "Politique d'annulation",
-        body: "En cas d'annulation, nous appliquons nos conditions. Vous pouvez modifier vos dates sous certaines conditions.",
+        body: "L'acompte versé n'est pas remboursable en cas d'annulation. En cas de force majeure documentée, un avoir peut être accordé. Les modifications de dates sont possibles sous conditions.",
       },
       {
         icon: "🔐",

@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,600&display=swap');
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 ::-webkit-scrollbar { width: 6px; }
@@ -159,3 +163,14 @@
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: none; }
 }
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-slide-in { animation: slideIn 0.3s ease; }
+.animate-fade-in { animation: fadeIn 0.3s ease; }
