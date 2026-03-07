@@ -174,3 +174,12 @@
 }
 .animate-slide-in { animation: slideIn 0.3s ease; }
 .animate-fade-in { animation: fadeIn 0.3s ease; }
+
+@keyframes mapReveal {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-map-reveal { animation: mapReveal 0.9s ease-out forwards; }
+
+.scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; }

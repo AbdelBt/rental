@@ -9,78 +9,35 @@ const TABS = [
   { id: "category", label: "🚗 Par type" },
 ];
 
+const chipBase =
+  "bg-white/[0.03] border border-white/[0.07] rounded-[14px] cursor-pointer transition-all duration-250 hover:border-gold/50 hover:bg-gold/5 hover:-translate-y-0.5";
+
 export default function SearchByCity() {
   const [tab, setTab] = useState("city");
   const { isMobile } = useBreakpoint();
   const navigate = useNavigate();
 
   return (
-    <section
-      style={{
-        padding: `clamp(48px,8vw,80px) clamp(20px,4vw,40px)`,
-        background: "#13131a",
-      }}
-    >
-      <div style={{ maxWidth: "900px", margin: "0 auto" }}>
-        {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: "40px" }}>
-          <div
-            style={{
-              width: "48px",
-              height: "3px",
-              background: "#d4a853",
-              borderRadius: "2px",
-              margin: "0 auto 20px",
-            }}
-          />
-          <h2
-            style={{
-              fontFamily: "'Playfair Display',serif",
-              fontSize: "clamp(1.8rem,4vw,2.8rem)",
-              fontWeight: "700",
-            }}
-          >
+    <section className="py-12 md:py-20 px-5 md:px-10 bg-dark">
+      <div className="max-w-[900px] mx-auto">
+        <div className="text-center mb-10">
+          <div className="w-12 h-0.5 bg-gold rounded mx-auto mb-5" />
+          <h2 className="font-playfair text-[clamp(1.8rem,4vw,2.8rem)] font-bold">
             Trouvez votre véhicule
           </h2>
-          <p
-            style={{
-              color: "rgba(240,238,234,0.45)",
-              marginTop: "10px",
-              fontSize: "15px",
-            }}
-          >
+          <p className="text-cream/45 mt-2.5 text-[15px]">
             Parcourez notre flotte par ville, marque ou type de véhicule
           </p>
         </div>
 
-        {/* Tab switcher */}
-        <div
-          style={{
-            display: "flex",
-            background: "rgba(255,255,255,0.04)",
-            borderRadius: "12px",
-            padding: "4px",
-            marginBottom: "32px",
-            border: "1px solid rgba(255,255,255,0.06)",
-          }}
-        >
+        <div className="flex bg-white/[0.04] rounded-xl p-1 mb-8 border border-white/[0.06]">
           {TABS.map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              style={{
-                flex: 1,
-                padding: "10px 16px",
-                borderRadius: "9px",
-                background: tab === t.id ? "#d4a853" : "transparent",
-                color: tab === t.id ? "#0a0a0f" : "rgba(240,238,234,0.55)",
-                border: "none",
-                fontFamily: "'Sora',sans-serif",
-                fontWeight: "700",
-                fontSize: isMobile ? "12px" : "13px",
-                cursor: "pointer",
-                transition: "all 0.25s",
-              }}
+              className={`flex-1 py-2.5 px-4 rounded-lg border-none font-sora font-bold transition-all duration-250 cursor-pointer ${
+                tab === t.id ? "bg-gold text-dark-bg" : "bg-transparent text-cream/55"
+              } ${isMobile ? "text-xs" : "text-[13px]"}`}
             >
               {t.label}
             </button>
@@ -88,140 +45,53 @@ export default function SearchByCity() {
         </div>
 
         <div
-          style={{
-            minHeight: isMobile ? "420px" : "250px",
-            transition: "min-height 0.25s ease",
-          }}
+          className="transition-[min-height] duration-250 ease-out"
+          style={{ minHeight: isMobile ? "420px" : "250px" }}
         >
-          {/* City Tab */}
           {tab === "city" && (
             <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4,1fr)",
-                gap: "14px",
-              }}
+              className="grid gap-3.5"
+              style={{ gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4,1fr)" }}
             >
               {cities.map((city) => (
                 <div
                   key={city.name}
                   onClick={() => navigate(`/cars?city=${city.name}`)}
-                  style={{
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(255,255,255,0.07)",
-                    borderRadius: "14px",
-                    padding: "20px 16px",
-                    textAlign: "center",
-                    cursor: "pointer",
-                    transition: "all 0.25s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(212,168,83,0.5)";
-                    e.currentTarget.style.background = "rgba(212,168,83,0.06)";
-                    e.currentTarget.style.transform = "translateY(-3px)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor =
-                      "rgba(255,255,255,0.07)";
-                    e.currentTarget.style.background = "rgba(255,255,255,0.03)";
-                    e.currentTarget.style.transform = "none";
-                  }}
+                  className={`${chipBase} py-5 px-4 text-center`}
                 >
-                  <div style={{ fontSize: "28px", marginBottom: "8px" }}>
-                    🏙️
-                  </div>
-                  <div style={{ fontWeight: "700", fontSize: "14px" }}>
-                    {city.name}
-                  </div>
-                  <div
-                    style={{
-                      color: "#d4a853",
-                      fontSize: "13px",
-                      fontWeight: "600",
-                      marginTop: "4px",
-                    }}
-                  >
+                  <div className="text-[28px] mb-2">🏙️</div>
+                  <div className="font-bold text-sm">{city.name}</div>
+                  <div className="text-gold text-[13px] font-semibold mt-1">
                     {city.count} voitures
                   </div>
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "rgba(240,238,234,0.4)",
-                      marginTop: "3px",
-                    }}
-                  >
-                    {city.desc}
-                  </div>
+                  <div className="text-[11px] text-cream/40 mt-0.5">{city.desc}</div>
                 </div>
               ))}
             </div>
           )}
 
-          {/* Brand Tab */}
           {tab === "brand" && (
             <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: isMobile
-                  ? "repeat(2,1fr)"
-                  : "repeat(3,1fr)",
-                gap: "14px",
-              }}
+              className="grid gap-3.5"
+              style={{ gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(3,1fr)" }}
             >
               {brands.map((b) => (
                 <div
                   key={b.name}
                   onClick={() => navigate(`/cars?brand=${b.name}`)}
-                  style={{
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(255,255,255,0.07)",
-                    borderRadius: "14px",
-                    padding: "20px 24px",
-                    cursor: "pointer",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    transition: "all 0.25s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(212,168,83,0.5)";
-                    e.currentTarget.style.background = "rgba(212,168,83,0.06)";
-                    e.currentTarget.style.transform = "translateY(-3px)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor =
-                      "rgba(255,255,255,0.07)";
-                    e.currentTarget.style.background = "rgba(255,255,255,0.03)";
-                    e.currentTarget.style.transform = "none";
-                  }}
+                  className={`${chipBase} py-5 px-6 flex justify-between items-center`}
                 >
-                  <div style={{ fontWeight: "700", fontSize: "15px" }}>
-                    {b.name}
-                  </div>
-                  <div
-                    style={{
-                      color: "#d4a853",
-                      fontWeight: "700",
-                      fontSize: "14px",
-                    }}
-                  >
-                    {b.count}
-                  </div>
+                  <div className="font-bold text-[15px]">{b.name}</div>
+                  <div className="text-gold font-bold text-sm">{b.count}</div>
                 </div>
               ))}
             </div>
           )}
 
-          {/* Category Tab */}
           {tab === "category" && (
             <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: isMobile
-                  ? "repeat(2,1fr)"
-                  : "repeat(4,1fr)",
-                gap: "14px",
-              }}
+              className="grid gap-3.5"
+              style={{ gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(4,1fr)" }}
             >
               {categories
                 .filter((c) => c !== "Toutes")
@@ -239,36 +109,10 @@ export default function SearchByCity() {
                     <div
                       key={c}
                       onClick={() => navigate(`/cars?category=${c}`)}
-                      style={{
-                        background: "rgba(255,255,255,0.03)",
-                        border: "1px solid rgba(255,255,255,0.07)",
-                        borderRadius: "14px",
-                        padding: "20px 16px",
-                        textAlign: "center",
-                        cursor: "pointer",
-                        transition: "all 0.25s",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor =
-                          "rgba(212,168,83,0.5)";
-                        e.currentTarget.style.background =
-                          "rgba(212,168,83,0.06)";
-                        e.currentTarget.style.transform = "translateY(-3px)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor =
-                          "rgba(255,255,255,0.07)";
-                        e.currentTarget.style.background =
-                          "rgba(255,255,255,0.03)";
-                        e.currentTarget.style.transform = "none";
-                      }}
+                      className={`${chipBase} py-5 px-4 text-center`}
                     >
-                      <div style={{ fontSize: "28px", marginBottom: "8px" }}>
-                        {icons[c] || "🚘"}
-                      </div>
-                      <div style={{ fontWeight: "700", fontSize: "14px" }}>
-                        {c}
-                      </div>
+                      <div className="text-[28px] mb-2">{icons[c] || "🚘"}</div>
+                      <div className="font-bold text-sm">{c}</div>
                     </div>
                   );
                 })}

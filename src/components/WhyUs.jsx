@@ -2,18 +2,13 @@ import { useEffect, useState } from "react";
 import { features } from "../data";
 
 function useBreakpoint() {
-  const [width, setWidth] = useState(
-    typeof window !== "undefined" ? window.innerWidth : 1200
-  );
+  const [width, setWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1200);
   useEffect(() => {
     const fn = () => setWidth(window.innerWidth);
     window.addEventListener("resize", fn);
     return () => window.removeEventListener("resize", fn);
   }, []);
-  return {
-    isMobile: width < 640,
-    isTablet: width >= 640 && width < 1024,
-  };
+  return { isMobile: width < 640, isTablet: width >= 640 && width < 1024 };
 }
 
 export default function WhyUs() {
@@ -21,24 +16,12 @@ export default function WhyUs() {
   const stacked = isMobile || isTablet;
 
   return (
-    <section style={{ padding: `clamp(48px, 8vw, 80px) clamp(20px, 4vw, 40px)` }}>
-      <div
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
-          display: "grid",
-          gridTemplateColumns: stacked ? "1fr" : "1fr 1fr",
-          gap: stacked ? "40px" : "80px",
-          alignItems: "center",
-        }}
-      >
-        {/* ── Left: features list ── */}
+    <section className="py-12 md:py-20 px-5 md:px-10">
+      <div className={`max-w-[1200px] mx-auto grid items-center ${stacked ? "grid-cols-1 gap-10" : "grid-cols-2 gap-20"}`}>
         <div>
           <div className="gold-line" />
-          <h2 className="section-title" style={{ marginBottom: "24px" }}>
-            Pourquoi choisir Drivo ?
-          </h2>
-          <p style={{ color: "rgba(240,238,234,0.55)", lineHeight: "1.8", marginBottom: "36px" }}>
+          <h2 className="section-title mb-6">Pourquoi choisir Drivo ?</h2>
+          <p className="text-cream/55 leading-relaxed mb-9">
             Nous rendons la location de voiture simple, transparente et accessible.
             100% digital, sans files d'attente, sans mauvaises surprises.
           </p>
@@ -47,37 +30,21 @@ export default function WhyUs() {
           ))}
         </div>
 
-        {/* ── Right: image + stat ── */}
-        <div style={{ position: "relative" }}>
+        <div className="relative">
           <img
             src="https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=600&q=85"
             alt="Feature"
-            style={{
-              width: "100%",
-              borderRadius: "20px",
-              objectFit: "cover",
-              height: isMobile ? "260px" : isTablet ? "360px" : "480px",
-            }}
+            className={`w-full rounded-2xl object-cover ${
+              isMobile ? "h-[260px]" : isTablet ? "h-[360px]" : "h-[480px]"
+            }`}
           />
-          {/* Floating stat card — tucked in on mobile so it doesn't overflow */}
           <div
-            style={{
-              position: "absolute",
-              bottom: isMobile ? "-14px" : "-20px",
-              left: isMobile ? "12px" : "-20px",
-              background: "#0a0a0f",
-              border: "1px solid rgba(212,168,83,0.3)",
-              borderRadius: "14px",
-              padding: isMobile ? "14px 18px" : "20px 24px",
-              boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
-            }}
+            className={`absolute bg-dark-bg border border-gold/30 rounded-[14px] shadow-2xl ${
+              isMobile ? "bottom-[-14px] left-3 py-3.5 px-4" : "bottom-[-20px] left-[-20px] py-5 px-6"
+            }`}
           >
-            <div style={{ fontSize: isMobile ? "26px" : "32px", fontWeight: "800", color: "#d4a853" }}>
-              50K+
-            </div>
-            <div style={{ fontSize: "13px", color: "rgba(240,238,234,0.6)", fontWeight: "500" }}>
-              clients satisfaits
-            </div>
+            <div className={`font-extrabold text-gold ${isMobile ? "text-[26px]" : "text-[32px]"}`}>50K+</div>
+            <div className="text-[13px] text-cream/60 font-medium">clients satisfaits</div>
           </div>
         </div>
       </div>
@@ -87,26 +54,13 @@ export default function WhyUs() {
 
 function FeatureRow({ icon, title, desc }) {
   return (
-    <div style={{ display: "flex", gap: "16px", marginBottom: "20px" }}>
-      <div
-        style={{
-          width: "44px",
-          height: "44px",
-          background: "rgba(212,168,83,0.1)",
-          border: "1px solid rgba(212,168,83,0.2)",
-          borderRadius: "10px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "20px",
-          flexShrink: 0,
-        }}
-      >
+    <div className="flex gap-4 mb-5">
+      <div className="w-11 h-11 bg-gold/10 border border-gold/20 rounded-[10px] flex items-center justify-center text-xl shrink-0">
         {icon}
       </div>
       <div>
-        <div style={{ fontWeight: "700", marginBottom: "4px" }}>{title}</div>
-        <div style={{ color: "rgba(240,238,234,0.5)", fontSize: "14px" }}>{desc}</div>
+        <div className="font-bold mb-1">{title}</div>
+        <div className="text-cream/50 text-sm">{desc}</div>
       </div>
     </div>
   );

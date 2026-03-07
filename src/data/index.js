@@ -254,10 +254,10 @@ export const faqs = [
 
 // ─── Offers strip ────────────────────────────────────────────────────────────
 export const offers = [
-  { label: "Sans caution", sub: "À partir de 45€ / jour", icon: "🔓" },
+  { label: "Sans caution", sub: "À partir de 450 DH / jour", icon: "🔓" },
   { label: "Réductions", sub: "Jusqu'à 40% de remise", icon: "🏷️" },
-  { label: "Kilométrage illimité", sub: "À partir de 75€ / jour", icon: "🛣️" },
-  { label: "Longue durée", sub: "À partir de 800€ / mois", icon: "📅" },
+  { label: "Kilométrage illimité", sub: "À partir de 750 DH / jour", icon: "🛣️" },
+  { label: "Longue durée", sub: "À partir de 8 000 DH / mois", icon: "📅" },
 ];
 
 // ─── Features (Why us) ───────────────────────────────────────────────────────
@@ -276,10 +276,10 @@ export const footerColumns = [
 ];
 
 export const cities = [
-  { name: "Casablanca", count: 48, x: 22, y: 37, desc: "Capitale économique" },
-  { name: "Marrakech", count: 63, x: 30, y: 54, desc: "Ville Ocre" },
-  { name: "Agadir", count: 35, x: 18, y: 65, desc: "Côte Atlantique" },
-  { name: "Tanger", count: 27, x: 27, y: 10, desc: "Porte de l'Europe" },
+  { name: "Casablanca", count: 48, x: 22, y: 37, lat: 33.5731, lng: -7.5898, desc: "Capitale économique" },
+  { name: "Marrakech", count: 63, x: 30, y: 54, lat: 31.6295, lng: -7.9811, desc: "Ville Ocre" },
+  { name: "Agadir", count: 35, x: 18, y: 65, lat: 30.4278, lng: -9.5981, desc: "Côte Atlantique" },
+  { name: "Tanger", count: 27, x: 27, y: 10, lat: 35.7595, lng: -5.834, desc: "Porte de l'Europe" },
 ];
 
 export const reviews = [

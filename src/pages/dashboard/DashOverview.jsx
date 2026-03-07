@@ -122,8 +122,8 @@ export default function DashOverview() {
         <StatCard
           icon="💰"
           label="Revenus ce mois"
-          value={`${s.revenueMonth.toLocaleString()}€`}
-          sub={`vs ${s.revenueLastMonth.toLocaleString()}€ le mois dernier`}
+          value={`${s.revenueMonth.toLocaleString()} DH`}
+          sub={`vs ${s.revenueLastMonth.toLocaleString()} DH le mois dernier`}
           trend={revTrend}
           link="/dashboard/paiements"
         />
@@ -166,7 +166,7 @@ export default function DashOverview() {
               </div>
             </div>
             <div className="text-[28px] font-extrabold text-gold bg-gold/10 py-2 px-4 rounded-full leading-none">
-              {s.revenueMonth.toLocaleString()}€
+              {s.revenueMonth.toLocaleString()} DH
             </div>
           </div>
           <MiniChart data={s.revenueChart} />
@@ -183,7 +183,7 @@ export default function DashOverview() {
                 ✓ Reçus
               </div>
               <div className="text-[28px] font-extrabold text-green-500">
-                {s.completedPayouts.toLocaleString()}€
+                {s.completedPayouts.toLocaleString()} DH
               </div>
             </div>
             <div className="bg-amber-500/10 border border-amber-500/20 rounded-[18px] p-5">
@@ -191,7 +191,7 @@ export default function DashOverview() {
                 ⏳ En attente
               </div>
               <div className="text-[28px] font-extrabold text-amber-500">
-                {s.pendingPayouts.toLocaleString()}€
+                {s.pendingPayouts.toLocaleString()} DH
               </div>
             </div>
           </div>
@@ -242,7 +242,7 @@ export default function DashOverview() {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="font-extrabold text-gold text-base">
-                    {r.total}€
+                    {r.total} DH
                   </div>
                   <span
                     className="text-xs font-semibold py-1.5 px-3.5 rounded-full tracking-wide"
@@ -306,7 +306,7 @@ export default function DashOverview() {
                     </div>
                   </div>
                   <div className="font-extrabold text-gold shrink-0 text-base bg-gold/10 py-1.5 px-3.5 rounded-full">
-                    {c.revenue.toLocaleString()}€
+                    {c.revenue.toLocaleString()} DH
                   </div>
                 </div>
               </Link>

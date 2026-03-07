@@ -3,9 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { cities } from "../data";
 import useBreakpoint from "../hooks/useBreakpoint";
 
-// Simplified Morocco SVG path
+// Contour réel du Maroc (Natural Earth 110m, GeoJSON → SVG path) — viewBox 0 0 60 90
 const MOROCCO_PATH =
-  "M 10 8 L 45 5 L 52 8 L 55 15 L 50 20 L 48 28 L 52 35 L 50 42 L 45 50 L 42 58 L 38 65 L 32 72 L 25 78 L 18 80 L 12 75 L 8 68 L 6 58 L 5 48 L 7 38 L 8 28 L 6 18 L 10 8 Z";
+  "M 56.05 3.71 L 57.48 7.73 L 57.70 11.55 L 59.01 18.18 L 60.00 19.51 L 59.31 21.95 L 54.37 23.01 L 52.66 25.33 L 50.48 25.88 L 50.31 30.52 L 45.90 33.01 L 44.46 36.15 L 41.37 37.84 L 37.60 38.79 L 31.50 43.43 L 31.54 50.86 L 30.96 50.86 L 31.05 54.22 L 28.71 54.43 L 27.50 55.85 L 25.78 55.85 L 24.42 55.04 L 21.24 55.71 L 20.01 60.61 L 18.83 61.06 L 17.06 68.98 L 11.81 75.75 L 10.57 84.42 L 9.02 87.24 L 8.57 89.50 L 0.07 90.00 L 0.00 89.99 L 0.18 87.08 L 1.63 85.37 L 2.86 82.10 L 2.62 79.98 L 3.92 75.55 L 6.02 71.56 L 7.29 70.55 L 8.29 66.88 L 8.38 63.54 L 9.74 59.66 L 12.25 57.37 L 14.65 50.96 L 14.72 50.88 L 16.61 48.47 L 20.12 47.77 L 23.10 43.48 L 24.99 41.81 L 28.14 36.57 L 27.20 28.76 L 28.63 23.36 L 29.14 20.06 L 31.57 15.82 L 35.35 12.95 L 38.15 10.35 L 40.68 3.85 L 41.86 0.00 L 44.64 0.03 L 46.92 2.69 L 50.51 2.26 L 54.41 3.65 L 56.05 3.71 Z";
+
+// Bounds du path (Natural Earth 110m) → projection viewBox 0 0 60 90
+const BOUNDS = { minLng: -17.02, maxLng: -1.12, minLat: 21.42, maxLat: 35.76 };
+function latLngToView(lat, lng) {
+  const x = ((lng - BOUNDS.minLng) / (BOUNDS.maxLng - BOUNDS.minLng)) * 60;
+  const y = 90 - ((lat - BOUNDS.minLat) / (BOUNDS.maxLat - BOUNDS.minLat)) * 90;
+  return { x, y };
+}
 
 export default function MoroccoMap() {
   const { isMobile } = useBreakpoint();
@@ -13,161 +21,76 @@ export default function MoroccoMap() {
   const navigate = useNavigate();
 
   return (
-    <section
-      style={{
-        padding: `clamp(48px,8vw,80px) clamp(20px,4vw,40px)`,
-        background: "#0a0a0f",
-      }}
-    >
-      <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-        {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: "48px" }}>
-          <div
-            style={{
-              width: "48px",
-              height: "3px",
-              background: "#d4a853",
-              borderRadius: "2px",
-              margin: "0 auto 20px",
-            }}
-          />
-          <h2
-            style={{
-              fontFamily: "'Playfair Display',serif",
-              fontSize: "clamp(1.8rem,4vw,2.8rem)",
-              fontWeight: "700",
-              marginBottom: "12px",
-            }}
-          >
+    <section className="py-12 md:py-20 px-5 md:px-10 bg-dark-bg">
+      <div className="max-w-[1200px] mx-auto">
+        <div className="text-center mb-12">
+          <div className="w-12 h-0.5 bg-gold rounded mx-auto mb-5" />
+          <h2 className="font-playfair text-[clamp(1.8rem,4vw,2.8rem)] font-bold mb-3">
             Disponible dans tout le Maroc
           </h2>
-          <p
-            style={{
-              color: "rgba(240,238,234,0.45)",
-              fontSize: "15px",
-              maxWidth: "500px",
-              margin: "0 auto",
-            }}
-          >
-            Des véhicules disponibles dans les principales villes. Cliquez sur
-            une ville pour voir les voitures disponibles.
+          <p className="text-cream/45 text-[15px] max-w-[500px] mx-auto">
+            Des véhicules disponibles dans les principales villes. Cliquez sur une ville pour voir les voitures disponibles.
           </p>
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-            gap: "48px",
-            alignItems: "center",
-          }}
-        >
-          {/* Map */}
-          <div
-            style={{
-              position: "relative",
-              aspectRatio: "1",
-              maxWidth: "480px",
-              margin: "0 auto",
-              width: "100%",
-            }}
-          >
-            {/* Glowing background */}
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                background:
-                  "radial-gradient(ellipse 80% 80% at 40% 50%, rgba(212,168,83,0.06) 0%, transparent 70%)",
-                borderRadius: "50%",
-              }}
-            />
-
-            {/* SVG Map */}
+        <div className={`grid gap-12 items-center ${isMobile ? "grid-cols-1" : "grid-cols-2"}`}>
+          <div className="relative aspect-[2/3] max-w-[380px] mx-auto w-full animate-map-reveal">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,rgba(212,168,83,0.06)_0%,transparent_70%)]" />
             <svg
-              viewBox="0 0 60 90"
-              style={{
-                width: "100%",
-                height: "100%",
-                filter: "drop-shadow(0 8px 32px rgba(212,168,83,0.15))",
-              }}
+              viewBox="-6 -10 72 104"
+              className="w-full h-full drop-shadow-[0_8px_32px_rgba(212,168,83,0.12)]"
+              aria-hidden="true"
             >
-              {/* Morocco shape */}
+              {/* Territoire du Maroc uniquement */}
               <path
                 d={MOROCCO_PATH}
                 fill="rgba(212,168,83,0.08)"
-                stroke="rgba(212,168,83,0.3)"
-                strokeWidth="0.5"
+                stroke="rgba(212,168,83,0.35)"
+                strokeWidth="0.6"
+                className="transition-all duration-500"
               />
-
-              {/* Grid lines */}
-              {[20, 40, 60, 80].map((y) => (
-                <line
-                  key={y}
-                  x1="0"
-                  y1={y}
-                  x2="60"
-                  y2={y}
-                  stroke="rgba(255,255,255,0.03)"
-                  strokeWidth="0.3"
-                />
-              ))}
-              {[15, 30, 45].map((x) => (
-                <line
-                  key={x}
-                  x1={x}
-                  y1="0"
-                  x2={x}
-                  y2="90"
-                  stroke="rgba(255,255,255,0.03)"
-                  strokeWidth="0.3"
-                />
-              ))}
-
-              {/* City pins */}
+              {/* Villes (position calculée depuis lat/lng) */}
               {cities.map((city) => {
+                const { x, y } = latLngToView(city.lat, city.lng);
                 const isHovered = hoveredCity === city.name;
                 return (
                   <g
                     key={city.name}
-                    style={{ cursor: "pointer" }}
+                    className="cursor-pointer"
                     onClick={() => navigate(`/cars?city=${city.name}`)}
                     onMouseEnter={() => setHoveredCity(city.name)}
                     onMouseLeave={() => setHoveredCity(null)}
                   >
-                    {/* Pulse ring */}
                     <circle
-                      cx={city.x}
-                      cy={city.y}
-                      r={isHovered ? 5 : 3.5}
-                      fill="rgba(212,168,83,0.15)"
-                      style={{ transition: "r 0.25s" }}
+                      cx={x}
+                      cy={y}
+                      r={isHovered ? 5.5 : 4}
+                      fill="rgba(212,168,83,0.2)"
+                      className="transition-all duration-300"
                     />
-                    {/* Dot */}
                     <circle
-                      cx={city.x}
-                      cy={city.y}
-                      r="2"
-                      fill={isHovered ? "#d4a853" : "rgba(212,168,83,0.7)"}
-                      style={{ transition: "all 0.2s" }}
+                      cx={x}
+                      cy={y}
+                      r="2.2"
+                      fill={isHovered ? "#d4a853" : "rgba(212,168,83,0.75)"}
+                      className="transition-all duration-200"
                     />
-                    {/* Label */}
                     <text
-                      x={city.x + 3.5}
-                      y={city.y + 1}
+                      x={x + 3.8}
+                      y={y + 1.2}
                       fontSize="3"
-                      fill={isHovered ? "#d4a853" : "rgba(240,238,234,0.7)"}
+                      fill={isHovered ? "#d4a853" : "rgba(240,238,234,0.75)"}
                       fontFamily="Sora, sans-serif"
                       fontWeight={isHovered ? "700" : "500"}
-                      style={{ transition: "fill 0.2s" }}
+                      className="transition-colors duration-200"
                     >
                       {city.name}
                     </text>
                     <text
-                      x={city.x + 3.5}
-                      y={city.y + 4.5}
+                      x={x + 3.8}
+                      y={y + 4.8}
                       fontSize="2.2"
-                      fill="rgba(212,168,83,0.6)"
+                      fill="rgba(212,168,83,0.65)"
                       fontFamily="Sora, sans-serif"
                     >
                       {city.count} voitures
@@ -178,14 +101,7 @@ export default function MoroccoMap() {
             </svg>
           </div>
 
-          {/* City cards */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "14px",
-            }}
-          >
+          <div className="grid grid-cols-2 gap-3.5">
             {cities.map((city) => {
               const isActive = hoveredCity === city.name;
               return (
@@ -194,53 +110,15 @@ export default function MoroccoMap() {
                   onClick={() => navigate(`/cars?city=${city.name}`)}
                   onMouseEnter={() => setHoveredCity(city.name)}
                   onMouseLeave={() => setHoveredCity(null)}
-                  style={{
-                    background: isActive
-                      ? "rgba(212,168,83,0.1)"
-                      : "rgba(255,255,255,0.03)",
-                    border: `1px solid ${isActive ? "rgba(212,168,83,0.5)" : "rgba(255,255,255,0.07)"}`,
-                    borderRadius: "14px",
-                    padding: "20px",
-                    cursor: "pointer",
-                    transition: "all 0.25s",
-                    transform: isActive ? "translateY(-3px)" : "none",
-                  }}
+                  className={`rounded-[14px] p-5 cursor-pointer transition-all duration-300 ${
+                    isActive ? "bg-gold/10 border border-gold/50 -translate-y-1" : "bg-white/[0.03] border border-white/[0.07]"
+                  }`}
                 >
-                  <div style={{ fontSize: "22px", marginBottom: "8px" }}>
-                    📍
-                  </div>
-                  <div
-                    style={{
-                      fontWeight: "700",
-                      fontSize: "15px",
-                      marginBottom: "3px",
-                    }}
-                  >
-                    {city.name}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      color: "rgba(240,238,234,0.45)",
-                      marginBottom: "10px",
-                    }}
-                  >
-                    {city.desc}
-                  </div>
-                  <div
-                    style={{
-                      fontWeight: "800",
-                      color: "#d4a853",
-                      fontSize: "20px",
-                    }}
-                  >
-                    {city.count}
-                  </div>
-                  <div
-                    style={{ fontSize: "11px", color: "rgba(240,238,234,0.4)" }}
-                  >
-                    véhicules disponibles
-                  </div>
+                  <div className="text-[22px] mb-2">📍</div>
+                  <div className="font-bold text-[15px] mb-0.5">{city.name}</div>
+                  <div className="text-xs text-cream/45 mb-2.5">{city.desc}</div>
+                  <div className="font-extrabold text-gold text-xl">{city.count}</div>
+                  <div className="text-[11px] text-cream/40">véhicules disponibles</div>
                 </div>
               );
             })}

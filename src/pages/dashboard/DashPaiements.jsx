@@ -51,28 +51,28 @@ export default function DashPaiements() {
           {
             icon: "💰",
             label: "Revenu total brut",
-            value: `${totalRevenue.toLocaleString()}€`,
+            value: `${totalRevenue.toLocaleString()} DH`,
             color: "#f0eeea",
             bg: "rgba(240,238,234,0.1)",
           },
           {
             icon: "📊",
             label: "Commission Drivo (10%)",
-            value: `−${totalCommission.toLocaleString()}€`,
+            value: `−${totalCommission.toLocaleString()} DH`,
             color: "#ef4444",
             bg: "rgba(239,68,68,0.1)",
           },
           {
             icon: "✅",
             label: "Net déjà versé",
-            value: `${totalPaid.toLocaleString()}€`,
+            value: `${totalPaid.toLocaleString()} DH`,
             color: "#22c55e",
             bg: "rgba(34,197,94,0.1)",
           },
           {
             icon: "⏳",
             label: "Net en attente",
-            value: `${totalPending.toLocaleString()}€`,
+            value: `${totalPending.toLocaleString()} DH`,
             color: "#f59e0b",
             bg: "rgba(245,158,11,0.1)",
           },
@@ -196,13 +196,13 @@ export default function DashPaiements() {
                     {p.carName}
                   </div>
                   <div className="text-right font-semibold text-[15px]">
-                    {p.amount}€
+                    {p.amount} DH
                   </div>
                   <div className="text-right text-sm text-red-500 font-medium">
-                    −{p.commission}€
+                    −{p.commission} DH
                   </div>
                   <div className="text-right font-bold text-gold text-base">
-                    {p.net}€
+                    {p.net} DH
                   </div>
                   <div className="text-right">
                     <span
@@ -223,13 +223,13 @@ export default function DashPaiements() {
                 Total ({filtered.length} transaction{filtered.length > 1 ? "s" : ""})
               </div>
               <div className="text-right font-bold text-base">
-                {filtered.reduce((s, p) => s + p.amount, 0)}€
+                {filtered.reduce((s, p) => s + p.amount, 0)} DH
               </div>
               <div className="text-right font-bold text-red-500 text-base">
-                −{filtered.reduce((s, p) => s + p.commission, 0)}€
+                −{filtered.reduce((s, p) => s + p.commission, 0)} DH
               </div>
               <div className="text-right font-extrabold text-gold text-lg">
-                {filtered.reduce((s, p) => s + p.net, 0)}€
+                {filtered.reduce((s, p) => s + p.net, 0)} DH
               </div>
               <div />
             </div>
@@ -263,18 +263,18 @@ export default function DashPaiements() {
                   <div className="grid grid-cols-3 gap-2 bg-black/30 rounded-xl p-3">
                     <div>
                       <div className="text-[10px] text-cream/40">Brut</div>
-                      <div className="font-bold text-sm">{p.amount}€</div>
+                      <div className="font-bold text-sm">{p.amount} DH</div>
                     </div>
                     <div>
                       <div className="text-[10px] text-cream/40">Commission</div>
                       <div className="font-bold text-sm text-red-500">
-                        −{p.commission}€
+                        −{p.commission} DH
                       </div>
                     </div>
                     <div>
                       <div className="text-[10px] text-cream/40">Net</div>
                       <div className="font-extrabold text-base text-gold">
-                        {p.net}€
+                        {p.net} DH
                       </div>
                     </div>
                   </div>
@@ -289,19 +289,19 @@ export default function DashPaiements() {
                 <div>
                   <div className="text-[11px] text-cream/50">Brut</div>
                   <div className="font-bold text-[15px]">
-                    {filtered.reduce((s, p) => s + p.amount, 0)}€
+                    {filtered.reduce((s, p) => s + p.amount, 0)} DH
                   </div>
                 </div>
                 <div>
                   <div className="text-[11px] text-cream/50">Commission</div>
                   <div className="font-bold text-[15px] text-red-500">
-                    −{filtered.reduce((s, p) => s + p.commission, 0)}€
+                    −{filtered.reduce((s, p) => s + p.commission, 0)} DH
                   </div>
                 </div>
                 <div>
                   <div className="text-[11px] text-cream/50">Net</div>
                   <div className="font-extrabold text-lg text-gold">
-                    {filtered.reduce((s, p) => s + p.net, 0)}€
+                    {filtered.reduce((s, p) => s + p.net, 0)} DH
                   </div>
                 </div>
               </div>

@@ -9,85 +9,49 @@ export default function SearchWidget({ isMobile = false }) {
 
   const handleSearch = () => navigate("/cars");
 
+  const labelClasses = "text-[11px] font-semibold text-gold tracking-[0.15em] uppercase block mb-2";
+
   return (
-    <div
-      style={{
-        background: "rgba(255,255,255,0.04)",
-        border: "1px solid rgba(255,255,255,0.1)",
-        borderRadius: "16px",
-        padding: isMobile ? "16px" : "24px",
-        backdropFilter: "blur(10px)",
-      }}
-    >
+    <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-4 md:p-6 backdrop-blur-md">
       {isMobile ? (
-        // ── Mobile: full single-column stack ──
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        <div className="flex flex-col gap-3">
           <div>
-            <label style={labelStyle}>Lieu de prise en charge</label>
+            <label className={labelClasses}>Lieu de prise en charge</label>
             <input className="input-field" defaultValue="Paris, CDG" />
           </div>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: isMobile ? "column" : "row", // ✅ colonne si mobile
-              gap: "8px",
-            }}
-          >
-            <div style={{ flex: 1 }}>
-              <label
-                style={{ ...labelStyle, fontSize: "10px", marginBottom: "4px" }}
-              >
-                Du
-              </label>
+          <div className="flex flex-col md:flex-row gap-2">
+            <div className="flex-1">
+              <label className={`${labelClasses} text-[10px] mb-1`}>Du</label>
               <input
-                className="input-field"
+                className="input-field h-[38px] text-sm"
                 type="date"
-                style={{ height: "38px", fontSize: "14px" }}
                 value={pickupDate.toISOString().split("T")[0]}
                 onChange={(e) => setPickupDate(new Date(e.target.value))}
               />
             </div>
-
-            <div style={{ flex: 1 }}>
-              <label
-                style={{ ...labelStyle, fontSize: "10px", marginBottom: "4px" }}
-              >
-                Jusqu'au
-              </label>
+            <div className="flex-1">
+              <label className={`${labelClasses} text-[10px] mb-1`}>Jusqu'au</label>
               <input
-                className="input-field"
+                className="input-field h-[38px] text-sm"
                 type="date"
-                style={{ height: "38px", fontSize: "14px" }}
                 value={returnDate.toISOString().split("T")[0]}
                 onChange={(e) => setReturnDate(new Date(e.target.value))}
               />
             </div>
           </div>
-          <button
-            className="btn-primary"
-            style={{ height: "46px", width: "100%" }}
-            onClick={handleSearch}
-          >
+          <button className="btn-primary h-[46px] w-full" onClick={handleSearch}>
             Rechercher
           </button>
         </div>
       ) : (
-        // ── Desktop: location full-width on top, dates + button on bottom ──
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        <div className="flex flex-col gap-3">
           <div>
-            <label style={labelStyle}>Lieu de prise en charge</label>
+            <label className={labelClasses}>Lieu de prise en charge</label>
             <input className="input-field" defaultValue="Paris, CDG" />
           </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr auto",
-              gap: "12px",
-              alignItems: "end",
-            }}
-          >
+          <div className="grid grid-cols-[1fr_1fr_auto] gap-3 items-end">
             <div>
-              <label style={labelStyle}>Du</label>
+              <label className={labelClasses}>Du</label>
               <input
                 className="input-field"
                 type="date"
@@ -96,7 +60,7 @@ export default function SearchWidget({ isMobile = false }) {
               />
             </div>
             <div>
-              <label style={labelStyle}>Jusqu'au</label>
+              <label className={labelClasses}>Jusqu'au</label>
               <input
                 className="input-field"
                 type="date"
@@ -104,11 +68,7 @@ export default function SearchWidget({ isMobile = false }) {
                 onChange={(e) => setReturnDate(new Date(e.target.value))}
               />
             </div>
-            <button
-              className="btn-primary"
-              style={{ height: "46px", whiteSpace: "nowrap" }}
-              onClick={handleSearch}
-            >
+            <button className="btn-primary h-[46px] whitespace-nowrap" onClick={handleSearch}>
               Rechercher
             </button>
           </div>
@@ -117,13 +77,3 @@ export default function SearchWidget({ isMobile = false }) {
     </div>
   );
 }
-
-const labelStyle = {
-  fontSize: "11px",
-  fontWeight: "600",
-  color: "#d4a853",
-  letterSpacing: "0.15em",
-  textTransform: "uppercase",
-  display: "block",
-  marginBottom: "8px",
-};

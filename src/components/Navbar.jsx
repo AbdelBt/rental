@@ -11,11 +11,7 @@ const SUBMENU_LINKS = [
   { label: "FAQ", href: "/info/faq", icon: "❓" },
   { label: "Pourquoi nous ?", href: "/info/pourquoi-nous", icon: "⭐" },
   { label: "Conduire au Maroc", href: "/info/maroc-infos", icon: "🇲🇦" },
-  {
-    label: "Solutions sur mesure",
-    href: "/info/solutions-sur-mesure",
-    icon: "💡",
-  },
+  { label: "Solutions sur mesure", href: "/info/solutions-sur-mesure", icon: "💡" },
   { label: "Paiement sécurisé", href: "/info/paiement-securise", icon: "🔐" },
 ];
 
@@ -43,208 +39,89 @@ export default function Navbar() {
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [menuOpen]);
 
   return (
     <>
-      <style>{`
-        .nav-link-mob {
-          color: rgba(240,238,234,0.75);
-          text-decoration: none;
-          font-size: 22px;
-          font-weight: 600;
-          letter-spacing: -0.01em;
-          padding: 14px 0;
-          border-bottom: 1px solid rgba(255,255,255,0.06);
-          display: block;
-          transition: color 0.2s;
-        }
-        .nav-link-mob:hover { color: #d4a853; }
-        .burger-line {
-          display: block;
-          width: 22px;
-          height: 2px;
-          background: #f0eeea;
-          border-radius: 2px;
-          transition: all 0.3s cubic-bezier(.22,.68,0,1.2);
-          transform-origin: center;
-        }
-      `}</style>
-
-      {/* ── Main bar ── */}
       <nav
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 200,
-          padding: "0 clamp(20px, 4vw, 40px)",
-          height: "64px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          background:
-            scrolled || menuOpen ? "rgba(10,10,15,0.97)" : "transparent",
-          backdropFilter: scrolled || menuOpen ? "blur(20px)" : "none",
-          borderBottom:
-            scrolled || menuOpen ? "1px solid rgba(255,255,255,0.06)" : "none",
-          transition:
-            "background 0.35s ease, backdrop-filter 0.35s ease, border-color 0.35s ease",
-        }}
+        className={`fixed top-0 left-0 right-0 z-[200] px-5 md:px-10 h-16 flex items-center justify-between transition-all duration-300 ${
+          scrolled || menuOpen
+            ? "bg-dark-bg/97 backdrop-blur-xl border-b border-white/[0.06]"
+            : "bg-transparent"
+        }`}
       >
         <Logo size={32} />
 
-        {/* Desktop links */}
         {!isMobile && (
-          <div
-            style={{
-              display: "flex",
-              gap: "32px",
-              alignItems: "center",
-              position: "relative",
-            }}
-          >
-            {" "}
+          <div className="flex gap-8 items-center relative">
             {NAV_LINKS.map((l) => (
               <Link key={l.label} to={l.href} className="nav-link">
                 {l.label}
               </Link>
             ))}
             <div
-              style={{ position: "relative" }}
+              className="relative"
               onMouseEnter={() => setInfoOpen(true)}
               onMouseLeave={() => setInfoOpen(false)}
             >
-              <div className="nav-link" style={{ cursor: "pointer" }}>
-                Infos ▾
-              </div>
-
+              <div className="nav-link cursor-pointer">Infos ▾</div>
               <div
-                style={{
-                  position: "absolute",
-                  top: "100%",
-                  left: 0,
-                  background: "rgba(15,15,20,0.98)",
-                  backdropFilter: "blur(20px)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: "12px",
-                  padding: "12px 0",
-                  minWidth: "220px",
-                  display: infoOpen ? "flex" : "none",
-                  flexDirection: "column",
-                  gap: "4px",
-                }}
+                className={`absolute top-full left-0 bg-[#0f0f14]/98 backdrop-blur-xl border border-white/[0.08] rounded-xl py-3 min-w-[220px] flex flex-col gap-1 ${
+                  infoOpen ? "flex" : "hidden"
+                }`}
               >
                 {SUBMENU_LINKS.map((l) => (
                   <Link
                     key={l.label}
                     to={l.href}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = "#d4a853";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = "rgba(240,238,234,0.8)";
-                    }}
-                    style={{
-                      padding: "10px 18px",
-                      textDecoration: "none",
-                      color: "rgba(240,238,234,0.8)",
-                      transition: "color 0.2s ease",
-                      fontSize: "14px",
-                      display: "block",
-                    }}
+                    className="py-2.5 px-4 no-underline text-cream/80 hover:text-gold transition-colors text-sm block"
                   >
                     {l.icon} {l.label}
                   </Link>
                 ))}
               </div>
             </div>
-            <button
-              className="btn-primary"
-              style={{ padding: "10px 22px", fontSize: "12px" }}
-            >
+            <button className="btn-primary py-2.5 px-5 text-xs">
               Se connecter
             </button>
           </div>
         )}
 
-        {/* Hamburger */}
         {isMobile && (
           <button
             onClick={() => setMenuOpen((o) => !o)}
             aria-label="Menu"
-            style={{
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-              width: "40px",
-              height: "40px",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "5px",
-              padding: "8px",
-            }}
+            className="bg-transparent border-none cursor-pointer w-10 h-10 flex flex-col items-center justify-center gap-1 p-2"
           >
             <span
-              className="burger-line"
-              style={{
-                transform: menuOpen ? "translateY(7px) rotate(45deg)" : "none",
-              }}
+              className="block w-[22px] h-0.5 bg-cream rounded transition-all duration-300 origin-center"
+              style={{ transform: menuOpen ? "translateY(7px) rotate(45deg)" : "none" }}
             />
             <span
-              className="burger-line"
-              style={{
-                opacity: menuOpen ? 0 : 1,
-                transform: menuOpen ? "scaleX(0)" : "none",
-              }}
+              className="block w-[22px] h-0.5 bg-cream rounded transition-all duration-300"
+              style={{ opacity: menuOpen ? 0 : 1, transform: menuOpen ? "scaleX(0)" : "none" }}
             />
             <span
-              className="burger-line"
-              style={{
-                transform: menuOpen
-                  ? "translateY(-7px) rotate(-45deg)"
-                  : "none",
-              }}
+              className="block w-[22px] h-0.5 bg-cream rounded transition-all duration-300 origin-center"
+              style={{ transform: menuOpen ? "translateY(-7px) rotate(-45deg)" : "none" }}
             />
           </button>
         )}
       </nav>
 
-      {/* ── Mobile drawer ── */}
       {isMobile && (
         <div
-          style={{
-            position: "fixed",
-            top: "64px",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 190,
-            background: "rgba(10,10,15,0.98)",
-            backdropFilter: "blur(24px)",
-            padding: "32px clamp(20px, 6vw, 40px) 40px",
-            display: "flex",
-            flexDirection: "column",
-            transform: menuOpen ? "translateY(0)" : "translateY(-10px)",
-            opacity: menuOpen ? 1 : 0,
-            pointerEvents: menuOpen ? "all" : "none",
-            transition:
-              "transform 0.35s cubic-bezier(.22,.68,0,1), opacity 0.25s ease",
-            overflowY: "auto",
-          }}
+          className={`fixed top-16 left-0 right-0 bottom-0 z-[190] bg-dark-bg/98 backdrop-blur-2xl p-8 md:p-10 flex flex-col transition-all duration-300 overflow-y-auto ${
+            menuOpen ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0 pointer-events-none"
+          }`}
         >
-          <nav style={{ flex: 1 }}>
+          <nav className="flex-1">
             {[...NAV_LINKS, ...SUBMENU_LINKS].map((l, i) => (
               <Link
                 key={l.label}
                 to={l.href}
-                className="nav-link-mob"
+                className="block text-cream/75 no-underline text-[22px] font-semibold tracking-tight py-3.5 border-b border-white/[0.06] hover:text-gold transition-colors"
                 onClick={() => setMenuOpen(false)}
                 style={{
                   transform: menuOpen ? "translateX(0)" : "translateX(-16px)",
@@ -257,46 +134,14 @@ export default function Navbar() {
             ))}
           </nav>
 
-          <div
-            style={{
-              marginTop: "32px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "12px",
-            }}
-          >
-            <button
-              className="btn-primary"
-              style={{ width: "100%", padding: "16px", fontSize: "14px" }}
-            >
-              Se connecter
-            </button>
-            <button
-              className="btn-ghost"
-              style={{ width: "100%", padding: "16px", fontSize: "14px" }}
-            >
-              Créer un compte
-            </button>
+          <div className="mt-8 flex flex-col gap-3">
+            <button className="btn-primary w-full py-4 text-sm">Se connecter</button>
+            <button className="btn-ghost w-full py-4 text-sm">Créer un compte</button>
           </div>
 
-          <div
-            style={{
-              marginTop: "28px",
-              display: "flex",
-              justifyContent: "center",
-              gap: "20px",
-              flexWrap: "wrap",
-            }}
-          >
+          <div className="mt-7 flex justify-center gap-5 flex-wrap">
             {["🛡️ Sans caution", "🚗 1200+ véhicules", "📞 24/7"].map((t) => (
-              <span
-                key={t}
-                style={{
-                  fontSize: "12px",
-                  color: "rgba(240,238,234,0.4)",
-                  fontWeight: "500",
-                }}
-              >
+              <span key={t} className="text-xs text-cream/40 font-medium">
                 {t}
               </span>
             ))}

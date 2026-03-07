@@ -3,9 +3,7 @@ import { footerColumns } from "../data";
 import Logo from "./Logo";
 
 function useBreakpoint() {
-  const [width, setWidth] = useState(
-    typeof window !== "undefined" ? window.innerWidth : 1200
-  );
+  const [width, setWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1200);
   useEffect(() => {
     const fn = () => setWidth(window.innerWidth);
     window.addEventListener("resize", fn);
@@ -20,53 +18,32 @@ function useBreakpoint() {
 export default function Footer() {
   const { isMobile, isTablet } = useBreakpoint();
 
-  // mobile: single column stack
-  // tablet: brand full-width top, then 3 link cols below
-  // desktop: brand + 3 cols side by side
-  const gridCols = isMobile
-    ? "1fr"
-    : isTablet
-    ? "1fr 1fr 1fr"
-    : "2fr 1fr 1fr 1fr";
+  const gridCols = isMobile ? "1fr" : isTablet ? "1fr 1fr 1fr" : "2fr 1fr 1fr 1fr";
 
   return (
-    <footer
-      style={{
-        background: "#060608",
-        borderTop: "1px solid rgba(255,255,255,0.06)",
-        padding: `clamp(36px, 6vw, 48px) clamp(20px, 4vw, 40px)`,
-      }}
-    >
-      <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-
-        {/* Brand block — always full-width on mobile & tablet */}
+    <footer className="bg-[#060608] border-t border-white/[0.06] py-9 md:py-12 px-5 md:px-10">
+      <div className="max-w-[1200px] mx-auto">
         {(isMobile || isTablet) && (
-          <div style={{ marginBottom: "36px", paddingBottom: "32px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-            <div style={{ marginBottom: "12px" }}>
+          <div className="mb-9 pb-8 border-b border-white/[0.06]">
+            <div className="mb-3">
               <Logo size={28} />
             </div>
-            <p style={{ color: "rgba(240,238,234,0.4)", fontSize: "14px", lineHeight: "1.8", maxWidth: "320px" }}>
+            <p className="text-cream/40 text-sm leading-relaxed max-w-[320px]">
               La location de voiture réinventée. Simple, transparente, et disponible partout.
             </p>
           </div>
         )}
 
-        {/* Link columns grid */}
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: gridCols,
-            gap: isMobile ? "28px" : "40px",
-            marginBottom: "40px",
-          }}
+          className="grid gap-7 md:gap-10 mb-10"
+          style={{ gridTemplateColumns: gridCols }}
         >
-          {/* Brand column — desktop only (already rendered above on mobile/tablet) */}
           {!isMobile && !isTablet && (
             <div>
-              <div style={{ marginBottom: "16px" }}>
+              <div className="mb-4">
                 <Logo size={28} />
               </div>
-              <p style={{ color: "rgba(240,238,234,0.4)", fontSize: "14px", lineHeight: "1.8", maxWidth: "280px" }}>
+              <p className="text-cream/40 text-sm leading-relaxed max-w-[280px]">
                 La location de voiture réinventée. Simple, transparente, et disponible partout.
               </p>
             </div>
@@ -77,24 +54,9 @@ export default function Footer() {
           ))}
         </div>
 
-        {/* Bottom bar */}
-        <div
-          style={{
-            borderTop: "1px solid rgba(255,255,255,0.05)",
-            paddingTop: "24px",
-            display: "flex",
-            flexDirection: isMobile ? "column" : "row",
-            justifyContent: "space-between",
-            alignItems: isMobile ? "flex-start" : "center",
-            gap: "8px",
-          }}
-        >
-          <span style={{ color: "rgba(240,238,234,0.3)", fontSize: "13px" }}>
-            © Drivo SAS, 2026. Tous droits réservés.
-          </span>
-          <span style={{ color: "rgba(240,238,234,0.3)", fontSize: "13px" }}>
-            Assistance : support@drivo.fr
-          </span>
+        <div className="border-t border-white/[0.05] pt-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+          <span className="text-cream/30 text-[13px]">© Drivo SAS, 2026. Tous droits réservés.</span>
+          <span className="text-cream/30 text-[13px]">Assistance : support@drivo.fr</span>
         </div>
       </div>
     </footer>
@@ -104,30 +66,13 @@ export default function Footer() {
 function FooterColumn({ title, links }) {
   return (
     <div>
-      <div
-        style={{
-          fontWeight: "700",
-          fontSize: "13px",
-          letterSpacing: "0.15em",
-          textTransform: "uppercase",
-          color: "#d4a853",
-          marginBottom: "16px",
-        }}
-      >
+      <div className="font-bold text-[13px] tracking-[0.15em] uppercase text-gold mb-4">
         {title}
       </div>
       {links.map((l) => (
         <div
           key={l}
-          style={{
-            color: "rgba(240,238,234,0.45)",
-            fontSize: "14px",
-            marginBottom: "10px",
-            cursor: "pointer",
-            transition: "color 0.2s",
-          }}
-          onMouseEnter={(e) => (e.target.style.color = "#f0eeea")}
-          onMouseLeave={(e) => (e.target.style.color = "rgba(240,238,234,0.45)")}
+          className="text-cream/45 text-sm mb-2.5 cursor-pointer transition-colors hover:text-cream"
         >
           {l}
         </div>

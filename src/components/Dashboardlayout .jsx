@@ -35,7 +35,7 @@ export default function DashboardLayout() {
       {/* Sidebar desktop */}
       {!isMobile && (
         <aside
-          className="flex-shrink-0 bg-dark-bg border-r border-white/[0.06] flex flex-col sticky top-0 h-screen overflow-hidden transition-[width] duration-300 ease-out"
+          className="flex-shrink-0 bg-dark-bg border-r border-white/[0.06] flex flex-col sticky top-0 overflow-hidden transition-[width] duration-300 ease-out"
           style={{ width: sidebarW }}
         >
           {/* Logo */}

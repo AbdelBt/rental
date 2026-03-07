@@ -1,16 +1,11 @@
+import { Link } from "react-router-dom";
+
 export default function Logo({ size = 32 }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+    <Link to="/" className="flex items-center gap-2 no-underline">
       <div
-        style={{
-          width: size,
-          height: size,
-          background: "#d4a853",
-          borderRadius: "6px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+        className="bg-gold rounded-md flex items-center justify-center"
+        style={{ width: size, height: size }}
       >
         <svg
           width={size * 0.56}
@@ -22,15 +17,11 @@ export default function Logo({ size = 32 }) {
         </svg>
       </div>
       <span
-        style={{
-          fontSize: size * 0.5,
-          fontWeight: "800",
-          letterSpacing: "-0.02em",
-          color: "#f0eeea",
-        }}
+        className="font-extrabold text-cream tracking-tight"
+        style={{ fontSize: size * 0.5 }}
       >
         DRIVO
       </span>
-    </div>
+    </Link>
   );
 }

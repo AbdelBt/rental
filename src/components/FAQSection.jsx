@@ -7,10 +7,10 @@ export default function FAQSection() {
   const toggle = (i) => setOpen(open === i ? null : i);
 
   return (
-    <section id="faq" style={{ padding: "80px 40px", background: "#0f0f17" }}>
-      <div style={{ maxWidth: "760px", margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: "48px" }}>
-          <div className="gold-line" style={{ margin: "0 auto 20px" }} />
+    <section id="faq" className="py-20 px-10 bg-[#0f0f17]">
+      <div className="max-w-[760px] mx-auto">
+        <div className="text-center mb-12">
+          <div className="gold-line mx-auto mb-5" />
           <h2 className="section-title">Questions fréquentes</h2>
         </div>
 
@@ -19,13 +19,9 @@ export default function FAQSection() {
             <div className="faq-q" onClick={() => toggle(i)}>
               <span>{f.q}</span>
               <span
-                style={{
-                  color: "#d4a853",
-                  fontSize: "20px",
-                  transition: "transform 0.2s",
-                  transform: open === i ? "rotate(45deg)" : "none",
-                  display: "inline-block",
-                }}
+                className={`text-gold text-xl inline-block transition-transform duration-200 ${
+                  open === i ? "rotate-45" : ""
+                }`}
               >
                 +
               </span>

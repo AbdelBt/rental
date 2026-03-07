@@ -10,84 +10,35 @@ export default function ReviewsSection() {
   const visible = reviews.slice(active * perPage, active * perPage + perPage);
 
   return (
-    <section
-      style={{
-        padding: `clamp(48px,8vw,80px) clamp(20px,4vw,40px)`,
-        background: "#0f0f17",
-      }}
-    >
-      <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-        {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: "48px" }}>
-          <div
-            style={{
-              width: "48px",
-              height: "3px",
-              background: "#d4a853",
-              borderRadius: "2px",
-              margin: "0 auto 20px",
-            }}
-          />
-          <h2
-            style={{
-              fontFamily: "'Playfair Display',serif",
-              fontSize: "clamp(1.8rem,4vw,2.8rem)",
-              fontWeight: "700",
-              marginBottom: "12px",
-            }}
-          >
+    <section className="py-12 md:py-20 px-5 md:px-10 bg-[#0f0f17]">
+      <div className="max-w-[1200px] mx-auto">
+        <div className="text-center mb-12">
+          <div className="w-12 h-0.5 bg-gold rounded mx-auto mb-5" />
+          <h2 className="font-playfair text-[clamp(1.8rem,4vw,2.8rem)] font-bold mb-3">
             Ce que disent nos clients
           </h2>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <span style={{ color: "#d4a853", fontSize: "20px" }}>★★★★★</span>
-            <span style={{ fontWeight: "700", fontSize: "16px" }}>4.8/5</span>
-            <span style={{ color: "rgba(240,238,234,0.4)", fontSize: "14px" }}>
-              · 1,200+ avis vérifiés
-            </span>
+          <div className="flex justify-center items-center gap-2">
+            <span className="text-gold text-xl">★★★★★</span>
+            <span className="font-bold text-base">4.8/5</span>
+            <span className="text-cream/40 text-sm">· 1,200+ avis vérifiés</span>
           </div>
         </div>
 
-        {/* Cards */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: `repeat(${perPage}, 1fr)`,
-            gap: "20px",
-            marginBottom: "32px",
-          }}
-        >
+        <div className="grid gap-5 mb-8" style={{ gridTemplateColumns: `repeat(${perPage}, 1fr)` }}>
           {visible.map((r, i) => (
             <ReviewCard key={i} review={r} />
           ))}
         </div>
 
-        {/* Pagination */}
         {pages > 1 && (
-          <div
-            style={{ display: "flex", justifyContent: "center", gap: "8px" }}
-          >
+          <div className="flex justify-center gap-2">
             {Array.from({ length: pages }).map((_, i) => (
               <button
                 key={i}
                 onClick={() => setActive(i)}
-                style={{
-                  width: active === i ? "32px" : "8px",
-                  height: "8px",
-                  borderRadius: "4px",
-                  background:
-                    active === i ? "#d4a853" : "rgba(240,238,234,0.2)",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: 0,
-                  transition: "all 0.3s ease",
-                }}
+                className={`h-2 rounded border-none cursor-pointer p-0 transition-all duration-300 ${
+                  active === i ? "w-8 bg-gold" : "w-2 bg-cream/20"
+                }`}
               />
             ))}
           </div>
@@ -99,83 +50,27 @@ export default function ReviewsSection() {
 
 function ReviewCard({ review }) {
   return (
-    <div
-      style={{
-        background: "#13131a",
-        border: "1px solid rgba(255,255,255,0.07)",
-        borderRadius: "16px",
-        padding: "24px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "16px",
-      }}
-    >
-      {/* Stars */}
-      <div style={{ color: "#d4a853", fontSize: "14px" }}>
+    <div className="bg-dark border border-white/[0.07] rounded-2xl p-6 flex flex-col gap-4">
+      <div className="text-gold text-sm">
         {"★".repeat(review.rating)}
         {"☆".repeat(5 - review.rating)}
       </div>
 
-      {/* Quote */}
-      <p
-        style={{
-          color: "rgba(240,238,234,0.7)",
-          fontSize: "14px",
-          lineHeight: "1.8",
-          flex: 1,
-          fontStyle: "italic",
-        }}
-      >
+      <p className="text-cream/70 text-sm leading-relaxed flex-1 italic">
         "{review.text}"
       </p>
 
-      {/* Car */}
-      <div
-        style={{
-          fontSize: "11px",
-          color: "#d4a853",
-          fontWeight: "600",
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
-        }}
-      >
+      <div className="text-[11px] text-gold font-semibold tracking-widest uppercase">
         🚗 {review.car}
       </div>
 
-      {/* Author */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          paddingTop: "16px",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
-        }}
-      >
-        <div
-          style={{
-            width: "40px",
-            height: "40px",
-            borderRadius: "50%",
-            background: "linear-gradient(135deg, #d4a853, #8a6520)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "13px",
-            fontWeight: "800",
-            color: "#0a0a0f",
-            flexShrink: 0,
-          }}
-        >
+      <div className="flex items-center gap-3 pt-4 border-t border-white/[0.06]">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold to-[#8a6520] flex items-center justify-center text-[13px] font-extrabold text-dark-bg shrink-0">
           {review.avatar}
         </div>
         <div>
-          <div style={{ fontWeight: "700", fontSize: "14px" }}>
-            {review.name}
-          </div>
-          <div style={{ fontSize: "12px", color: "rgba(240,238,234,0.4)" }}>
-            📍 {review.city} · {review.date}
-          </div>
+          <div className="font-bold text-sm">{review.name}</div>
+          <div className="text-xs text-cream/40">📍 {review.city} · {review.date}</div>
         </div>
       </div>
     </div>

@@ -60,22 +60,22 @@ function ConfirmCashModal({ reservation, onConfirm, onClose }) {
 
         <p className="text-cream/70 mb-6 text-sm leading-relaxed">
           Avez-vous bien reçu{" "}
-          <strong className="text-gold text-lg">{solde}€</strong> en cash de{" "}
+          <strong className="text-gold text-lg">{solde} DH</strong> en cash de{" "}
           <strong>{reservation.client}</strong> pour la {reservation.carName} ?
         </p>
 
         <div className="bg-gold/10 rounded-2xl p-5 mb-7 border border-gold/15">
           <div className="flex justify-between mb-3 text-sm">
             <span className="text-cream/60">Prix total :</span>
-            <span className="font-bold">{reservation.prixTotal}€</span>
+            <span className="font-bold">{reservation.prixTotal} DH</span>
           </div>
           <div className="flex justify-between mb-3 text-sm">
             <span className="text-cream/60">Déjà payé en ligne :</span>
-            <span className="font-bold">{reservation.acompte}€</span>
+            <span className="font-bold">{reservation.acompte} DH</span>
           </div>
           <div className="flex justify-between border-t border-gold/30 pt-3 text-base">
             <span className="font-bold">Solde à confirmer :</span>
-            <span className="font-extrabold text-gold text-lg">{solde}€</span>
+            <span className="font-extrabold text-gold text-lg">{solde} DH</span>
           </div>
         </div>
 
@@ -241,14 +241,14 @@ function ReservationSidebar({
           <div className="mb-6">
             <div className="flex justify-between text-[13px] mb-2">
               <span className="text-green-500">
-                ✓ En ligne: {reservation.acompte}€
+                ✓ En ligne: {reservation.acompte} DH
               </span>
               <span
                 style={{
                   color: reservation.cashConfirme ? "#22c55e" : "#f59e0b",
                 }}
               >
-                {reservation.cashConfirme ? "✓" : "⏳"} Cash: {solde}€
+                {reservation.cashConfirme ? "✓" : "⏳"} Cash: {solde} DH
               </span>
             </div>
             <div className="h-2.5 bg-white/10 rounded-[5px] overflow-hidden flex">
@@ -274,18 +274,18 @@ function ReservationSidebar({
           <div className="bg-black/30 rounded-2xl p-4 mb-5">
             <div className="flex justify-between mb-2">
               <span className="text-cream/60">Prix total</span>
-              <span className="font-bold text-lg">{reservation.prixTotal}€</span>
+              <span className="font-bold text-lg">{reservation.prixTotal} DH</span>
             </div>
             <div className="flex justify-between mb-2">
               <span className="text-cream/60">Commission (10%)</span>
               <span className="font-bold text-red-500">
-                -{Math.round(reservation.prixTotal * 0.1)}€
+                -{Math.round(reservation.prixTotal * 0.1)} DH
               </span>
             </div>
             <div className="flex justify-between border-t border-white/10 pt-2">
               <span className="font-bold">Net agence</span>
               <span className="font-extrabold text-gold text-xl">
-                {Math.round(reservation.prixTotal * 0.9)}€
+                {Math.round(reservation.prixTotal * 0.9)} DH
               </span>
             </div>
           </div>
@@ -296,7 +296,7 @@ function ReservationSidebar({
               onClick={() => setShowConfirmModal(true)}
               className="w-full py-4 bg-gold/10 border border-gold/30 rounded-[40px] text-gold font-bold text-[15px] cursor-pointer mb-4 transition-all duration-200 hover:bg-gold/20"
             >
-              ✓ Confirmer paiement cash ({solde}€)
+              ✓ Confirmer paiement cash ({solde} DH)
             </button>
           )}
 
@@ -596,7 +596,7 @@ export default function DashReservations() {
                     }`}
                   >
                     <div className="font-extrabold text-gold text-base md:text-lg">
-                      {r.total}€
+                      {r.total} DH
                     </div>
                     <div className="text-[11px] text-cream/40">{r.days} jours</div>
                   </div>
@@ -739,7 +739,7 @@ export default function DashReservations() {
                               <span className="whitespace-nowrap overflow-hidden text-ellipsis max-w-[90px]">
                                 {r.client.split(" ")[0]}
                               </span>
-                              <span className="font-bold">{r.total}€</span>
+                              <span className="font-bold">{r.total} DH</span>
                             </div>
                           ))}
                           {res.length > 3 && (

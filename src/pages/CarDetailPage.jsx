@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
 import { cars, addDays } from "../data";
 import useBreakpoint from "../hooks/useBreakpoint";
 import Navbar from "../components/Navbar";
@@ -7,9 +7,12 @@ import Footer from "../components/Footer";
 
 export default function CarDetailPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const car = cars.find((c) => c.id === Number(id));
   const { isMobile, isTablet } = useBreakpoint();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
 
   const [activeImg, setActiveImg] = useState(0);
   const [pickupDate, setPickupDate] = useState(addDays(new Date(), 2));
@@ -18,31 +21,10 @@ export default function CarDetailPage() {
 
   if (!car) {
     return (
-      <div
-        style={{
-          fontFamily: "'Sora',sans-serif",
-          background: "#0a0a0f",
-          color: "#f0eeea",
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "16px",
-        }}
-      >
-        <div style={{ fontSize: "48px" }}>🚗</div>
-        <div style={{ fontSize: "20px", fontWeight: "700" }}>
-          Véhicule introuvable
-        </div>
-        <Link
-          to="/cars"
-          style={{
-            color: "#d4a853",
-            textDecoration: "none",
-            fontWeight: "600",
-          }}
-        >
+      <div className="font-sora bg-dark-bg text-cream min-h-screen flex flex-col items-center justify-center gap-4">
+        <div className="text-5xl">🚗</div>
+        <div className="text-xl font-bold">Véhicule introuvable</div>
+        <Link to="/cars" className="text-gold no-underline font-semibold">
           ← Retour aux résultats
         </Link>
       </div>
@@ -58,98 +40,41 @@ export default function CarDetailPage() {
     .filter((c) => c.category === car.category && c.id !== car.id)
     .slice(0, 3);
 
-  const labelStyle = {
-    fontSize: "11px",
-    fontWeight: "600",
-    color: "#d4a853",
-    letterSpacing: "0.15em",
-    textTransform: "uppercase",
-    display: "block",
-    marginBottom: "8px",
-  };
-
   return (
-    <div
-      style={{
-        fontFamily: "'Sora',sans-serif",
-        background: "#0a0a0f",
-        color: "#f0eeea",
-        minHeight: "100vh",
-      }}
-    >
+    <div className="font-sora bg-dark-bg text-cream min-h-screen">
       <Navbar />
 
-      <div
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
-          padding: "100px clamp(20px,4vw,40px) 80px",
-        }}
-      >
+      <div className="max-w-[1200px] mx-auto pt-[100px] px-[clamp(20px,4vw,40px)] pb-20">
         {/* ── Breadcrumb ── */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            marginBottom: "32px",
-            fontSize: "13px",
-            color: "rgba(240,238,234,0.4)",
-          }}
-        >
-          <Link
-            to="/"
-            style={{ color: "rgba(240,238,234,0.4)", textDecoration: "none" }}
-          >
+        <div className="flex items-center gap-2 mb-8 text-[13px] text-cream/40">
+          <Link to="/" className="text-cream/40 no-underline">
             Accueil
           </Link>
           <span>›</span>
-          <Link
-            to="/cars"
-            style={{ color: "rgba(240,238,234,0.4)", textDecoration: "none" }}
-          >
+          <Link to="/cars" className="text-cream/40 no-underline">
             Véhicules
           </Link>
           <span>›</span>
-          <span style={{ color: "#d4a853" }}>{car.name}</span>
+          <span className="text-gold">{car.name}</span>
         </div>
 
         {/* ── Main content grid ── */}
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: stacked ? "1fr" : "1fr 380px",
-            gap: "40px",
-            alignItems: "start",
-          }}
+          className={`grid gap-10 items-start ${stacked ? "grid-cols-1" : "grid-cols-[1fr_380px]"}`}
         >
           {/* ── LEFT: gallery + info ── */}
           <div>
             {/* Main image */}
-            <div
-              style={{
-                position: "relative",
-                borderRadius: "20px",
-                overflow: "hidden",
-                marginBottom: "12px",
-                boxShadow: "0 24px 60px rgba(0,0,0,0.5)",
-              }}
-            >
+            <div className="relative rounded-[20px] overflow-hidden mb-3 shadow-[0_24px_60px_rgba(0,0,0,0.5)]">
               <img
                 src={car.imgs[activeImg]}
                 alt={car.name}
-                style={{
-                  width: "100%",
-                  height: isMobile ? "240px" : "420px",
-                  objectFit: "cover",
-                  display: "block",
-                  transition: "opacity 0.3s",
-                }}
+                className="w-full object-cover block transition-opacity duration-300"
+                style={{ height: isMobile ? "240px" : "420px" }}
               />
               <div
+                className="absolute inset-0"
                 style={{
-                  position: "absolute",
-                  inset: 0,
                   background:
                     "linear-gradient(to top, rgba(10,10,15,0.5) 0%, transparent 50%)",
                 }}
@@ -164,23 +89,7 @@ export default function CarDetailPage() {
                         (i) => (i - 1 + car.imgs.length) % car.imgs.length,
                       )
                     }
-                    style={{
-                      position: "absolute",
-                      left: "16px",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      background: "rgba(10,10,15,0.7)",
-                      border: "none",
-                      color: "#f0eeea",
-                      width: "36px",
-                      height: "36px",
-                      borderRadius: "50%",
-                      cursor: "pointer",
-                      fontSize: "16px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-dark-bg/70 border-none text-cream w-9 h-9 rounded-full cursor-pointer text-base flex items-center justify-center"
                   >
                     ‹
                   </button>
@@ -188,23 +97,7 @@ export default function CarDetailPage() {
                     onClick={() =>
                       setActiveImg((i) => (i + 1) % car.imgs.length)
                     }
-                    style={{
-                      position: "absolute",
-                      right: "16px",
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      background: "rgba(10,10,15,0.7)",
-                      border: "none",
-                      color: "#f0eeea",
-                      width: "36px",
-                      height: "36px",
-                      borderRadius: "50%",
-                      cursor: "pointer",
-                      fontSize: "16px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-dark-bg/70 border-none text-cream w-9 h-9 rounded-full cursor-pointer text-base flex items-center justify-center"
                   >
                     ›
                   </button>
@@ -213,23 +106,8 @@ export default function CarDetailPage() {
 
               {/* Badge */}
               {car.badge && (
-                <div
-                  style={{ position: "absolute", top: "16px", left: "16px" }}
-                >
-                  <span
-                    style={{
-                      display: "inline-block",
-                      background: "rgba(212,168,83,0.18)",
-                      color: "#d4a853",
-                      border: "1px solid rgba(212,168,83,0.35)",
-                      padding: "4px 12px",
-                      borderRadius: "20px",
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
-                    }}
-                  >
+                <div className="absolute top-4 left-4">
+                  <span className="inline-block bg-gold/20 text-gold border border-gold/35 px-3 py-1 rounded-[20px] text-xs font-semibold tracking-[0.08em] uppercase">
                     {car.badge}
                   </span>
                 </div>
@@ -237,118 +115,54 @@ export default function CarDetailPage() {
             </div>
 
             {/* Thumbnails */}
-            <div style={{ display: "flex", gap: "10px" }}>
+            <div className="flex gap-2.5">
               {car.imgs.map((img, i) => (
                 <div
                   key={i}
                   onClick={() => setActiveImg(i)}
+                  className="w-20 h-14 rounded-[10px] overflow-hidden cursor-pointer shrink-0 transition-all duration-200"
                   style={{
-                    width: "80px",
-                    height: "56px",
-                    borderRadius: "10px",
-                    overflow: "hidden",
-                    cursor: "pointer",
                     border: `2px solid ${activeImg === i ? "#d4a853" : "transparent"}`,
                     opacity: activeImg === i ? 1 : 0.5,
-                    transition: "all 0.2s",
-                    flexShrink: 0,
                   }}
                 >
-                  <img
-                    src={img}
-                    alt=""
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
+                  <img src={img} alt="" className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>
 
             {/* ── Title + rating ── */}
-            <div style={{ marginTop: "32px", marginBottom: "24px" }}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  justifyContent: "space-between",
-                  flexWrap: "wrap",
-                  gap: "12px",
-                }}
-              >
+            <div className="mt-8 mb-6">
+              <div className="flex items-start justify-between flex-wrap gap-3">
                 <div>
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      color: "#d4a853",
-                      fontWeight: "600",
-                      letterSpacing: "0.15em",
-                      textTransform: "uppercase",
-                      marginBottom: "6px",
-                    }}
-                  >
+                  <div className="text-xs text-gold font-semibold tracking-[0.15em] uppercase mb-1.5">
                     {car.brand} · {car.category} · {car.year}
                   </div>
-                  <h1
-                    style={{
-                      fontFamily: "'Playfair Display',serif",
-                      fontSize: "clamp(1.8rem,4vw,2.6rem)",
-                      fontWeight: "700",
-                      lineHeight: "1.1",
-                    }}
-                  >
+                  <h1 className="font-playfair text-[clamp(1.8rem,4vw,2.6rem)] font-bold leading-tight">
                     {car.name}
                   </h1>
                 </div>
-                <div style={{ textAlign: "right" }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                    }}
-                  >
-                    <span style={{ color: "#d4a853", fontSize: "18px" }}>
+                <div className="text-right">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-gold text-lg">
                       {"★".repeat(Math.round(car.rating))}
                     </span>
-                    <span style={{ fontWeight: "700", fontSize: "16px" }}>
-                      {car.rating}
-                    </span>
+                    <span className="font-bold text-base">{car.rating}</span>
                   </div>
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      color: "rgba(240,238,234,0.4)",
-                      marginTop: "2px",
-                    }}
-                  >
+                  <div className="text-xs text-cream/40 mt-0.5">
                     {car.reviews} avis
                   </div>
                 </div>
               </div>
 
-              <p
-                style={{
-                  color: "rgba(240,238,234,0.55)",
-                  lineHeight: "1.8",
-                  marginTop: "16px",
-                  fontSize: "15px",
-                }}
-              >
+              <p className="text-cream/55 leading-[1.8] mt-4 text-[15px]">
                 {car.description}
               </p>
             </div>
 
             {/* ── Tabs ── */}
-            <div
-              style={{
-                borderBottom: "1px solid rgba(255,255,255,0.08)",
-                marginBottom: "24px",
-              }}
-            >
-              <div style={{ display: "flex", gap: "0" }}>
+            <div className="border-b border-white/10 mb-6">
+              <div className="flex gap-0">
                 {[
                   { key: "specs", label: "Caractéristiques" },
                   { key: "features", label: "Équipements" },
@@ -357,20 +171,9 @@ export default function CarDetailPage() {
                   <button
                     key={t.key}
                     onClick={() => setActiveTab(t.key)}
+                    className={`py-3 px-5 bg-transparent border-none font-sora text-sm font-semibold cursor-pointer transition-all duration-200 ${activeTab === t.key ? "text-gold" : "text-cream/45"}`}
                     style={{
-                      padding: "12px 20px",
-                      background: "transparent",
-                      border: "none",
                       borderBottom: `2px solid ${activeTab === t.key ? "#d4a853" : "transparent"}`,
-                      color:
-                        activeTab === t.key
-                          ? "#d4a853"
-                          : "rgba(240,238,234,0.45)",
-                      fontFamily: "'Sora',sans-serif",
-                      fontSize: "14px",
-                      fontWeight: "600",
-                      cursor: "pointer",
-                      transition: "all 0.2s",
                     }}
                   >
                     {t.label}
@@ -381,13 +184,7 @@ export default function CarDetailPage() {
 
             {/* Tab content */}
             {activeTab === "specs" && (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(160px,1fr))",
-                  gap: "12px",
-                }}
-              >
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
                 {[
                   { icon: "👤", label: "Places", val: `${car.seats} places` },
                   { icon: "⚙️", label: "Transmission", val: car.transmission },
@@ -402,73 +199,34 @@ export default function CarDetailPage() {
                 ].map((s) => (
                   <div
                     key={s.label}
-                    style={{
-                      background: "rgba(255,255,255,0.03)",
-                      border: "1px solid rgba(255,255,255,0.06)",
-                      borderRadius: "12px",
-                      padding: "16px",
-                    }}
+                    className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4"
                   >
-                    <div style={{ fontSize: "20px", marginBottom: "8px" }}>
-                      {s.icon}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "11px",
-                        color: "rgba(240,238,234,0.4)",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.1em",
-                        marginBottom: "4px",
-                      }}
-                    >
+                    <div className="text-xl mb-2">{s.icon}</div>
+                    <div className="text-[11px] text-cream/40 uppercase tracking-[0.1em] mb-1">
                       {s.label}
                     </div>
-                    <div style={{ fontWeight: "700", fontSize: "14px" }}>
-                      {s.val}
-                    </div>
+                    <div className="font-bold text-sm">{s.val}</div>
                   </div>
                 ))}
               </div>
             )}
 
             {activeTab === "features" && (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(200px,1fr))",
-                  gap: "10px",
-                }}
-              >
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2.5">
                 {car.features.map((f) => (
                   <div
                     key={f}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      padding: "12px 16px",
-                      background: "rgba(212,168,83,0.05)",
-                      border: "1px solid rgba(212,168,83,0.15)",
-                      borderRadius: "10px",
-                    }}
+                    className="flex items-center gap-2.5 py-3 px-4 bg-gold/5 border border-gold/20 rounded-[10px]"
                   >
-                    <span style={{ color: "#d4a853", fontWeight: "700" }}>
-                      ✓
-                    </span>
-                    <span style={{ fontSize: "14px" }}>{f}</span>
+                    <span className="text-gold font-bold">✓</span>
+                    <span className="text-sm">{f}</span>
                   </div>
                 ))}
               </div>
             )}
 
             {activeTab === "reviews" && (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "16px",
-                }}
-              >
+              <div className="flex flex-col gap-4">
                 {[
                   {
                     name: "Marie L.",
@@ -491,50 +249,18 @@ export default function CarDetailPage() {
                 ].map((r, i) => (
                   <div
                     key={i}
-                    style={{
-                      background: "rgba(255,255,255,0.03)",
-                      border: "1px solid rgba(255,255,255,0.06)",
-                      borderRadius: "12px",
-                      padding: "20px",
-                    }}
+                    className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-5"
                   >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        marginBottom: "10px",
-                      }}
-                    >
+                    <div className="flex justify-between mb-2.5">
                       <div>
-                        <div style={{ fontWeight: "700", fontSize: "14px" }}>
-                          {r.name}
-                        </div>
-                        <div
-                          style={{
-                            color: "#d4a853",
-                            fontSize: "13px",
-                            marginTop: "2px",
-                          }}
-                        >
+                        <div className="font-bold text-sm">{r.name}</div>
+                        <div className="text-gold text-[13px] mt-0.5">
                           {"★".repeat(r.rating)}
                         </div>
                       </div>
-                      <div
-                        style={{
-                          fontSize: "12px",
-                          color: "rgba(240,238,234,0.3)",
-                        }}
-                      >
-                        {r.date}
-                      </div>
+                      <div className="text-xs text-cream/30">{r.date}</div>
                     </div>
-                    <p
-                      style={{
-                        color: "rgba(240,238,234,0.6)",
-                        fontSize: "14px",
-                        lineHeight: "1.7",
-                      }}
-                    >
+                    <p className="text-cream/60 text-sm leading-[1.7]">
                       {r.text}
                     </p>
                   </div>
@@ -544,75 +270,28 @@ export default function CarDetailPage() {
           </div>
 
           {/* ── RIGHT: booking widget ── */}
-          <div style={{ position: stacked ? "static" : "sticky", top: "84px" }}>
-            <div
-              style={{
-                background: "#13131a",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: "20px",
-                padding: "28px",
-                boxShadow: "0 24px 48px rgba(0,0,0,0.3)",
-              }}
-            >
+          <div className={stacked ? "static" : "sticky top-[84px]"}>
+            <div className="bg-dark border border-white/10 rounded-[20px] p-7 shadow-[0_24px_48px_rgba(0,0,0,0.3)]">
               {/* Price header */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "flex-end",
-                  gap: "8px",
-                  marginBottom: "24px",
-                  paddingBottom: "24px",
-                  borderBottom: "1px solid rgba(255,255,255,0.06)",
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: "38px",
-                    fontWeight: "800",
-                    color: "#d4a853",
-                    lineHeight: 1,
-                  }}
-                >
-                  {car.price}€
+              <div className="flex items-end gap-2 mb-6 pb-6 border-b border-white/[0.06]">
+                <span className="text-[38px] font-extrabold text-gold leading-none">
+                  {car.price} DH
                 </span>
-                <span
-                  style={{
-                    fontSize: "14px",
-                    color: "rgba(240,238,234,0.4)",
-                    marginBottom: "6px",
-                  }}
-                >
-                  /jour
-                </span>
-                <div style={{ marginLeft: "auto", textAlign: "right" }}>
-                  <div
-                    style={{ fontSize: "11px", color: "rgba(240,238,234,0.4)" }}
-                  >
-                    à partir de
-                  </div>
-                  <div
-                    style={{
-                      fontWeight: "700",
-                      fontSize: "16px",
-                      color: "rgba(240,238,234,0.7)",
-                    }}
-                  >
-                    {car.priceMonth}€/mois
+                <span className="text-sm text-cream/40 mb-1.5">/jour</span>
+                <div className="ml-auto text-right">
+                  <div className="text-[11px] text-cream/40">à partir de</div>
+                  <div className="font-bold text-base text-cream/70">
+                    {car.priceMonth} DH/mois
                   </div>
                 </div>
               </div>
 
               {/* Date inputs */}
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "14px",
-                  marginBottom: "20px",
-                }}
-              >
+              <div className="flex flex-col gap-3.5 mb-5">
                 <div>
-                  <label style={labelStyle}>Date de prise en charge</label>
+                  <label className="block text-[11px] font-semibold text-gold tracking-[0.15em] uppercase mb-2">
+                    Date de prise en charge
+                  </label>
                   <input
                     type="date"
                     className="input-field"
@@ -621,7 +300,9 @@ export default function CarDetailPage() {
                   />
                 </div>
                 <div>
-                  <label style={labelStyle}>Date de retour</label>
+                  <label className="block text-[11px] font-semibold text-gold tracking-[0.15em] uppercase mb-2">
+                    Date de retour
+                  </label>
                   <input
                     type="date"
                     className="input-field"
@@ -632,83 +313,29 @@ export default function CarDetailPage() {
               </div>
 
               {/* Summary */}
-              <div
-                style={{
-                  background: "rgba(212,168,83,0.06)",
-                  border: "1px solid rgba(212,168,83,0.15)",
-                  borderRadius: "12px",
-                  padding: "16px",
-                  marginBottom: "20px",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: "8px",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: "13px",
-                      color: "rgba(240,238,234,0.55)",
-                    }}
-                  >
-                    {car.price}€ × {days} jour{days > 1 ? "s" : ""}
+              <div className="bg-gold/[0.06] border border-gold/20 rounded-xl p-4 mb-5">
+                <div className="flex justify-between mb-2">
+                  <span className="text-[13px] text-cream/55">
+                    {car.price} DH × {days} jour{days > 1 ? "s" : ""}
                   </span>
-                  <span style={{ fontSize: "13px", fontWeight: "600" }}>
-                    {total}€
-                  </span>
+                  <span className="text-[13px] font-semibold">{total} DH</span>
                 </div>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: "8px",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: "13px",
-                      color: "rgba(240,238,234,0.55)",
-                    }}
-                  >
+                <div className="flex justify-between mb-2">
+                  <span className="text-[13px] text-cream/55">
                     Frais de service
                   </span>
-                  <span style={{ fontSize: "13px", fontWeight: "600" }}>
-                    0€
-                  </span>
+                  <span className="text-[13px] font-semibold">0 DH</span>
                 </div>
-                <div
-                  style={{
-                    borderTop: "1px solid rgba(255,255,255,0.08)",
-                    paddingTop: "10px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <span style={{ fontWeight: "700" }}>Total</span>
-                  <span
-                    style={{
-                      fontWeight: "800",
-                      fontSize: "18px",
-                      color: "#d4a853",
-                    }}
-                  >
-                    {total}€
+                <div className="border-t border-white/10 pt-2.5 flex justify-between">
+                  <span className="font-bold">Total</span>
+                  <span className="font-extrabold text-lg text-gold">
+                    {total} DH
                   </span>
                 </div>
               </div>
 
               {/* Perks */}
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "8px",
-                  marginBottom: "24px",
-                }}
-              >
+              <div className="flex flex-col gap-2 mb-6">
                 {[
                   {
                     icon: !car.deposit ? "✅" : "⚠️",
@@ -719,13 +346,7 @@ export default function CarDetailPage() {
                 ].map((p) => (
                   <div
                     key={p.text}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      fontSize: "13px",
-                      color: "rgba(240,238,234,0.6)",
-                    }}
+                    className="flex items-center gap-2.5 text-[13px] text-cream/60"
                   >
                     <span>{p.icon}</span>
                     <span>{p.text}</span>
@@ -736,61 +357,14 @@ export default function CarDetailPage() {
               {/* CTA */}
               <button
                 onClick={() =>
-                  alert(`Réservation confirmée pour ${car.name} — ${total}€`)
+                  alert(`Réservation confirmée pour ${car.name} — ${total} DH`)
                 }
-                style={{
-                  width: "100%",
-                  background: "#d4a853",
-                  color: "#0a0a0f",
-                  border: "none",
-                  padding: "16px",
-                  borderRadius: "10px",
-                  fontFamily: "'Sora',sans-serif",
-                  fontWeight: "800",
-                  fontSize: "15px",
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
-                  cursor: "pointer",
-                  transition: "all 0.25s",
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.background = "#e8be6a";
-                  e.target.style.transform = "translateY(-2px)";
-                  e.target.style.boxShadow = "0 8px 24px rgba(212,168,83,0.4)";
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = "#d4a853";
-                  e.target.style.transform = "none";
-                  e.target.style.boxShadow = "none";
-                }}
+                className="w-full bg-gold text-dark-bg border-none py-4 rounded-[10px] font-sora font-extrabold text-[15px] tracking-[0.08em] uppercase cursor-pointer transition-all duration-[0.25s] hover:bg-[#e8be6a] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(212,168,83,0.4)]"
               >
                 Réserver maintenant
               </button>
 
-              <button
-                style={{
-                  width: "100%",
-                  background: "transparent",
-                  color: "rgba(240,238,234,0.6)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  padding: "12px",
-                  borderRadius: "10px",
-                  fontFamily: "'Sora',sans-serif",
-                  fontWeight: "600",
-                  fontSize: "13px",
-                  cursor: "pointer",
-                  marginTop: "10px",
-                  transition: "all 0.2s",
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.borderColor = "#d4a853";
-                  e.target.style.color = "#d4a853";
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.borderColor = "rgba(255,255,255,0.1)";
-                  e.target.style.color = "rgba(240,238,234,0.6)";
-                }}
-              >
+              <button className="w-full bg-transparent text-cream/60 border border-white/10 py-3 rounded-[10px] font-sora font-semibold text-[13px] cursor-pointer mt-2.5 transition-all duration-200 hover:border-gold hover:text-gold">
                 Contacter l'agence
               </button>
             </div>
@@ -799,38 +373,19 @@ export default function CarDetailPage() {
 
         {/* ── Similar vehicles ── */}
         {similar.length > 0 && (
-          <div style={{ marginTop: "80px" }}>
-            <div
-              style={{
-                width: "48px",
-                height: "3px",
-                background: "#d4a853",
-                borderRadius: "2px",
-                marginBottom: "16px",
-              }}
-            />
-            <h2
-              style={{
-                fontFamily: "'Playfair Display',serif",
-                fontSize: "clamp(1.6rem,3vw,2.2rem)",
-                fontWeight: "700",
-                marginBottom: "32px",
-              }}
-            >
+          <div className="mt-20">
+            <div className="w-12 h-[3px] bg-gold rounded-sm mb-4" />
+            <h2 className="font-playfair text-[clamp(1.6rem,3vw,2.2rem)] font-bold mb-8">
               Véhicules similaires
             </h2>
             <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
-                gap: "20px",
-              }}
+              className={`grid gap-5 ${isMobile ? "grid-cols-1" : "grid-cols-3"}`}
             >
               {similar.map((c) => (
                 <Link
                   key={c.id}
                   to={`/car/${c.id}`}
-                  style={{ textDecoration: "none", color: "inherit" }}
+                  className="no-underline text-inherit"
                 >
                   <SimilarCard car={c} />
                 </Link>
@@ -851,63 +406,30 @@ function SimilarCard({ car }) {
     <div
       onMouseEnter={() => setH(true)}
       onMouseLeave={() => setH(false)}
+      className="bg-dark rounded-[14px] overflow-hidden cursor-pointer transition-all duration-300 ease-[cubic-bezier(.22,.68,0,1.2)]"
       style={{
-        background: "#13131a",
         border: `1px solid ${h ? "rgba(212,168,83,0.4)" : "rgba(255,255,255,0.06)"}`,
-        borderRadius: "14px",
-        overflow: "hidden",
         transform: h ? "translateY(-6px)" : "none",
         boxShadow: h ? "0 20px 40px rgba(0,0,0,0.4)" : "none",
-        transition: "all 0.3s cubic-bezier(.22,.68,0,1.2)",
-        cursor: "pointer",
       }}
     >
       <img
         src={car.img}
         alt={car.name}
-        style={{
-          width: "100%",
-          height: "160px",
-          objectFit: "cover",
-          display: "block",
-          transition: "transform 0.5s",
-          transform: h ? "scale(1.04)" : "scale(1)",
-        }}
+        className="w-full h-40 object-cover block transition-transform duration-500"
+        style={{ transform: h ? "scale(1.04)" : "scale(1)" }}
       />
-      <div style={{ padding: "16px" }}>
-        <div style={{ fontWeight: "700", marginBottom: "4px" }}>{car.name}</div>
-        <div
-          style={{
-            fontSize: "12px",
-            color: "rgba(240,238,234,0.4)",
-            marginBottom: "12px",
-          }}
-        >
-          {car.category}
-        </div>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <span style={{ fontWeight: "800", color: "#d4a853" }}>
-            {car.price}€
-            <span
-              style={{
-                fontSize: "11px",
-                fontWeight: "400",
-                color: "rgba(240,238,234,0.4)",
-                marginLeft: "3px",
-              }}
-            >
+      <div className="p-4">
+        <div className="font-bold mb-1">{car.name}</div>
+        <div className="text-xs text-cream/40 mb-3">{car.category}</div>
+        <div className="flex justify-between items-center">
+          <span className="font-extrabold text-gold">
+            {car.price} DH
+            <span className="text-[11px] font-normal text-cream/40 ml-0.5">
               /jour
             </span>
           </span>
-          <span style={{ color: "#d4a853", fontSize: "13px" }}>
-            ★ {car.rating}
-          </span>
+          <span className="text-gold text-[13px]">★ {car.rating}</span>
         </div>
       </div>
     </div>
