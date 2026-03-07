@@ -136,7 +136,7 @@ export default function Navbar() {
 
           <div className="mt-8 flex flex-col gap-3">
             <button className="btn-primary w-full py-4 text-sm">Se connecter</button>
-            <button className="btn-ghost w-full py-4 text-sm">Créer un compte</button>
+            <button className="btn-ghost w-full py-4 text-sm">Contactez-nous</button>
           </div>
 
           <div className="mt-7 flex justify-center gap-5 flex-wrap">

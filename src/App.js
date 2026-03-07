@@ -6,6 +6,7 @@ import HomePage from "./pages/HomePage";
 import ResultsPage from "./pages/ResultsPage";
 import CarDetailPage from "./pages/CarDetailPage";
 import InfoPage from "./pages/InfoPage";
+import AgencyLogin from "./pages/AgencyLogin";
 import DashboardLayout from "./components/Dashboardlayout ";
 import DashboardOverview from "./pages/dashboard/DashOverview";
 import DashboardVoitures from "./pages/dashboard/DashVoitures";
@@ -23,6 +24,7 @@ export default function App() {
           <Route path="/cars" element={<ResultsPage />} />
           <Route path="/car/:id" element={<CarDetailPage />} />
           <Route path="/info/:slug" element={<InfoPage />} />
+          <Route path="/agence" element={<AgencyLogin />} />
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardOverview />} />
             <Route path="voitures" element={<DashboardVoitures />} />
