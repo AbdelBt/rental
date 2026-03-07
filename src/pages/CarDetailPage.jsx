@@ -365,7 +365,7 @@ export default function CarDetailPage() {
               </button>
 
               <button className="w-full bg-transparent text-cream/60 border border-white/10 py-3 rounded-[10px] font-sora font-semibold text-[13px] cursor-pointer mt-2.5 transition-all duration-200 hover:border-gold hover:text-gold">
-                Contacter l'agence
+                Contactez-nous
               </button>
             </div>
           </div>
