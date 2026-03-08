@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { agencyCars as initialCars } from "../../data/dashboardData";
+import { useState, useEffect } from "react";
+import { supabase } from "../../lib/supabaseClient";
 
 const STEPS = ["Identité", "Tarifs & Options", "Équipements", "Photos"];
 const CATS = [
@@ -27,6 +27,7 @@ const STATUS = {
     bg: "rgba(239,68,68,0.15)",
   },
 };
+
 const EMPTY = {
   name: "",
   brand: "",
@@ -34,28 +35,28 @@ const EMPTY = {
   category: "Standard",
   city: "Casablanca",
   price: "",
-  priceWeek: "",
-  priceMonth: "",
+  price_week: "",
+  price_month: "",
   fuel: "Essence",
   seats: 5,
   transmission: "Auto",
   mileage: "Illimité",
   deposit: false,
-  depositAmount: 0,
+  deposit_amount: 0,
   babyseat: false,
-  GPS: false,
-  minAge: 21,
-  minDays: 1,
-  secondDriver: "",
-  deliveryPrice: "",
-  damageRules: [],
+  gps: false,
+  min_age: 21,
+  min_days: 1,
+  second_driver: "",
+  delivery_price: "",
+  damage_rules: [],
   status: "active",
   img: "",
   imgs: [],
   description: "",
-  reservations: 0,
-  revenue: 0,
+  agency_id: null,
 };
+
 const inputClasses =
   "w-full bg-white/[0.04] border border-white/10 text-cream py-2.5 px-3.5 rounded-[10px] font-sora text-[13px] outline-none box-border";
 const labelClasses =
@@ -69,6 +70,7 @@ function Field({ label, children }) {
     </div>
   );
 }
+
 function Inp({ k, form, set, type = "text", placeholder = "" }) {
   return (
     <input
@@ -76,12 +78,13 @@ function Inp({ k, form, set, type = "text", placeholder = "" }) {
       value={form[k] ?? ""}
       placeholder={placeholder}
       onChange={(e) =>
-        set(k, type === "number" ? Number(e.target.value) : e.target.value)
+        set(k, type === "number" ? Number(e.target.value) || 0 : e.target.value)
       }
       className={inputClasses}
     />
   );
 }
+
 function Sel({ k, form, set, options }) {
   return (
     <select
@@ -97,6 +100,7 @@ function Sel({ k, form, set, options }) {
     </select>
   );
 }
+
 function Check({ k, form, set, label }) {
   return (
     <label
@@ -122,7 +126,8 @@ function Check({ k, form, set, label }) {
 }
 
 export default function DashVoitures() {
-  const [cars, setCars] = useState(initialCars);
+  const [cars, setCars] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
   const [step, setStep] = useState(0);
   const [form, setForm] = useState(EMPTY);
@@ -131,64 +136,311 @@ export default function DashVoitures() {
   const [dmgIn, setDmgIn] = useState({ item: "", price: "" });
   const [filterStatus, setFilterStatus] = useState("all");
   const [search, setSearch] = useState("");
+  const [agencyId, setAgencyId] = useState(null);
+
+  // Charger l'agence ID au démarrage
+  // Dans DashVoitures.jsx - useEffect modifié
+
+  useEffect(() => {
+    const initAgency = async () => {
+      try {
+        setLoading(true);
+
+        // 1. Récupérer l'utilisateur connecté
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+
+        if (userError) throw userError;
+        if (!user) {
+          console.error("Aucun utilisateur connecté");
+          setLoading(false);
+          return;
+        }
+
+        console.log("Utilisateur connecté:", user.id, user.email);
+
+        // 2. D'ABORD chercher par auth_user_id (plus fiable)
+        let { data: agencyByUserId, error: errorByUserId } = await supabase
+          .from("agencies")
+          .select("*")
+          .eq("auth_user_id", user.id)
+          .maybeSingle();
+
+        if (errorByUserId && errorByUserId.code !== "PGRST116") {
+          throw errorByUserId;
+        }
+
+        // 3. Si trouvé par auth_user_id, on l'utilise
+        if (agencyByUserId) {
+          console.log("Agence trouvée par auth_user_id:", agencyByUserId);
+          setAgencyId(agencyByUserId.id);
+          loadCars(agencyByUserId.id);
+          setLoading(false);
+          return;
+        }
+
+        // 6. Si aucune agence trouvée, on en crée une nouvelle
+        console.log("Création d'une nouvelle agence pour", user.email);
+
+        const { data: newAgency, error: insertError } = await supabase
+          .from("agencies")
+          .insert([
+            {
+              auth_user_id: user.id,
+              name: user.email?.split("@")[0] || "Mon agence",
+              email: user.email,
+              city: "Casablanca",
+              phone: "",
+            },
+          ])
+          .select()
+          .single();
+
+        if (insertError) {
+          // Si erreur de duplicate, essayer une dernière fois de récupérer
+          if (insertError.code === "23505") {
+            console.log(
+              "Email déjà existant, récupération de l'agence existante",
+            );
+
+            const { data: existingAgency } = await supabase
+              .from("agencies")
+              .select("*")
+              .eq("email", user.email)
+              .single();
+
+            if (existingAgency) {
+              // Mettre à jour avec le bon auth_user_id
+              const { data: updated } = await supabase
+                .from("agencies")
+                .update({ auth_user_id: user.id })
+                .eq("id", existingAgency.id)
+                .select()
+                .single();
+
+              setAgencyId(updated?.id || existingAgency.id);
+              loadCars(updated?.id || existingAgency.id);
+            }
+          } else {
+            throw insertError;
+          }
+        } else {
+          setAgencyId(newAgency.id);
+          loadCars(newAgency.id);
+        }
+      } catch (err) {
+        console.error("Erreur lors de l'initialisation:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initAgency();
+  }, []);
+
+  // Charger les voitures depuis Supabase
+  const loadCars = async (agency_id) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("cars")
+        .select("*")
+        .eq("agency_id", agency_id)
+        .order("added_at", { ascending: false });
+
+      if (error) throw error;
+      setCars(data || []);
+    } catch (err) {
+      console.error("Erreur chargement voitures:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
   const openAdd = () => {
-    setForm({ ...EMPTY });
+    setForm({ ...EMPTY, agency_id: agencyId });
     setStep(0);
     setModal("add");
   };
+
   const openEdit = (car) => {
-    setForm({ ...EMPTY, ...car, imgs: car.imgs || [] });
+    setForm({
+      ...EMPTY,
+      ...car,
+      imgs: car.imgs || [],
+      damage_rules: car.damage_rules || [],
+    });
     setStep(0);
     setModal(car);
   };
+
   const closeModal = () => setModal(null);
 
-  const save = () => {
+  // Sauvegarder dans Supabase
+  const save = async () => {
     if (!form.name?.trim() || !form.price) return;
-    if (modal === "add") {
-      const nc = { ...form, id: `c${Date.now()}` };
-      setCars((prev) => [...prev, nc]);
-    } else {
-      setCars((prev) => prev.map((c) => (c.id === form.id ? { ...form } : c)));
-      if (sidebarCar?.id === form.id) setSidebarCar({ ...form });
+
+    // Liste des champs numériques
+    const numericFields = [
+      "price",
+      "price_week",
+      "price_month",
+      "deposit_amount",
+      "second_driver",
+      "delivery_price",
+      "min_age",
+      "min_days",
+      "year",
+    ];
+
+    const cleanForm = { ...form };
+    numericFields.forEach((field) => {
+      const value = cleanForm[field];
+      if (value === "" || value === null || value === undefined) {
+        cleanForm[field] = null; // null pour les champs optionnels
+      } else if (typeof value === "string") {
+        // Convertir en nombre, garder null si pas un nombre valide
+        const num = parseFloat(value);
+        cleanForm[field] = isNaN(num) ? null : num;
+      }
+    });
+
+    try {
+      if (modal === "add") {
+        const { data, error } = await supabase
+          .from("cars")
+          .insert([
+            {
+              agency_id: agencyId,
+              name: cleanForm.name,
+              brand: cleanForm.brand,
+              year: cleanForm.year,
+              category: cleanForm.category,
+              city: cleanForm.city,
+              price: cleanForm.price,
+              price_week: cleanForm.price_week,
+              price_month: cleanForm.price_month,
+              fuel: cleanForm.fuel,
+              transmission: cleanForm.transmission,
+              seats: cleanForm.seats,
+              deposit: cleanForm.deposit,
+              deposit_amount: cleanForm.deposit_amount,
+              img: cleanForm.img,
+              imgs: cleanForm.imgs,
+              description: cleanForm.description,
+              status: cleanForm.status,
+              mileage: cleanForm.mileage,
+              min_age: cleanForm.min_age,
+              min_days: cleanForm.min_days,
+              second_driver: cleanForm.second_driver,
+              delivery_price: cleanForm.delivery_price,
+              damage_rules: cleanForm.damage_rules,
+              babyseat: cleanForm.babyseat,
+              gps: cleanForm.gps,
+            },
+          ])
+          .select();
+
+        if (error) throw error;
+        if (data) setCars((prev) => [data[0], ...prev]);
+      } else {
+        const { error } = await supabase
+          .from("cars")
+          .update({
+            name: cleanForm.name,
+            brand: cleanForm.brand,
+            year: cleanForm.year,
+            category: cleanForm.category,
+            city: cleanForm.city,
+            price: cleanForm.price,
+            price_week: cleanForm.price_week,
+            price_month: cleanForm.price_month,
+            fuel: cleanForm.fuel,
+            transmission: cleanForm.transmission,
+            seats: cleanForm.seats,
+            deposit: cleanForm.deposit,
+            deposit_amount: cleanForm.deposit_amount,
+            img: cleanForm.img,
+            imgs: cleanForm.imgs,
+            description: cleanForm.description,
+            status: cleanForm.status,
+            mileage: cleanForm.mileage,
+            min_age: cleanForm.min_age,
+            min_days: cleanForm.min_days,
+            second_driver: cleanForm.second_driver,
+            delivery_price: cleanForm.delivery_price,
+            damage_rules: cleanForm.damage_rules,
+            babyseat: cleanForm.babyseat,
+            gps: cleanForm.gps,
+          })
+          .eq("id", cleanForm.id);
+
+        if (error) throw error;
+
+        setCars((prev) =>
+          prev.map((c) => (c.id === cleanForm.id ? { ...cleanForm } : c)),
+        );
+        if (sidebarCar?.id === cleanForm.id) setSidebarCar({ ...cleanForm });
+      }
+      closeModal();
+    } catch (err) {
+      console.error("Erreur sauvegarde:", err);
+      alert("Erreur lors de la sauvegarde");
     }
-    closeModal();
   };
 
-  const cycleStatus = (id, e) => {
+  const cycleStatus = async (id, e) => {
     e?.stopPropagation();
     const order = ["active", "unavailable", "maintenance"];
-    setCars((prev) =>
-      prev.map((c) => {
-        if (c.id !== id) return c;
-        const next =
-          order[(order.indexOf(c.status || "active") + 1) % order.length];
-        return { ...c, status: next };
-      }),
-    );
-    if (sidebarCar?.id === id) {
-      const order2 = ["active", "unavailable", "maintenance"];
-      setSidebarCar((s) => ({
-        ...s,
-        status:
-          order2[(order2.indexOf(s.status || "active") + 1) % order2.length],
-      }));
+
+    const car = cars.find((c) => c.id === id);
+    const currentStatus = car.status || "active";
+    const nextStatus = order[(order.indexOf(currentStatus) + 1) % order.length];
+
+    try {
+      const { error } = await supabase
+        .from("cars")
+        .update({ status: nextStatus })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      setCars((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, status: nextStatus } : c)),
+      );
+
+      if (sidebarCar?.id === id) {
+        setSidebarCar((s) => ({ ...s, status: nextStatus }));
+      }
+    } catch (err) {
+      console.error("Erreur mise à jour statut:", err);
     }
   };
 
-  const confirmDelete = () => {
-    setCars((prev) => prev.filter((c) => c.id !== deleteId));
-    if (sidebarCar?.id === deleteId) setSidebarCar(null);
-    setDeleteId(null);
+  const confirmDelete = async () => {
+    try {
+      const { error } = await supabase.from("cars").delete().eq("id", deleteId);
+
+      if (error) throw error;
+
+      setCars((prev) => prev.filter((c) => c.id !== deleteId));
+      if (sidebarCar?.id === deleteId) setSidebarCar(null);
+    } catch (err) {
+      console.error("Erreur suppression:", err);
+      alert("Erreur lors de la suppression");
+    } finally {
+      setDeleteId(null);
+    }
   };
 
   const addDmg = () => {
     if (!dmgIn.item || !dmgIn.price) return;
-    set("damageRules", [
-      ...(form.damageRules || []),
+    set("damage_rules", [
+      ...(form.damage_rules || []),
       { item: dmgIn.item, price: Number(dmgIn.price) },
     ]);
     setDmgIn({ item: "", price: "" });
@@ -205,17 +457,53 @@ export default function DashVoitures() {
     return true;
   };
 
+  // Charger les stats mensuelles (réservations/revenus)
+  useEffect(() => {
+    const loadStats = async () => {
+      if (!cars.length) return;
+
+      for (let car of cars) {
+        const { data } = await supabase
+          .from("reservations")
+          .select("total")
+          .eq("car_id", car.id)
+          .eq("status", "completed");
+
+        if (data) {
+          const revenue = data.reduce((sum, r) => sum + r.total, 0);
+          setCars((prev) =>
+            prev.map((c) =>
+              c.id === car.id
+                ? { ...c, reservations: data.length, revenue }
+                : c,
+            ),
+          );
+        }
+      }
+    };
+
+    loadStats();
+  }, [cars.length]);
+
   const displayed = cars.filter((c) => {
     const matchS =
       filterStatus === "all" || (c.status || "active") === filterStatus;
     const q = search.toLowerCase();
     const matchQ =
       !search ||
-      c.name.toLowerCase().includes(q) ||
-      c.brand.toLowerCase().includes(q) ||
-      c.city.toLowerCase().includes(q);
+      c.name?.toLowerCase().includes(q) ||
+      c.brand?.toLowerCase().includes(q) ||
+      c.city?.toLowerCase().includes(q);
     return matchS && matchQ;
   });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-10 h-10 border-4 border-gold/30 border-t-gold rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex gap-6 items-start">
@@ -380,7 +668,7 @@ export default function DashVoitures() {
         </div>
       </div>
 
-      {/* Sidebar */}
+      {/* Sidebar - reste identique mais avec les champs Supabase */}
       {sidebarCar &&
         (() => {
           const st = STATUS[sidebarCar.status || "active"];
@@ -389,6 +677,7 @@ export default function DashVoitures() {
               className="w-[310px] shrink-0 sticky top-20 bg-dark rounded-[20px] overflow-hidden max-h-[calc(100vh-104px)] overflow-y-auto"
               style={{ border: `1px solid ${st.color}33` }}
             >
+              {/* ... (contenu sidebar identique à votre code) ... */}
               <div className="relative">
                 <img
                   src={
@@ -442,7 +731,9 @@ export default function DashVoitures() {
                     [
                       "📆",
                       "/ sem",
-                      sidebarCar.priceWeek ? `${sidebarCar.priceWeek} DH` : "—",
+                      sidebarCar.price_week
+                        ? `${sidebarCar.price_week} DH`
+                        : "—",
                     ],
                   ].map(([ic, lb, val]) => (
                     <div
@@ -471,11 +762,11 @@ export default function DashVoitures() {
                       `👤 ${sidebarCar.seats} places`,
                       `📍 ${sidebarCar.city}`,
                       `🛣️ ${sidebarCar.mileage || "Illimité"}`,
-                      `🎂 ${sidebarCar.minAge || 21} ans min`,
+                      `🎂 ${sidebarCar.min_age || 21} ans min`,
                       sidebarCar.babyseat ? "🪑 Siège bébé" : null,
-                      sidebarCar.GPS ? "🗺️ GPS" : null,
+                      sidebarCar.gps ? "🗺️ gps" : null,
                       sidebarCar.deposit
-                        ? `🔐 Caution ${sidebarCar.depositAmount || 0} MAD`
+                        ? `🔐 Caution ${sidebarCar.deposit_amount || 0} MAD`
                         : "✅ Sans caution",
                     ]
                       .filter(Boolean)
@@ -496,12 +787,12 @@ export default function DashVoitures() {
                   </div>
                 )}
                 {/* Damages */}
-                {sidebarCar.damageRules?.length > 0 && (
+                {sidebarCar.damage_rules?.length > 0 && (
                   <div className="mb-3.5">
                     <div className="text-[10px] font-bold text-cream/30 tracking-widest uppercase mb-1.5">
                       Tarifs dommages
                     </div>
-                    {sidebarCar.damageRules.map((r, i) => (
+                    {sidebarCar.damage_rules.map((r, i) => (
                       <div
                         key={i}
                         className="flex justify-between text-xs py-1 border-b border-white/[0.05]"
@@ -552,15 +843,12 @@ export default function DashVoitures() {
           );
         })()}
 
-      {/* Modal Add/Edit */}
+      {/* Modal Add/Edit - adapter les noms de champs pour Supabase */}
       {modal !== null && (
         <div className="fixed inset-0 z-[600] flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/90"
-            onClick={closeModal}
-          />
+          <div className="absolute inset-0 bg-black/90" onClick={closeModal} />
           <div className="relative bg-dark border border-white/10 rounded-3xl w-full max-w-[700px] max-h-[93vh] overflow-y-auto flex flex-col">
-            {/* Header + stepper */}
+            {/* Header + stepper (identique) */}
             <div className="py-6 px-7 pb-5 border-b border-white/[0.07] sticky top-0 bg-dark z-10">
               <div className="flex justify-between items-center mb-5">
                 <div>
@@ -627,7 +915,7 @@ export default function DashVoitures() {
               </div>
             </div>
 
-            {/* Step body */}
+            {/* Step body - adapter les noms de champs */}
             <div className="py-6 px-7 flex-1 min-h-[320px]">
               {step === 0 && (
                 <div className="flex flex-col gap-[18px]">
@@ -638,13 +926,27 @@ export default function DashVoitures() {
                           src={form.img}
                           alt=""
                           className="w-full h-full object-cover"
-                          onError={(e) => (e.target.style.display = "none")}
+                          onError={(e) => {
+                            e.target.style.display = "none";
+                            e.target.parentNode.querySelector(
+                              ".error-message",
+                            ).style.display = "flex";
+                          }}
+                          onLoad={(e) => {
+                            e.target.style.display = "block";
+                            e.target.parentNode.querySelector(
+                              ".error-message",
+                            ).style.display = "none";
+                          }}
                         />
                       ) : (
                         <div className="flex items-center justify-center h-full text-cream/20 text-[32px]">
                           🚗
                         </div>
                       )}
+                      <div className="error-message hidden absolute inset-0 items-center justify-center bg-red-500/10 text-red-500 text-xs">
+                        ⚠️ Image invalide
+                      </div>
                       <div className="absolute bottom-1 left-0 right-0 text-center text-[9px] text-cream/30">
                         Aperçu
                       </div>
@@ -693,11 +995,7 @@ export default function DashVoitures() {
                         className={inputClasses}
                       >
                         {Object.entries(STATUS).map(([k, v]) => (
-                          <option
-                            key={k}
-                            value={k}
-                            className="bg-dark"
-                          >
+                          <option key={k} value={k} className="bg-dark">
                             {v.label}
                           </option>
                         ))}
@@ -729,7 +1027,7 @@ export default function DashVoitures() {
                     </Field>
                     <Field label="Prix / semaine (DH)">
                       <Inp
-                        k="priceWeek"
+                        k="price_week"
                         form={form}
                         set={set}
                         type="number"
@@ -738,7 +1036,7 @@ export default function DashVoitures() {
                     </Field>
                     <Field label="Prix / mois (DH)">
                       <Inp
-                        k="priceMonth"
+                        k="price_month"
                         form={form}
                         set={set}
                         type="number"
@@ -746,11 +1044,11 @@ export default function DashVoitures() {
                       />
                     </Field>
                     <Field label="Durée min (jours)">
-                      <Inp k="minDays" form={form} set={set} type="number" />
+                      <Inp k="min_days" form={form} set={set} type="number" />
                     </Field>
                     <Field label="2ème conducteur (DH)">
                       <Inp
-                        k="secondDriver"
+                        k="second_driver"
                         form={form}
                         set={set}
                         type="number"
@@ -759,7 +1057,7 @@ export default function DashVoitures() {
                     </Field>
                     <Field label="Livraison autre ville (MAD)">
                       <Inp
-                        k="deliveryPrice"
+                        k="delivery_price"
                         form={form}
                         set={set}
                         type="number"
@@ -778,7 +1076,7 @@ export default function DashVoitures() {
                       <div className="mt-3">
                         <Field label="Montant caution (MAD)">
                           <Inp
-                            k="depositAmount"
+                            k="deposit_amount"
                             form={form}
                             set={set}
                             type="number"
@@ -789,14 +1087,16 @@ export default function DashVoitures() {
                     )}
                   </div>
                   <div>
-                    <label className={labelClasses}>Grille tarifaire dommages (MAD)</label>
-                    {(form.damageRules || []).length === 0 && (
+                    <label className={labelClasses}>
+                      Grille tarifaire dommages (MAD)
+                    </label>
+                    {(form.damage_rules || []).length === 0 && (
                       <p className="text-xs text-cream/30 mb-2.5 -mt-1">
                         Aucun tarif défini.
                       </p>
                     )}
                     <div className="flex flex-col gap-1.5 mb-2.5">
-                      {(form.damageRules || []).map((r, i) => (
+                      {(form.damage_rules || []).map((r, i) => (
                         <div
                           key={i}
                           className="flex justify-between items-center bg-white/[0.03] border border-white/[0.07] rounded-lg py-2 px-3"
@@ -809,8 +1109,8 @@ export default function DashVoitures() {
                             <button
                               onClick={() =>
                                 set(
-                                  "damageRules",
-                                  form.damageRules.filter((_, j) => j !== i),
+                                  "damage_rules",
+                                  form.damage_rules.filter((_, j) => j !== i),
                                 )
                               }
                               className="bg-transparent border-none text-red-500 cursor-pointer text-[15px] leading-none"
@@ -868,7 +1168,7 @@ export default function DashVoitures() {
                       <Inp k="seats" form={form} set={set} type="number" />
                     </Field>
                     <Field label="Âge minimum (ans)">
-                      <Inp k="minAge" form={form} set={set} type="number" />
+                      <Inp k="min_age" form={form} set={set} type="number" />
                     </Field>
                     <Field label="Kilométrage inclus">
                       <Inp
@@ -880,7 +1180,9 @@ export default function DashVoitures() {
                     </Field>
                   </div>
                   <div>
-                    <label className={labelClasses}>Options &amp; équipements</label>
+                    <label className={labelClasses}>
+                      Options &amp; équipements
+                    </label>
                     <div className="grid grid-cols-2 gap-2">
                       <Check
                         k="babyseat"
@@ -889,7 +1191,7 @@ export default function DashVoitures() {
                         label="🪑 Siège bébé disponible"
                       />
                       <Check
-                        k="GPS"
+                        k="gps"
                         form={form}
                         set={set}
                         label="🗺️ GPS inclus"
@@ -902,7 +1204,9 @@ export default function DashVoitures() {
               {step === 3 && (
                 <div className="flex flex-col gap-[18px]">
                   <div>
-                    <label className={labelClasses}>Photo principale (aperçu)</label>
+                    <label className={labelClasses}>
+                      Photo principale (aperçu)
+                    </label>
                     {form.img ? (
                       <img
                         src={form.img}

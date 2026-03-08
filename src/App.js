@@ -6,7 +6,8 @@ import HomePage from "./pages/HomePage";
 import ResultsPage from "./pages/ResultsPage";
 import CarDetailPage from "./pages/CarDetailPage";
 import InfoPage from "./pages/InfoPage";
-import AgencyLogin from "./pages/AgencyLogin";
+import AgencyLogin from "./pages/dashboard/AgencyLogin";
+import ClientSignup from "./pages/ClientSignup";
 import DashboardLayout from "./components/Dashboardlayout ";
 import DashboardOverview from "./pages/dashboard/DashOverview";
 import DashboardVoitures from "./pages/dashboard/DashVoitures";
@@ -14,6 +15,7 @@ import DashboardReservations from "./pages/dashboard/DashReservations";
 import DashboardPaiements from "./pages/dashboard/DashPaiements";
 import DashboardBlacklist from "./pages/dashboard/DashBlacklist";
 import DashboardProfil from "./pages/dashboard/DashProfil";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
   return (
@@ -25,7 +27,15 @@ export default function App() {
           <Route path="/car/:id" element={<CarDetailPage />} />
           <Route path="/info/:slug" element={<InfoPage />} />
           <Route path="/agence" element={<AgencyLogin />} />
-          <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route path="/compte" element={<ClientSignup />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<DashboardOverview />} />
             <Route path="voitures" element={<DashboardVoitures />} />
             <Route path="reservations" element={<DashboardReservations />} />

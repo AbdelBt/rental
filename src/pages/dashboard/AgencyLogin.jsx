@@ -1,36 +1,44 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Logo from "../components/Logo";
+import { supabase } from "../../lib/supabaseClient";
 
 export default function AgencyLogin() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
+
     setLoading(true);
-    setTimeout(() => {
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      // Message d'erreur personnalisé
+      if (error.message.includes("Invalid login credentials")) {
+        setErrorMsg("Email ou mot de passe incorrect");
+      } else if (error.message.includes("Email not confirmed")) {
+        setErrorMsg("Veuillez confirmer votre email avant de vous connecter");
+      } else {
+        setErrorMsg("Erreur de connexion. Veuillez réessayer.");
+      }
+
       setLoading(false);
-      navigate("/dashboard");
-    }, 800);
+      return;
+    }
+
+    navigate("/dashboard");
   };
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,#1c1a28_0%,#050509_55%,#020106_100%)] text-cream flex flex-col">
-      {/* Top bar */}
-      <header className="px-5 md:px-10 py-4 flex items-center justify-between">
-        <Logo size={30} />
-        <Link
-          to="/"
-          className="text-cream/45 text-xs md:text-sm no-underline hover:text-gold transition-colors"
-        >
-          ← Retour au site public
-        </Link>
-      </header>
-
       <main className="flex-1 flex items-center justify-center px-5 md:px-10 pb-10">
         <div className="w-full max-w-[1040px] grid gap-10 md:gap-14 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] items-center">
           {/* Left: pitch */}
@@ -67,9 +75,17 @@ export default function AgencyLogin() {
                   Accédez à votre espace
                 </h2>
                 <p className="text-cream/50 text-[13px]">
-                  Identifiez-vous avec l'email utilisé lors de l'onboarding Drivo.
+                  Identifiez-vous avec l'email utilisé lors de l'onboarding
+                  Drivo.
                 </p>
               </div>
+
+              {/* Message d'erreur - AJOUTÉ */}
+              {errorMsg && (
+                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm">
+                  ⚠️ {errorMsg}
+                </div>
+              )}
 
               <form className="space-y-4" onSubmit={handleSubmit}>
                 <div>
@@ -126,7 +142,14 @@ export default function AgencyLogin() {
                   disabled={loading}
                   className="btn-primary w-full py-3 mt-2 text-[13px] flex items-center justify-center gap-2 disabled:opacity-60"
                 >
-                  {loading ? "Connexion en cours..." : "Se connecter à mon espace"}
+                  {loading ? (
+                    <>
+                      <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Connexion en cours...
+                    </>
+                  ) : (
+                    "Se connecter à mon espace"
+                  )}
                 </button>
               </form>
 
@@ -141,4 +164,3 @@ export default function AgencyLogin() {
     </div>
   );
 }
-
