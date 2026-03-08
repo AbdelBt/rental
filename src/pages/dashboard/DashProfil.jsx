@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { agency as initialAgency } from "../../data/dashboardData";
+import { useState, useEffect } from "react";
+import { supabase } from "../../lib/supabaseClient";
 
 const CITIES_OPTIONS = [
   "Casablanca",
@@ -11,28 +11,149 @@ const CITIES_OPTIONS = [
 ];
 
 export default function DashProfil() {
-  const [agency, setAgency] = useState(initialAgency);
+  const [agency, setAgency] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState(initialAgency);
+  const [form, setForm] = useState(null);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState(null);
 
-  const save = () => {
-    setAgency(form);
-    setEditing(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  useEffect(() => {
+    const loadAgency = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+        if (userError) throw userError;
+        if (!user) throw new Error("Non authentifié");
+
+        const { data: agencyData, error: agencyError } = await supabase
+          .from("agencies")
+          .select("*")
+          .eq("auth_user_id", user.id)
+          .maybeSingle();
+
+        if (agencyError) throw agencyError;
+
+        if (!agencyData) {
+          // Création automatique si l'agence n'existe pas
+          const { data: newAgency, error: insertError } = await supabase
+            .from("agencies")
+            .insert([
+              {
+                auth_user_id: user.id,
+                name: user.email?.split("@")[0] || "Mon agence",
+                email: user.email,
+                city: "Casablanca",
+                phone: "",
+                whatsapp: "",
+                address: "",
+                cities: ["Casablanca"],
+                iban: "",
+                commission: 10,
+                rating: 0,
+                total_reviews: 0,
+                verified: false,
+                member_since: new Date().toISOString().split("T")[0],
+              },
+            ])
+            .select()
+            .single();
+
+          if (insertError) throw insertError;
+          setAgency(newAgency);
+          setForm(newAgency);
+        } else {
+          setAgency(agencyData);
+          setForm(agencyData);
+        }
+      } catch (err) {
+        console.error("Erreur chargement profil:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAgency();
+  }, []);
+
+  const save = async () => {
+    try {
+      if (form.iban && !/^[A-Z]{2}[0-9A-Z]{10,30}$/.test(form.iban)) {
+        setError(
+          "Format IBAN invalide (exemple: MA64011519000000105000553171)",
+        );
+        return;
+      }
+
+      setError(null);
+      const { error: updateError } = await supabase
+        .from("agencies")
+        .update({
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          whatsapp: form.whatsapp,
+          address: form.address,
+          cities: form.cities,
+          iban: form.iban,
+        })
+        .eq("id", agency.id);
+
+      if (updateError) throw updateError;
+
+      setAgency(form);
+      setEditing(false);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      console.error("Erreur sauvegarde:", err);
+      setError("Erreur lors de la sauvegarde");
+    }
   };
+
   const cancel = () => {
     setForm(agency);
     setEditing(false);
   };
-  const toggleCity = (city) =>
+
+  const toggleCity = (city) => {
     setForm((f) => ({
       ...f,
       cities: f.cities.includes(city)
         ? f.cities.filter((c) => c !== city)
         : [...f.cities, city],
     }));
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-10 h-10 border-4 border-gold/30 border-t-gold rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-500/10 border border-red-500/30 rounded-[10px] py-4 px-5 text-red-500 text-sm">
+        ⚠️ {error}
+      </div>
+    );
+  }
+
+  if (!agency) {
+    return (
+      <div className="bg-orange-500/10 border border-orange-500/30 rounded-[10px] py-4 px-5 text-orange-500 text-sm">
+        Aucune agence trouvée.
+      </div>
+    );
+  }
 
   const A = editing ? form : agency;
 
@@ -88,7 +209,7 @@ export default function DashProfil() {
       {/* Agency hero card */}
       <div className="bg-gradient-to-br from-dark to-[#1a1a26] border border-white/[0.07] rounded-[20px] p-7 flex gap-6 items-center flex-wrap">
         <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-gold to-[#8a6520] flex items-center justify-center text-[28px] font-extrabold text-[#0a0a0f] shrink-0">
-          {A.name.charAt(0)}
+          {A.name?.charAt(0) || "A"}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2.5 flex-wrap">
@@ -100,11 +221,15 @@ export default function DashProfil() {
             )}
           </div>
           <div className="text-[13px] text-cream/50 mt-1">
-            Membre depuis {A.memberSince} · Commission {A.commission}%
+            Membre depuis {A.member_since} | {A.cities?.join(", ")}
           </div>
           <div className="flex gap-4 mt-2.5 flex-wrap">
-            <span className="text-[13px] text-gold font-bold">★ {A.rating}/5</span>
-            <span className="text-[13px] text-cream/45">{A.totalReviews} avis</span>
+            <span className="text-[13px] text-gold font-bold">
+              ★ {A.rating}/5
+            </span>
+            <span className="text-[13px] text-cream/45">
+              {A.total_reviews} avis
+            </span>
           </div>
         </div>
       </div>
@@ -154,18 +279,18 @@ export default function DashProfil() {
                     key={city}
                     onClick={() => toggleCity(city)}
                     className={`py-2 px-3 rounded-lg font-sora text-[13px] font-semibold cursor-pointer transition-all ${
-                      form.cities.includes(city)
+                      form.cities?.includes(city)
                         ? "border border-gold bg-gold/10 text-gold"
                         : "border border-white/10 text-cream/50"
                     }`}
                   >
-                    {city} {form.cities.includes(city) ? "✓" : ""}
+                    {city} {form.cities?.includes(city) ? "✓" : ""}
                   </button>
                 ))}
               </div>
             ) : (
               <div className="flex gap-2 flex-wrap">
-                {A.cities.map((city) => (
+                {A.cities?.map((city) => (
                   <span
                     key={city}
                     className="text-[13px] font-semibold text-gold bg-gold/10 border border-gold/25 py-1.5 px-3.5 rounded-full"
@@ -184,16 +309,29 @@ export default function DashProfil() {
             </div>
             <label className={labelClasses}>IBAN</label>
             {editing ? (
-              <input
-                value={form.iban || ""}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, iban: e.target.value }))
-                }
-                className={`${inputClasses} font-mono tracking-wider`}
-              />
+              <div>
+                <input
+                  value={form.iban || ""}
+                  onChange={(e) => {
+                    // Ne garder que les caractères alphanumériques et les convertir en majuscules
+                    const value = e.target.value
+                      .toUpperCase()
+                      .replace(/[^A-Z0-9]/g, "");
+                    setForm((f) => ({ ...f, iban: value }));
+                  }}
+                  className={`${inputClasses} font-mono tracking-wider`}
+                  placeholder="MA64 0115 1900 0001 0500 0553 171"
+                  maxLength="34"
+                />
+                {form.iban && !/^[A-Z]{2}[0-9A-Z]{10,30}$/.test(form.iban) && (
+                  <p className="text-red-500 text-xs mt-1">
+                    Format IBAN invalide (doit commencer par 2 lettres)
+                  </p>
+                )}
+              </div>
             ) : (
               <div className="font-mono text-sm text-gold py-2.5 px-3.5 bg-gold/5 border border-gold/15 rounded-lg tracking-wide">
-                {A.iban}
+                {A.iban || "—"}
               </div>
             )}
             <div className="text-xs text-cream/35 mt-2">
