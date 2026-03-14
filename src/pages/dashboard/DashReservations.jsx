@@ -1,8 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  reservations as initialRes,
-  agencyCars,
-} from "../../data/dashboardData";
+import { supabase } from "../../lib/supabaseClient";
 
 const S_COLOR = {
   confirmed: "#22c55e",
@@ -57,13 +54,11 @@ function ConfirmCashModal({ reservation, onConfirm, onClose }) {
         <h3 className="text-lg md:text-xl mb-4 flex items-center gap-2">
           <span className="text-2xl">💶</span> Confirmer le paiement cash
         </h3>
-
         <p className="text-cream/70 mb-6 text-sm leading-relaxed">
           Avez-vous bien reçu{" "}
           <strong className="text-gold text-lg">{solde} DH</strong> en cash de{" "}
           <strong>{reservation.client}</strong> pour la {reservation.carName} ?
         </p>
-
         <div className="bg-gold/10 rounded-2xl p-5 mb-7 border border-gold/15">
           <div className="flex justify-between mb-3 text-sm">
             <span className="text-cream/60">Prix total :</span>
@@ -78,7 +73,6 @@ function ConfirmCashModal({ reservation, onConfirm, onClose }) {
             <span className="font-extrabold text-gold text-lg">{solde} DH</span>
           </div>
         </div>
-
         <div className="flex gap-3">
           <button
             onClick={onClose}
@@ -98,7 +92,7 @@ function ConfirmCashModal({ reservation, onConfirm, onClose }) {
   );
 }
 
-// Sidebar des détails AMÉLIORÉE
+// Sidebar des détails
 function ReservationSidebar({
   reservation,
   onClose,
@@ -106,10 +100,8 @@ function ReservationSidebar({
   onConfirmCash,
 }) {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const car = agencyCars.find((c) => c.name === reservation.carName);
   const solde = reservation.prixTotal - reservation.acompte;
 
-  // Calcul des dates
   const dateDebut = new Date(reservation.from);
   const dateFin = new Date(reservation.to);
   const duree = Math.ceil((dateFin - dateDebut) / (1000 * 60 * 60 * 24));
@@ -131,13 +123,13 @@ function ReservationSidebar({
         {/* Image du véhicule */}
         <div className="w-full h-[200px] rounded-2xl overflow-hidden mb-6 relative border border-gold/30">
           <img
-            src={car?.img}
-            alt={car?.name}
+            src={reservation.carImg}
+            alt={reservation.carName}
             className="w-full h-full object-cover"
           />
-          {car?.category && (
+          {reservation.carCategory && (
             <div className="absolute top-4 left-4 bg-gold/90 text-dark-bg py-1.5 px-3.5 rounded-[30px] text-xs font-bold">
-              {car.category}
+              {reservation.carCategory}
             </div>
           )}
         </div>
@@ -145,9 +137,7 @@ function ReservationSidebar({
         {/* Client info */}
         <div className="bg-gold/10 rounded-2xl p-6 mb-6 border border-gold/15">
           <div className="flex items-center gap-5">
-            <div
-              className="w-[70px] h-[70px] rounded-full bg-gradient-to-br from-gold to-[#8a6520] flex items-center justify-center text-[22px] font-extrabold text-dark-bg shrink-0"
-            >
+            <div className="w-[70px] h-[70px] rounded-full bg-gradient-to-br from-gold to-[#8a6520] flex items-center justify-center text-[22px] font-extrabold text-dark-bg shrink-0">
               {reservation.client
                 .split(" ")
                 .map((w) => w[0])
@@ -164,34 +154,38 @@ function ReservationSidebar({
           </div>
         </div>
 
-        {/* Infos véhicule détaillées */}
+        {/* Infos véhicule */}
         <div className="bg-dark rounded-2xl p-6 mb-6 border border-white/[0.07]">
           <div className="font-bold text-lg mb-4">🚗 Véhicule</div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="text-xs text-cream/40 mb-1">Marque</div>
-              <div className="font-semibold text-base">{car?.brand || "-"}</div>
+              <div className="font-semibold text-base">
+                {reservation.carBrand || "-"}
+              </div>
             </div>
             <div>
               <div className="text-xs text-cream/40 mb-1">Modèle</div>
               <div className="font-semibold text-base">
-                {car?.model || reservation.carName}
+                {reservation.carName}
               </div>
             </div>
             <div>
               <div className="text-xs text-cream/40 mb-1">Année</div>
-              <div className="font-semibold text-base">{car?.year || "-"}</div>
+              <div className="font-semibold text-base">
+                {reservation.carYear || "-"}
+              </div>
             </div>
             <div>
               <div className="text-xs text-cream/40 mb-1">Immatriculation</div>
               <div className="font-semibold text-base font-mono">
-                {car?.plate || "-"}
+                {reservation.carPlate || "-"}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Dates détaillées */}
+        {/* Dates */}
         <div className="bg-dark rounded-2xl p-6 mb-6 border border-white/[0.07]">
           <div className="font-bold text-lg mb-4">📅 Dates</div>
           <div className="flex flex-col gap-4">
@@ -237,7 +231,6 @@ function ReservationSidebar({
         <div className="bg-dark rounded-2xl p-6 mb-6 border border-white/[0.07]">
           <div className="font-bold text-lg mb-4">💳 Paiement</div>
 
-          {/* Barre de progression */}
           <div className="mb-6">
             <div className="flex justify-between text-[13px] mb-2">
               <span className="text-green-500">
@@ -270,11 +263,12 @@ function ReservationSidebar({
             </div>
           </div>
 
-          {/* Récapitulatif */}
           <div className="bg-black/30 rounded-2xl p-4 mb-5">
             <div className="flex justify-between mb-2">
               <span className="text-cream/60">Prix total</span>
-              <span className="font-bold text-lg">{reservation.prixTotal} DH</span>
+              <span className="font-bold text-lg">
+                {reservation.prixTotal} DH
+              </span>
             </div>
             <div className="flex justify-between mb-2">
               <span className="text-cream/60">Commission (10%)</span>
@@ -290,7 +284,6 @@ function ReservationSidebar({
             </div>
           </div>
 
-          {/* Bouton confirmation cash */}
           {!reservation.cashConfirme && reservation.status !== "cancelled" && (
             <button
               onClick={() => setShowConfirmModal(true)}
@@ -305,17 +298,18 @@ function ReservationSidebar({
               <span className="text-xl">✅</span>
               <span>
                 Paiement cash confirmé le{" "}
-                {new Date(reservation.dateConfirmation).toLocaleDateString(
+                {new Date(reservation.cashConfirmedAt).toLocaleDateString(
                   "fr-FR",
                 )}
               </span>
             </div>
           )}
 
-          {/* Note client */}
           {reservation.note && (
             <div className="bg-gold/5 rounded-2xl p-4 border-l-4 border-gold">
-              <div className="text-xs text-cream/40 mb-1.5">💬 Note du client</div>
+              <div className="text-xs text-cream/40 mb-1.5">
+                💬 Note du client
+              </div>
               <div className="text-sm italic">"{reservation.note}"</div>
             </div>
           )}
@@ -343,7 +337,6 @@ function ReservationSidebar({
         </div>
       </div>
 
-      {/* Modal de confirmation cash */}
       {showConfirmModal && (
         <ConfirmCashModal
           reservation={reservation}
@@ -359,24 +352,34 @@ function ReservationSidebar({
 }
 
 export default function DashReservations() {
-  const [reservations, setReservations] = useState(
-    initialRes.map((r) => ({
-      ...r,
-      prixTotal: r.total,
-      acompte: Math.round(r.total * 0.4),
-      cashConfirme: r.cashConfirme || false,
-      dateConfirmation: r.dateConfirmation || null,
-      phone: r.phone || "06 XX XX XX XX",
-    })),
-  );
+  const [reservations, setReservations] = useState([]);
+  const [cars, setCars] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [agencyId, setAgencyId] = useState(null);
   const [view, setView] = useState("list");
   const [filter, setFilter] = useState("all");
   const [selected, setSelected] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [calYear, setCalYear] = useState(2025);
-  const [calMonth, setCalMonth] = useState(3);
+  const [calYear, setCalYear] = useState(new Date().getFullYear());
+  const [calMonth, setCalMonth] = useState(new Date().getMonth());
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [selectedCar, setSelectedCar] = useState("all");
+  // États pour l'ajout de réservation
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newReservation, setNewReservation] = useState({
+    car_id: "",
+    client_name: "",
+    client_email: "",
+    client_phone: "",
+    date_from: "",
+    date_to: "",
+    days: 1,
+    total: 0,
+    deposit: 0,
+    city: "",
+    note: "",
+    status: "pending",
+  });
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -384,36 +387,234 @@ export default function DashReservations() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const filtered = reservations.filter(
-    (r) => filter === "all" || r.status === filter,
-  );
+  // Charger l'agence et les données
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return;
 
-  const updateStatus = (id, status) => {
-    setReservations((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status } : r)),
-    );
-    if (selected?.id === id) setSelected((prev) => ({ ...prev, status }));
+        // Récupérer l'agence
+        const { data: agency } = await supabase
+          .from("agencies")
+          .select("id")
+          .eq("auth_user_id", user.id)
+          .maybeSingle();
+
+        if (!agency) return;
+        setAgencyId(agency.id);
+
+        // Récupérer les voitures de l'agence (sans plate pour éviter erreur si colonne absente)
+        const { data: carsData } = await supabase
+          .from("cars")
+          .select("id, name, brand, year, category, img, price") // price ajouté pour le calcul
+          .eq("agency_id", agency.id);
+        setCars(carsData || []);
+
+        // Récupérer les réservations
+        const { data: resData } = await supabase
+          .from("reservations")
+          .select("*")
+          .eq("agency_id", agency.id)
+          .order("created_at", { ascending: false });
+
+        if (resData) {
+          // Enrichir avec les infos des voitures
+          const enriched = resData.map((r) => {
+            const car = carsData?.find((c) => c.id === r.car_id) || {};
+            return {
+              ...r,
+              client: r.client_name,
+              carName: car.name || "Inconnue",
+              carBrand: car.brand,
+              carYear: car.year,
+              carCategory: car.category,
+              carImg: car.img,
+              from: r.date_from,
+              to: r.date_to,
+              total: r.total,
+              days: r.days,
+              city: r.city,
+              phone: r.client_phone,
+              note: r.note,
+              prixTotal: r.total,
+              acompte: r.deposit || Math.round(r.total * 0.4),
+              cashConfirme: r.cash_confirmed || false,
+              cashConfirmedAt: r.cash_confirmed_at,
+            };
+          });
+          setReservations(enriched);
+        }
+      } catch (err) {
+        console.error("Erreur chargement réservations:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Fonction pour calculer jours et total lors de l'ajout
+  const calculateDaysAndTotal = (from, to, carId) => {
+    if (!from || !to || !carId) return;
+    const start = new Date(from);
+    const end = new Date(to);
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    const car = cars.find((c) => c.id === parseInt(carId));
+    if (car) {
+      setNewReservation((prev) => ({
+        ...prev,
+        days: diffDays,
+        total: diffDays * car.price,
+      }));
+    } else {
+      setNewReservation((prev) => ({ ...prev, days: diffDays }));
+    }
   };
 
-  const confirmCash = (id) => {
-    setReservations((prev) =>
-      prev.map((r) => {
-        if (r.id === id) {
-          return {
-            ...r,
-            cashConfirme: true,
-            dateConfirmation: new Date().toISOString(),
-          };
-        }
-        return r;
-      }),
-    );
-    if (selected?.id === id) {
-      setSelected((prev) => ({
-        ...prev,
-        cashConfirme: true,
-        dateConfirmation: new Date().toISOString(),
-      }));
+  // Ajout d'une réservation
+  const handleAddReservation = async () => {
+    try {
+      if (
+        !newReservation.car_id ||
+        !newReservation.client_name ||
+        !newReservation.date_from ||
+        !newReservation.date_to
+      ) {
+        alert("Veuillez remplir tous les champs obligatoires");
+        return;
+      }
+
+      const { error } = await supabase.from("reservations").insert([
+        {
+          agency_id: agencyId,
+          car_id: newReservation.car_id,
+          client_name: newReservation.client_name,
+          client_email: newReservation.client_email,
+          client_phone: newReservation.client_phone,
+          date_from: newReservation.date_from,
+          date_to: newReservation.date_to,
+          days: newReservation.days,
+          total: newReservation.total,
+          deposit: newReservation.deposit,
+          city: newReservation.city,
+          note: newReservation.note,
+          status: newReservation.status,
+          cash_confirmed: false,
+        },
+      ]);
+
+      if (error) throw error;
+
+      // Recharger les réservations
+      const { data: newRes } = await supabase
+        .from("reservations")
+        .select("*")
+        .eq("agency_id", agencyId)
+        .order("created_at", { ascending: false });
+
+      // Enrichir avec les infos des voitures
+      const enriched = newRes.map((r) => {
+        const car = cars.find((c) => c.id === r.car_id) || {};
+        return {
+          ...r,
+          client: r.client_name,
+          carName: car.name || "Inconnue",
+          carBrand: car.brand,
+          carYear: car.year,
+          carCategory: car.category,
+          carImg: car.img,
+          from: r.date_from,
+          to: r.date_to,
+          total: r.total,
+          days: r.days,
+          city: r.city,
+          phone: r.client_phone,
+          note: r.note,
+          prixTotal: r.total,
+          acompte: r.deposit || Math.round(r.total * 0.4),
+          cashConfirme: r.cash_confirmed || false,
+          cashConfirmedAt: r.cash_confirmed_at,
+        };
+      });
+      setReservations(enriched);
+      setShowAddModal(false);
+      // Réinitialiser le formulaire
+      setNewReservation({
+        car_id: "",
+        client_name: "",
+        client_email: "",
+        client_phone: "",
+        date_from: "",
+        date_to: "",
+        days: 1,
+        total: 0,
+        deposit: 0,
+        city: "",
+        note: "",
+        status: "pending",
+      });
+    } catch (err) {
+      console.error("Erreur ajout réservation:", err);
+      alert("Erreur lors de l'ajout");
+    }
+  };
+
+  const updateStatus = async (id, status) => {
+    try {
+      const { error } = await supabase
+        .from("reservations")
+        .update({ status })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      setReservations((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, status } : r)),
+      );
+      if (selected?.id === id) setSelected((prev) => ({ ...prev, status }));
+    } catch (err) {
+      console.error("Erreur mise à jour statut:", err);
+    }
+  };
+
+  const confirmCash = async (id) => {
+    try {
+      const { error } = await supabase
+        .from("reservations")
+        .update({
+          cash_confirmed: true,
+          cash_confirmed_at: new Date().toISOString(),
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      setReservations((prev) =>
+        prev.map((r) =>
+          r.id === id
+            ? {
+                ...r,
+                cashConfirme: true,
+                cashConfirmedAt: new Date().toISOString(),
+              }
+            : r,
+        ),
+      );
+      if (selected?.id === id) {
+        setSelected((prev) => ({
+          ...prev,
+          cashConfirme: true,
+          cashConfirmedAt: new Date().toISOString(),
+        }));
+      }
+    } catch (err) {
+      console.error("Erreur confirmation cash:", err);
     }
   };
 
@@ -427,7 +628,12 @@ export default function DashReservations() {
     setTimeout(() => setSelected(null), 300);
   };
 
-  // Calendar logic
+  // Filtrage
+  const filtered = reservations.filter(
+    (r) => filter === "all" || r.status === filter,
+  );
+
+  // Calendrier
   const firstDay = new Date(calYear, calMonth, 1);
   const lastDay = new Date(calYear, calMonth + 1, 0);
   const startDow = (firstDay.getDay() + 6) % 7;
@@ -442,8 +648,16 @@ export default function DashReservations() {
 
   const resOnDay = (day) => {
     const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    return reservations.filter((r) => r.from <= dateStr && r.to >= dateStr);
+    return filtered.filter((r) => r.from <= dateStr && r.to >= dateStr);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-10 h-10 border-4 border-gold/30 border-t-gold rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-5 md:gap-7 max-w-[1400px] mx-auto p-4 md:p-6 min-h-screen relative">
@@ -459,34 +673,48 @@ export default function DashReservations() {
           </p>
         </div>
 
-        {/* View toggle */}
-        <div
-          className={`flex bg-white/[0.04] rounded-[40px] p-1 border border-white/[0.07] ${
-            isMobile ? "w-full" : "w-auto"
-          }`}
-        >
-          {[
-            ["list", "☰ Liste"],
-            ["calendar", "📅 Calendrier"],
-          ].map(([v, l]) => (
-            <button
-              key={v}
-              onClick={() => setView(v)}
-              className={`flex-1 md:flex-none py-2 md:py-2 px-5 rounded-[30px] border-none font-bold text-sm md:text-[13px] cursor-pointer transition-all duration-200 whitespace-nowrap ${
-                view === v
-                  ? "bg-gold text-dark-bg"
-                  : "bg-transparent text-cream/55"
-              }`}
-            >
-              {l}
-            </button>
-          ))}
+        <div className="flex gap-2">
+          {/* Bouton Nouvelle réservation */}
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="bg-gold text-dark-bg py-2 px-4 rounded-lg font-bold text-sm flex items-center gap-2"
+          >
+            ➕ Nouvelle réservation
+          </button>
+
+          {/* View toggle */}
+          <div
+            className={`flex bg-white/[0.04] rounded-[40px] p-1 border border-white/[0.07] ${isMobile ? "w-full" : "w-auto"}`}
+          >
+            {[
+              ["list", "☰ Liste"],
+              ["calendar", "📅 Calendrier"],
+            ].map(([v, l]) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={`flex-1 md:flex-none py-2 md:py-2 px-5 rounded-[30px] border-none font-bold text-sm md:text-[13px] cursor-pointer transition-all duration-200 whitespace-nowrap ${
+                  view === v
+                    ? "bg-gold text-dark-bg"
+                    : "bg-transparent text-cream/55"
+                }`}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
+
       {/* Status pills */}
       <div className="flex gap-2.5 flex-wrap pb-1">
         {[
-          { val: "all", label: "Toutes", count: reservations.length, color: null },
+          {
+            val: "all",
+            label: "Toutes",
+            count: reservations.length,
+            color: null,
+          },
           {
             val: "confirmed",
             label: "Confirmée",
@@ -522,7 +750,9 @@ export default function DashReservations() {
               }`}
               style={{
                 border: `1px solid ${isActive ? color || "#d4a853" : "rgba(255,255,255,0.1)"}`,
-                background: isActive ? `${color || "#d4a853"}15` : "transparent",
+                background: isActive
+                  ? `${color || "#d4a853"}15`
+                  : "transparent",
                 color: isActive ? color || "#d4a853" : "rgba(240,238,234,0.6)",
               }}
             >
@@ -530,7 +760,9 @@ export default function DashReservations() {
               <span
                 className="py-0.5 px-2 rounded-[20px] text-[11px] font-bold min-w-6 text-center"
                 style={{
-                  background: isActive ? color || "#d4a853" : "rgba(255,255,255,0.1)",
+                  background: isActive
+                    ? color || "#d4a853"
+                    : "rgba(255,255,255,0.1)",
                   color: isActive ? "#0a0a0f" : "rgba(240,238,234,0.6)",
                 }}
               >
@@ -540,6 +772,7 @@ export default function DashReservations() {
           );
         })}
       </div>
+
       {/* List view */}
       {view === "list" && (
         <div className="flex flex-col gap-3">
@@ -557,7 +790,9 @@ export default function DashReservations() {
                 <div className="flex gap-4 items-center flex-1">
                   <div
                     className={`rounded-2xl bg-gradient-to-br from-gold to-[#8a6520] flex items-center justify-center font-extrabold text-dark-bg shrink-0 ${
-                      isMobile ? "w-12 h-12 text-base" : "w-[52px] h-[52px] text-lg"
+                      isMobile
+                        ? "w-12 h-12 text-base"
+                        : "w-[52px] h-[52px] text-lg"
                     }`}
                   >
                     {r.client
@@ -566,7 +801,6 @@ export default function DashReservations() {
                       .join("")
                       .slice(0, 2)}
                   </div>
-
                   <div className="flex-1 min-w-0">
                     <div className="font-bold text-[15px] md:text-base mb-1.5">
                       {r.client}
@@ -584,21 +818,18 @@ export default function DashReservations() {
                     </div>
                   </div>
                 </div>
-
                 <div
-                  className={`flex items-center gap-5 flex-wrap ${
-                    isMobile ? "justify-between" : "justify-end ml-auto"
-                  }`}
+                  className={`flex items-center gap-5 flex-wrap ${isMobile ? "justify-between" : "justify-end ml-auto"}`}
                 >
                   <div
-                    className={`flex flex-col ${
-                      isMobile ? "items-start" : "items-end"
-                    }`}
+                    className={`flex flex-col ${isMobile ? "items-start" : "items-end"}`}
                   >
                     <div className="font-extrabold text-gold text-base md:text-lg">
                       {r.total} DH
                     </div>
-                    <div className="text-[11px] text-cream/40">{r.days} jours</div>
+                    <div className="text-[11px] text-cream/40">
+                      {r.days} jours
+                    </div>
                   </div>
                   <StatusBadge status={r.status} />
                 </div>
@@ -613,9 +844,9 @@ export default function DashReservations() {
         </div>
       )}
 
+      {/* Calendar view */}
       {view === "calendar" && (
         <div className="bg-dark border border-white/[0.07] rounded-3xl overflow-hidden p-6 md:p-7">
-          {/* Calendar header with month navigation */}
           <div className="flex justify-between items-center mb-7 flex-wrap gap-4">
             <div className="flex gap-3 items-center">
               <button
@@ -649,14 +880,14 @@ export default function DashReservations() {
               </button>
             </div>
 
-            {/* Car filter */}
+            {/* Filtre par voiture */}
             <select
               value={selectedCar}
               onChange={(e) => setSelectedCar(e.target.value)}
               className="bg-white/5 border border-white/10 rounded-xl py-3 px-5 text-cream text-sm cursor-pointer min-w-[200px]"
             >
               <option value="all">🚗 Tous les véhicules</option>
-              {agencyCars.map((car) => (
+              {cars.map((car) => (
                 <option key={car.id} value={car.id}>
                   {car.name}
                 </option>
@@ -664,7 +895,6 @@ export default function DashReservations() {
             </select>
           </div>
 
-          {/* Weekday headers */}
           <div className="grid grid-cols-7 mb-4">
             {DAYS.map((d) => (
               <div
@@ -676,87 +906,85 @@ export default function DashReservations() {
             ))}
           </div>
 
-          {/* Calendar grid */}
           <div className="grid grid-cols-7 gap-2.5 min-h-[800px]">
-              {cells.map((day, i) => {
-                const today = new Date();
-                const isToday =
-                  day === today.getDate() &&
-                  calMonth === today.getMonth() &&
-                  calYear === today.getFullYear();
-                const res = day ? resOnDay(day) : [];
-                const hasReservations = res.length > 0;
+            {cells.map((day, i) => {
+              const today = new Date();
+              const isToday =
+                day === today.getDate() &&
+                calMonth === today.getMonth() &&
+                calYear === today.getFullYear();
+              const res = day ? resOnDay(day) : [];
+              const hasReservations = res.length > 0;
 
-                return (
-                  <div
-                    key={i}
-                    className={`rounded-[18px] p-4 min-h-[160px] transition-all duration-200 flex flex-col ${
-                      day ? "cursor-pointer" : "cursor-default"
-                    }`}
-                    style={{
-                      background: day
-                        ? hasReservations
-                          ? "rgba(212,168,83,0.03)"
-                          : "transparent"
-                        : "rgba(0,0,0,0.2)",
-                      border: `1px solid ${hasReservations ? "rgba(212,168,83,0.2)" : "rgba(255,255,255,0.05)"}`,
-                    }}
-                  >
-                    {day && (
-                      <>
-                        {/* Day number */}
-                        <div className="flex justify-between items-center mb-3.5">
-                          <span
-                            className={`w-9 h-9 rounded-full flex items-center justify-center text-lg font-semibold ${
-                              isToday ? "font-extrabold text-gold bg-gold/15" : "text-cream/80"
-                            }`}
-                          >
-                            {day}
+              return (
+                <div
+                  key={i}
+                  className={`rounded-[18px] p-4 min-h-[160px] transition-all duration-200 flex flex-col ${
+                    day ? "cursor-pointer" : "cursor-default"
+                  }`}
+                  style={{
+                    background: day
+                      ? hasReservations
+                        ? "rgba(212,168,83,0.03)"
+                        : "transparent"
+                      : "rgba(0,0,0,0.2)",
+                    border: `1px solid ${hasReservations ? "rgba(212,168,83,0.2)" : "rgba(255,255,255,0.05)"}`,
+                  }}
+                >
+                  {day && (
+                    <>
+                      <div className="flex justify-between items-center mb-3.5">
+                        <span
+                          className={`w-9 h-9 rounded-full flex items-center justify-center text-lg font-semibold ${
+                            isToday
+                              ? "font-extrabold text-gold bg-gold/15"
+                              : "text-cream/80"
+                          }`}
+                        >
+                          {day}
+                        </span>
+                        {res.length > 0 && (
+                          <span className="bg-gold text-dark-bg text-xs font-bold py-1 px-3 rounded-[20px]">
+                            {res.length}
                           </span>
-                          {res.length > 0 && (
-                            <span className="bg-gold text-dark-bg text-xs font-bold py-1 px-3 rounded-[20px]">
-                              {res.length}
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-2 flex-1 overflow-y-auto max-h-[120px]">
+                        {res.slice(0, 3).map((r) => (
+                          <div
+                            key={r.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openSidebar(r);
+                            }}
+                            className="text-xs font-semibold py-2.5 px-3 rounded-lg cursor-pointer flex justify-between items-center transition-all duration-200"
+                            style={{
+                              background: `${S_COLOR[r.status]}15`,
+                              borderLeft: `4px solid ${S_COLOR[r.status]}`,
+                              color: S_COLOR[r.status],
+                            }}
+                          >
+                            <span className="whitespace-nowrap overflow-hidden text-ellipsis max-w-[90px]">
+                              {r.client.split(" ")[0]}
                             </span>
-                          )}
-                        </div>
-
-                        {/* Day reservations list */}
-                        <div className="flex flex-col gap-2 flex-1 overflow-y-auto max-h-[120px]">
-                          {res.slice(0, 3).map((r) => (
-                            <div
-                              key={r.id}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openSidebar(r);
-                              }}
-                              className="text-xs font-semibold py-2.5 px-3 rounded-lg cursor-pointer flex justify-between items-center transition-all duration-200"
-                              style={{
-                                background: `${S_COLOR[r.status]}15`,
-                                borderLeft: `4px solid ${S_COLOR[r.status]}`,
-                                color: S_COLOR[r.status],
-                              }}
-                            >
-                              <span className="whitespace-nowrap overflow-hidden text-ellipsis max-w-[90px]">
-                                {r.client.split(" ")[0]}
-                              </span>
-                              <span className="font-bold">{r.total} DH</span>
-                            </div>
-                          ))}
-                          {res.length > 3 && (
-                            <div className="text-[11px] text-cream/50 text-center py-1.5 px-1.5 bg-white/[0.03] rounded-md">
-                              +{res.length - 3} autre
-                              {res.length - 3 > 1 ? "s" : ""}
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                            <span className="font-bold">{r.total} DH</span>
+                          </div>
+                        ))}
+                        {res.length > 3 && (
+                          <div className="text-[11px] text-cream/50 text-center py-1.5 px-1.5 bg-white/[0.03] rounded-md">
+                            +{res.length - 3} autre
+                            {res.length - 3 > 1 ? "s" : ""}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        )}
+        </div>
+      )}
 
       {/* Sidebar overlay */}
       {sidebarOpen && (
@@ -773,6 +1001,259 @@ export default function DashReservations() {
           />
         </>
       )}
+
+      {/* Modal d'ajout de réservation */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center z-[2000] p-4">
+          <div className="bg-dark border border-gold/30 rounded-3xl p-6 md:p-8 max-w-[600px] w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold">➕ Nouvelle réservation</h3>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="text-cream/60 hover:text-cream text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleAddReservation();
+              }}
+              className="space-y-4"
+            >
+              {/* Véhicule */}
+              <div>
+                <label className="text-gold text-xs font-bold uppercase tracking-wide mb-1 block">
+                  Véhicule *
+                </label>
+                <select
+                  value={newReservation.car_id}
+                  onChange={(e) => {
+                    const carId = e.target.value;
+                    setNewReservation((prev) => ({ ...prev, car_id: carId }));
+                    calculateDaysAndTotal(
+                      newReservation.date_from,
+                      newReservation.date_to,
+                      carId,
+                    );
+                  }}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-cream"
+                  required
+                >
+                  <option value="">Sélectionner un véhicule</option>
+                  {cars.map((car) => (
+                    <option key={car.id} value={car.id}>
+                      {car.name} - {car.price} DH/jour
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Client */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-gold text-xs font-bold uppercase tracking-wide mb-1 block">
+                    Nom complet *
+                  </label>
+                  <input
+                    type="text"
+                    value={newReservation.client_name}
+                    onChange={(e) =>
+                      setNewReservation((prev) => ({
+                        ...prev,
+                        client_name: e.target.value,
+                      }))
+                    }
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-cream"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-gold text-xs font-bold uppercase tracking-wide mb-1 block">
+                    Téléphone
+                  </label>
+                  <input
+                    type="tel"
+                    value={newReservation.client_phone}
+                    onChange={(e) =>
+                      setNewReservation((prev) => ({
+                        ...prev,
+                        client_phone: e.target.value,
+                      }))
+                    }
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-cream"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-gold text-xs font-bold uppercase tracking-wide mb-1 block">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={newReservation.client_email}
+                    onChange={(e) =>
+                      setNewReservation((prev) => ({
+                        ...prev,
+                        client_email: e.target.value,
+                      }))
+                    }
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-cream"
+                  />
+                </div>
+              </div>
+
+              {/* Dates */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-gold text-xs font-bold uppercase tracking-wide mb-1 block">
+                    Date début *
+                  </label>
+                  <input
+                    type="date"
+                    value={newReservation.date_from}
+                    onChange={(e) => {
+                      const from = e.target.value;
+                      setNewReservation((prev) => ({
+                        ...prev,
+                        date_from: from,
+                      }));
+                      calculateDaysAndTotal(
+                        from,
+                        newReservation.date_to,
+                        newReservation.car_id,
+                      );
+                    }}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-cream"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-gold text-xs font-bold uppercase tracking-wide mb-1 block">
+                    Date fin *
+                  </label>
+                  <input
+                    type="date"
+                    value={newReservation.date_to}
+                    onChange={(e) => {
+                      const to = e.target.value;
+                      setNewReservation((prev) => ({ ...prev, date_to: to }));
+                      calculateDaysAndTotal(
+                        newReservation.date_from,
+                        to,
+                        newReservation.car_id,
+                      );
+                    }}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-cream"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Résumé */}
+              <div className="bg-gold/10 rounded-xl p-4 border border-gold/20">
+                <div className="flex justify-between mb-2">
+                  <span>Nombre de jours</span>
+                  <span className="font-bold">{newReservation.days}</span>
+                </div>
+                <div className="flex justify-between mb-2">
+                  <span>Prix total</span>
+                  <span className="font-bold text-gold">
+                    {newReservation.total} DH
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>Acompte (optionnel)</span>
+                  <input
+                    type="number"
+                    value={newReservation.deposit}
+                    onChange={(e) =>
+                      setNewReservation((prev) => ({
+                        ...prev,
+                        deposit: Number(e.target.value),
+                      }))
+                    }
+                    className="w-24 bg-white/5 border border-white/10 rounded p-1 text-right"
+                    min="0"
+                    step="100"
+                  />
+                </div>
+              </div>
+
+              {/* Ville et note */}
+              <div>
+                <label className="text-gold text-xs font-bold uppercase tracking-wide mb-1 block">
+                  Ville
+                </label>
+                <input
+                  type="text"
+                  value={newReservation.city}
+                  onChange={(e) =>
+                    setNewReservation((prev) => ({
+                      ...prev,
+                      city: e.target.value,
+                    }))
+                  }
+                  className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-cream"
+                  placeholder="Casablanca"
+                />
+              </div>
+              <div>
+                <label className="text-gold text-xs font-bold uppercase tracking-wide mb-1 block">
+                  Note
+                </label>
+                <textarea
+                  value={newReservation.note}
+                  onChange={(e) =>
+                    setNewReservation((prev) => ({
+                      ...prev,
+                      note: e.target.value,
+                    }))
+                  }
+                  className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-cream"
+                  rows="2"
+                  placeholder="Informations complémentaires..."
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="flex-1 py-3 bg-transparent border border-white/15 rounded-lg text-cream/70 font-semibold"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-3 bg-gold rounded-lg text-dark-bg font-bold"
+                >
+                  Créer la réservation
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Styles pour animations */}
+      <style>{`
+        @keyframes slideIn {
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .animate-slide-in {
+          animation: slideIn 0.3s ease;
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.3s ease;
+        }
+      `}</style>
     </div>
   );
 }
