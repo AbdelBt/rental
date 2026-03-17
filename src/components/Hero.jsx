@@ -147,7 +147,7 @@ export default function Hero() {
                   <div className="text-right shrink-0">
                     <div className="text-[10px] text-cream/45 mb-0.5">à partir de</div>
                     <div className={`font-extrabold text-gold leading-none ${isMobile ? "text-[22px]" : "text-[26px]"}`}>
-                      {RECENT[slide].price} DH
+                      {RECENT[slide].price} €
                     </div>
                     <div className="text-[10px] text-cream/40">/ jour</div>
                   </div>

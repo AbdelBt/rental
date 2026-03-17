@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Logo from "./Logo";
+import { useClientAuth } from "../hooks/useClientAuth";
 
 const NAV_LINKS = [
   { label: "Accueil", href: "/" },
@@ -20,6 +21,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
+  const { isLoggedIn, client } = useClientAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -82,9 +84,23 @@ export default function Navbar() {
                 ))}
               </div>
             </div>
-            <Link to="/compte" className="btn-primary py-2.5 px-5 text-xs">
-              Se connecter
-            </Link>
+            {isLoggedIn ? (
+              <Link
+                to="/client/dashboard"
+                className="flex items-center gap-2.5 group"
+              >
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#5b8de8] to-[#2d5fc4] flex items-center justify-center text-[11px] font-bold text-white shrink-0">
+                  {`${client?.first_name?.[0] ?? ""}${client?.last_name?.[0] ?? ""}`.toUpperCase() || "?"}
+                </div>
+                <span className="text-[13px] text-cream/70 group-hover:text-cream transition-colors">
+                  {client?.first_name ?? "Mon espace"}
+                </span>
+              </Link>
+            ) : (
+              <Link to="/compte" className="btn-primary py-2.5 px-5 text-xs">
+                Se connecter
+              </Link>
+            )}
           </div>
         )}
 
@@ -135,7 +151,25 @@ export default function Navbar() {
           </nav>
 
           <div className="mt-8 flex flex-col gap-3">
-            <Link to="/compte" className="btn-primary w-full py-4 text-sm text-center" onClick={() => setMenuOpen(false)}>Se connecter</Link>
+            {isLoggedIn ? (
+              <Link
+                to="/client/dashboard"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:border-white/[0.15] transition-colors"
+              >
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#5b8de8] to-[#2d5fc4] flex items-center justify-center text-[12px] font-bold text-white shrink-0">
+                  {`${client?.first_name?.[0] ?? ""}${client?.last_name?.[0] ?? ""}`.toUpperCase() || "?"}
+                </div>
+                <div>
+                  <div className="text-[13px] font-semibold text-cream">{client?.first_name} {client?.last_name}</div>
+                  <div className="text-[11px] text-cream/40">Mon espace →</div>
+                </div>
+              </Link>
+            ) : (
+              <Link to="/compte" className="btn-primary w-full py-4 text-sm text-center" onClick={() => setMenuOpen(false)}>
+                Se connecter
+              </Link>
+            )}
             <button className="btn-ghost w-full py-4 text-sm">Contactez-nous</button>
           </div>
 

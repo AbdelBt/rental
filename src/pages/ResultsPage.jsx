@@ -177,7 +177,7 @@ export default function ResultsPage() {
               </div>
             </FilterBlock>
 
-            <FilterBlock title={`Prix max : ${maxPrice} DH/j`}>
+            <FilterBlock title={`Prix max : ${maxPrice} €/j`}>
               <input
                 type="range"
                 min={45}
@@ -188,8 +188,8 @@ export default function ResultsPage() {
                 className="w-full accent-gold"
               />
               <div className="flex justify-between text-xs text-cream/35 mt-1">
-                <span>45 DH</span>
-                <span>1000 DH</span>
+                <span>45 €</span>
+                <span>1000 €</span>
               </div>
             </FilterBlock>
 
@@ -397,7 +397,7 @@ function ResultCard({ car, listView, index }) {
           <div className="flex justify-between items-center mt-4">
             <div>
               <span className="text-[22px] font-extrabold text-gold">
-                {car.price} DH
+                {car.price} €
               </span>
               <span className="text-xs text-cream/40 ml-1">/jour</span>
             </div>

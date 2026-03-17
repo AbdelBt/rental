@@ -973,7 +973,7 @@ export default function DashVoitures() {
               {step === 1 && (
                 <div className="flex flex-col gap-5">
                   <div className="grid grid-cols-3 gap-3.5">
-                    <Field label="Prix / jour (DH) *">
+                    <Field label="Prix / jour (€) *">
                       <Inp
                         k="price"
                         form={form}
@@ -982,7 +982,7 @@ export default function DashVoitures() {
                         placeholder="0"
                       />
                     </Field>
-                    <Field label="Prix / semaine (DH)">
+                    <Field label="Prix / semaine (€)">
                       <Inp
                         k="price_week"
                         form={form}
@@ -991,7 +991,7 @@ export default function DashVoitures() {
                         placeholder="0"
                       />
                     </Field>
-                    <Field label="Prix / mois (DH)">
+                    <Field label="Prix / mois (€)">
                       <Inp
                         k="price_month"
                         form={form}
@@ -1003,7 +1003,7 @@ export default function DashVoitures() {
                     <Field label="Durée min (jours)">
                       <Inp k="min_days" form={form} set={set} type="number" />
                     </Field>
-                    <Field label="2ème conducteur (DH)">
+                    <Field label="2ème conducteur (€)">
                       <Inp
                         k="second_driver"
                         form={form}

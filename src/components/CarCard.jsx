@@ -80,7 +80,7 @@ export default function CarCard({ car, days = 3, index = 0, isMobile = false }) 
 
             {hovered && !horizontal && (
               <div className="absolute inset-0 flex items-center justify-center bg-dark/95 rounded-t text-gold text-[10px] font-medium">
-                Total estimé : <strong>{car.price * days} DH / {days} jour{days > 1 ? "s" : ""}</strong> 
+                Total estimé : <strong>{car.price * days} € / {days} jour{days > 1 ? "s" : ""}</strong> 
               </div>
             )}
           </div>
@@ -88,7 +88,7 @@ export default function CarCard({ car, days = 3, index = 0, isMobile = false }) 
           <div className="flex justify-between items-center">
             <div>
               <span className={`font-extrabold text-gold ${horizontal ? "text-xl" : "text-2xl"}`}>
-                {car.price} DH
+                {car.price} €
               </span>
               <span className="text-[11px] text-cream/40 ml-0.5">/ jour</span>
             </div>

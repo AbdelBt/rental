@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabaseClient";
-import { useClientAuth } from "../../hooks/useClientAuth";
+import { useClientAuthContext as useClientAuth } from "../../hooks/ClientAuthContext";
 
 function Field({ label, value, type = "text", onChange, editable }) {
   return (
@@ -169,7 +169,7 @@ function DocRow({
 }
 
 export default function ClientProfile() {
-  const { client, customer, user, refresh } = useClientAuth();
+  const { client, customer, user, patchCustomer, loading } = useClientAuth();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
     first_name: "",
@@ -210,7 +210,8 @@ export default function ClientProfile() {
     if (error) {
       setMessage({ text: error.message, ok: false });
     } else {
-      await refresh();
+      // Patch local state instantly — no round-trip needed
+      patchCustomer({ first_name: form.first_name, last_name: form.last_name, phone: form.phone });
       setMessage({ text: "Profil mis à jour.", ok: true });
       setEditing(false);
     }
@@ -251,7 +252,17 @@ export default function ClientProfile() {
   const missingCount = DOCS.filter(
     (d) => !mergedCustomer?.[`${d.key}_uploaded`],
   ).length;
-  const verifiedCount = DOCS.filter((d) => customer?.[d.verifiedKey]).length;
+
+  if (loading) {
+    return (
+      <div className="space-y-6 max-w-2xl animate-pulse">
+        <div className="h-8 w-48 bg-white/[0.05] rounded-lg" />
+        <div className="h-24 bg-white/[0.03] border border-white/[0.07] rounded-2xl" />
+        <div className="h-52 bg-white/[0.03] border border-white/[0.07] rounded-2xl" />
+        <div className="h-40 bg-white/[0.03] border border-white/[0.07] rounded-2xl" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -387,9 +398,7 @@ export default function ClientProfile() {
       <div className="bg-white/[0.03] border border-white/[0.07] rounded-2xl p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold text-[14px]">Documents</h2>
-          <span className="text-[11px] text-cream/35">
-            {verifiedCount}/{DOCS.length} vérifiés
-          </span>
+          <span className="text-[11px] text-cream/35"></span>
         </div>
 
         <div>

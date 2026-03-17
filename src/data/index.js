@@ -254,10 +254,10 @@ export const faqs = [
 
 // ─── Offers strip ────────────────────────────────────────────────────────────
 export const offers = [
-  { label: "Sans caution", sub: "À partir de 450 DH / jour", icon: "🔓" },
+  { label: "Sans caution", sub: "À partir de 450 € / jour", icon: "🔓" },
   { label: "Réductions", sub: "Jusqu'à 40% de remise", icon: "🏷️" },
-  { label: "Kilométrage illimité", sub: "À partir de 750 DH / jour", icon: "🛣️" },
-  { label: "Longue durée", sub: "À partir de 8 000 DH / mois", icon: "📅" },
+  { label: "Kilométrage illimité", sub: "À partir de 750 € / jour", icon: "🛣️" },
+  { label: "Longue durée", sub: "À partir de 8 000 € / mois", icon: "📅" },
 ];
 
 // ─── Features (Why us) ───────────────────────────────────────────────────────

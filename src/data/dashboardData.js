@@ -55,7 +55,7 @@ export const blacklist = [
   { id: "b001", name: "Ahmed Benali", phone: "+33 611 22 33 44", reason: "Véhicule rendu avec dommages non déclarés. Jante rayée + pare-choc fissuré.", date: "2025-02-14", severity: "high", sharedBy: "AutoMaroc Premium", reportedBy: "3 agences" },
   { id: "b002", name: "Kevin Moreau", phone: "+32 477 55 66 77", reason: "Annulation 3x sans prévenir. No-show confirmé.", date: "2025-01-08", severity: "medium", sharedBy: "AutoMaroc Premium", reportedBy: "1 agence" },
   { id: "b003", name: "Fatima Zahra", phone: "+31 634 88 99 00", reason: "Retard de restitution de 2 jours, injoignable.", date: "2025-03-20", severity: "medium", sharedBy: "LuxRent Maroc", reportedBy: "2 agences" },
-  { id: "b004", name: "Roberto Santos", phone: "+34 612 44 55 66", reason: "Fumé dans le véhicule malgré interdiction. Nettoyage 800 DH.", date: "2025-03-05", severity: "low", sharedBy: "CasaFleet", reportedBy: "1 agence" },
+  { id: "b004", name: "Roberto Santos", phone: "+34 612 44 55 66", reason: "Fumé dans le véhicule malgré interdiction. Nettoyage 800 €.", date: "2025-03-05", severity: "low", sharedBy: "CasaFleet", reportedBy: "1 agence" },
 ];
 
 // ─── Overview stats

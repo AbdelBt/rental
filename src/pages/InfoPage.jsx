@@ -149,7 +149,7 @@ function ContactForm() {
           <label className={labelClasses}>Décrivez votre besoin</label>
           <textarea
             className="input-field resize-y min-h-[120px] font-sora"
-            placeholder="Ex: Besoin d'un véhicule 9 places avec chauffeur à Marrakech du 15 au 22 juillet, budget max 8000 DH..."
+            placeholder="Ex: Besoin d'un véhicule 9 places avec chauffeur à Marrakech du 15 au 22 juillet, budget max 8000 €..."
           />
         </div>
         <div className={isMobile ? "col-span-1" : "col-span-2"}>

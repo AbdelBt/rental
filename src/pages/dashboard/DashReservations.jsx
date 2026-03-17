@@ -475,6 +475,7 @@ export default function DashReservations() {
               cashConfirmedAt: r.cash_confirmed_at,
             };
           });
+          console.log("[DashReservations] réservations:", enriched);
           setReservations(enriched);
         }
       } catch (err) {
@@ -909,153 +910,289 @@ export default function DashReservations() {
       )}
 
       {/* Calendar view */}
-      {view === "calendar" && (
-        <div className="bg-dark border border-white/[0.07] rounded-3xl overflow-hidden p-6 md:p-7">
-          <div className="flex justify-between items-center mb-7 flex-wrap gap-4">
-            <div className="flex gap-3 items-center">
-              <button
-                onClick={() => {
-                  if (calMonth === 0) {
-                    setCalMonth(11);
-                    setCalYear((y) => y - 1);
-                  } else {
-                    setCalMonth((m) => m - 1);
-                  }
-                }}
-                className="bg-white/5 border border-white/10 text-cream w-10 h-10 rounded-xl cursor-pointer text-lg flex items-center justify-center"
-              >
-                ←
-              </button>
-              <h3 className="font-playfair text-xl font-bold min-w-[220px] text-center">
-                {MONTHS[calMonth]} {calYear}
-              </h3>
-              <button
-                onClick={() => {
-                  if (calMonth === 11) {
-                    setCalMonth(0);
-                    setCalYear((y) => y + 1);
-                  } else {
-                    setCalMonth((m) => m + 1);
-                  }
-                }}
-                className="bg-white/5 border border-white/10 text-cream w-10 h-10 rounded-xl cursor-pointer text-lg flex items-center justify-center"
-              >
-                →
-              </button>
-            </div>
+      {view === "calendar" &&
+        (() => {
+          const now = new Date();
+          const isCurrentMonth =
+            calMonth === now.getMonth() && calYear === now.getFullYear();
+          const monthRes = reservations.filter((r) => {
+            const d = new Date(r.dateFrom);
+            return (
+              d.getMonth() === calMonth &&
+              d.getFullYear() === calYear &&
+              (selectedCar === "all" || r.carId === selectedCar)
+            );
+          });
+          const prevMonth = () => {
+            if (calMonth === 0) {
+              setCalMonth(11);
+              setCalYear((y) => y - 1);
+            } else setCalMonth((m) => m - 1);
+          };
+          const nextMonth = () => {
+            if (calMonth === 11) {
+              setCalMonth(0);
+              setCalYear((y) => y + 1);
+            } else setCalMonth((m) => m + 1);
+          };
 
-            {/* Filtre par voiture */}
-            <select
-              value={selectedCar}
-              onChange={(e) => setSelectedCar(e.target.value)}
-              className="bg-white/5 border border-white/10 rounded-xl py-3 px-5 text-cream text-sm cursor-pointer min-w-[200px]"
-            >
-              <option value="all">🚗 Tous les véhicules</option>
-              {cars.map((car) => (
-                <option key={car.id} value={car.id}>
-                  {car.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          return (
+            <div className="bg-dark border border-white/[0.07] rounded-3xl overflow-hidden">
+              {/* Calendar header */}
+              <div className="px-6 pt-6 pb-5 border-b border-white/[0.06]">
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  {/* Navigation mois */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={prevMonth}
+                      className="w-9 h-9 rounded-xl bg-white/[0.05] border border-white/[0.08] text-cream/70 hover:text-cream hover:bg-white/[0.08] transition-all cursor-pointer flex items-center justify-center"
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                      >
+                        <polyline points="15 18 9 12 15 6" />
+                      </svg>
+                    </button>
+                    <div className="min-w-[200px] text-center">
+                      <span className="font-playfair text-xl font-bold">
+                        {MONTHS[calMonth]}
+                      </span>
+                      <span className="text-cream/40 text-lg ml-2">
+                        {calYear}
+                      </span>
+                    </div>
+                    <button
+                      onClick={nextMonth}
+                      className="w-9 h-9 rounded-xl bg-white/[0.05] border border-white/[0.08] text-cream/70 hover:text-cream hover:bg-white/[0.08] transition-all cursor-pointer flex items-center justify-center"
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                      >
+                        <polyline points="9 18 15 12 9 6" />
+                      </svg>
+                    </button>
+                    {!isCurrentMonth && (
+                      <button
+                        onClick={() => {
+                          setCalMonth(now.getMonth());
+                          setCalYear(now.getFullYear());
+                        }}
+                        className="ml-1 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/25 text-gold text-[11px] font-semibold hover:bg-gold/20 transition-all cursor-pointer"
+                      >
+                        Aujourd'hui
+                      </button>
+                    )}
+                  </div>
 
-          <div className="grid grid-cols-7 mb-4">
-            {DAYS.map((d) => (
-              <div
-                key={d}
-                className="text-center py-3.5 text-sm font-bold text-cream/45 tracking-wide border-b border-white/[0.07]"
-              >
-                {d}
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-7 gap-2.5 min-h-[800px]">
-            {cells.map((day, i) => {
-              const today = new Date();
-              const isToday =
-                day === today.getDate() &&
-                calMonth === today.getMonth() &&
-                calYear === today.getFullYear();
-              const res = day ? resOnDay(day) : [];
-              const hasReservations = res.length > 0;
-
-              return (
-                <div
-                  key={i}
-                  className={`rounded-[18px] p-4 min-h-[160px] transition-all duration-200 flex flex-col ${
-                    day ? "cursor-pointer" : "cursor-default"
-                  }`}
-                  style={{
-                    background: day
-                      ? hasReservations
-                        ? "rgba(212,168,83,0.03)"
-                        : "transparent"
-                      : "rgba(0,0,0,0.2)",
-                    border: `1px solid ${hasReservations ? "rgba(212,168,83,0.2)" : "rgba(255,255,255,0.05)"}`,
-                  }}
-                >
-                  {day && (
-                    <>
-                      <div className="flex justify-between items-center mb-3.5">
-                        <span
-                          className={`w-9 h-9 rounded-full flex items-center justify-center text-lg font-semibold ${
-                            isToday
-                              ? "font-extrabold text-gold bg-gold/15"
-                              : "text-cream/80"
-                          }`}
-                        >
-                          {day}
-                        </span>
-                        {res.length > 0 && (
-                          <span className="bg-gold text-dark-bg text-xs font-bold py-1 px-3 rounded-[20px]">
-                            {res.length}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex flex-col gap-2 flex-1 overflow-y-auto max-h-[120px]">
-                        {res.slice(0, 3).map((r) => (
-                          <div
-                            key={r.id}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openSidebar(r);
-                            }}
-                            className="text-xs font-semibold py-2 px-3 rounded-lg cursor-pointer flex justify-between items-center gap-2 transition-all duration-200"
-                            style={{
-                              background: `${S_COLOR[r.status]}15`,
-                              borderLeft: `4px solid ${S_COLOR[r.status]}`,
-                              color: S_COLOR[r.status],
-                            }}
-                          >
-                            <div className="flex flex-col min-w-0">
-                              <span className="whitespace-nowrap overflow-hidden text-ellipsis max-w-[90px]">
-                                {r.client.split(" ")[0]}
-                              </span>
-                              <span className="text-[10px] opacity-75 font-normal">
-                                {r.timeFrom || "10:00"} → {r.timeTo || "10:00"}
+                  <div className="flex items-center gap-3">
+                    {/* Stats du mois */}
+                    <div className="hidden md:flex items-center gap-3">
+                      {[
+                        {
+                          key: "confirmed",
+                          count: monthRes.filter(
+                            (r) => r.status === "confirmed",
+                          ).length,
+                        },
+                        {
+                          key: "pending",
+                          count: monthRes.filter((r) => r.status === "pending")
+                            .length,
+                        },
+                        {
+                          key: "completed",
+                          count: monthRes.filter(
+                            (r) => r.status === "completed",
+                          ).length,
+                        },
+                      ].map(
+                        ({ key, count }) =>
+                          count > 0 && (
+                            <div
+                              key={key}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border"
+                              style={{
+                                background: `${S_COLOR[key]}10`,
+                                borderColor: `${S_COLOR[key]}30`,
+                              }}
+                            >
+                              <div
+                                className="w-2 h-2 rounded-full"
+                                style={{ background: S_COLOR[key] }}
+                              />
+                              <span
+                                className="text-[11px] font-semibold"
+                                style={{ color: S_COLOR[key] }}
+                              >
+                                {count} {S_LABEL[key]}
+                                {count > 1 ? "s" : ""}
                               </span>
                             </div>
-                            <span className="font-bold shrink-0">
-                              {r.total} €
-                            </span>
-                          </div>
-                        ))}
-                        {res.length > 3 && (
-                          <div className="text-[11px] text-cream/50 text-center py-1.5 px-1.5 bg-white/[0.03] rounded-md">
-                            +{res.length - 3} autre
-                            {res.length - 3 > 1 ? "s" : ""}
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  )}
+                          ),
+                      )}
+                    </div>
+
+                    {/* Filtre voiture */}
+                    <select
+                      value={selectedCar}
+                      onChange={(e) => setSelectedCar(e.target.value)}
+                      className="rounded-xl py-2 px-4 text-[12px] cursor-pointer border border-white/[0.08]"
+                      style={{ background: "#1a1a2e", color: "#f5efe0" }}
+                    >
+                      <option
+                        value="all"
+                        style={{ background: "#1a1a2e", color: "#f5efe0" }}
+                      >
+                        Tous les véhicules
+                      </option>
+                      {cars.map((car) => (
+                        <option
+                          key={car.id}
+                          value={car.id}
+                          style={{ background: "#1a1a2e", color: "#f5efe0" }}
+                        >
+                          {car.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+              </div>
+
+              {/* Jours de la semaine */}
+              <div className="grid grid-cols-7 border-b border-white/[0.06]">
+                {DAYS.map((d, i) => (
+                  <div
+                    key={d}
+                    className={`py-3 text-center text-[11px] font-bold tracking-widest uppercase ${i >= 5 ? "text-gold/60" : "text-cream/30"}`}
+                  >
+                    {d}
+                  </div>
+                ))}
+              </div>
+
+              {/* Grille jours */}
+              <div className="grid grid-cols-7">
+                {cells.map((day, i) => {
+                  const isToday =
+                    day === now.getDate() &&
+                    calMonth === now.getMonth() &&
+                    calYear === now.getFullYear();
+                  const isWeekend = i % 7 >= 5;
+                  const res = day ? resOnDay(day) : [];
+                  const hasRes = res.length > 0;
+                  const isPast =
+                    day &&
+                    new Date(calYear, calMonth, day) <
+                      new Date(
+                        now.getFullYear(),
+                        now.getMonth(),
+                        now.getDate(),
+                      );
+
+                  return (
+                    <div
+                      key={i}
+                      className={`min-h-[130px] p-2.5 flex flex-col border-b border-r border-white/[0.04] transition-colors ${
+                        !day
+                          ? "bg-black/20"
+                          : isToday
+                            ? "bg-gold/[0.04]"
+                            : isWeekend
+                              ? "bg-white/[0.015]"
+                              : ""
+                      } ${i % 7 === 6 ? "border-r-0" : ""}`}
+                    >
+                      {day && (
+                        <>
+                          {/* Numéro du jour */}
+                          <div className="flex items-center justify-between mb-2">
+                            <span
+                              className={`w-7 h-7 flex items-center justify-center rounded-full text-[13px] font-bold transition-all ${
+                                isToday
+                                  ? "bg-gold text-[#0a0a0f]"
+                                  : isPast
+                                    ? "text-cream/25"
+                                    : isWeekend
+                                      ? "text-gold/70"
+                                      : "text-cream/70"
+                              }`}
+                            >
+                              {day}
+                            </span>
+                            {hasRes && (
+                              <span className="text-[10px] font-bold w-5 h-5 rounded-full bg-gold/20 text-gold flex items-center justify-center">
+                                {res.length}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Réservations */}
+                          <div className="flex flex-col gap-1 flex-1">
+                            {res.slice(0, 2).map((r) => (
+                              <button
+                                key={r.id}
+                                onClick={() => openSidebar(r)}
+                                className="w-full text-left text-[10px] font-semibold px-2 py-1.5 rounded-md cursor-pointer transition-all hover:brightness-125 border-l-[3px]"
+                                style={{
+                                  background: `${S_COLOR[r.status]}12`,
+                                  borderLeftColor: S_COLOR[r.status],
+                                  color: S_COLOR[r.status],
+                                }}
+                              >
+                                <div className="truncate">
+                                  {r.client.split(" ")[0]}
+                                </div>
+                                <div className="opacity-70 font-normal text-[9px]">
+                                  {r.carName || "Véhicule"}
+                                </div>
+                              </button>
+                            ))}
+                            {res.length > 2 && (
+                              <button
+                                onClick={() => openSidebar(res[2])}
+                                className="text-[10px] text-cream/40 hover:text-cream/70 text-center py-0.5 cursor-pointer bg-transparent border-none"
+                              >
+                                +{res.length - 2} autre
+                                {res.length - 2 > 1 ? "s" : ""}
+                              </button>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Légende */}
+              <div className="px-6 py-4 border-t border-white/[0.06] flex items-center gap-5 flex-wrap">
+                <span className="text-[11px] text-cream/30 font-semibold uppercase tracking-wider">
+                  Statuts :
+                </span>
+                {Object.entries(S_LABEL).map(([key, label]) => (
+                  <div key={key} className="flex items-center gap-1.5">
+                    <div
+                      className="w-2.5 h-2.5 rounded-sm"
+                      style={{ background: S_COLOR[key] }}
+                    />
+                    <span className="text-[11px] text-cream/50">{label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
       {/* Sidebar overlay */}
       {sidebarOpen && (
