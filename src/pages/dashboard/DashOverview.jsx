@@ -137,11 +137,13 @@ export default function DashOverview() {
         const totalCars = cars.length;
         const activeCars = cars.filter((c) => c.status === "active").length;
 
-        // 4. Récupérer les réservations
+        // 4. Récupérer les réservations — uniquement acompte payé
+        // Les données client sont masquées tant que deposit_paid = false
         const { data: reservations, error: resError } = await supabase
           .from("reservations")
           .select("*")
           .eq("agency_id", agencyData.id)
+          .eq("deposit_paid", true)
           .order("created_at", { ascending: false });
 
         if (resError) throw resError;
@@ -334,8 +336,8 @@ export default function DashOverview() {
         <StatCard
           icon="💰"
           label="Revenus ce mois"
-          value={`${stats.revenueMonth.toLocaleString()} DH`}
-          sub={`vs ${stats.revenueLastMonth.toLocaleString()} DH le mois dernier`}
+          value={`${stats.revenueMonth.toLocaleString()} €`}
+          sub={`vs ${stats.revenueLastMonth.toLocaleString()} € le mois dernier`}
           trend={revTrend}
           link="/dashboard/paiements"
         />
@@ -378,7 +380,7 @@ export default function DashOverview() {
               </div>
             </div>
             <div className="text-[28px] font-extrabold text-gold bg-gold/10 py-2 px-4 rounded-full leading-none">
-              {stats.revenueMonth.toLocaleString()} DH
+              {stats.revenueMonth.toLocaleString()} €
             </div>
           </div>
           <MiniChart data={stats.revenueChart} />
@@ -395,7 +397,7 @@ export default function DashOverview() {
                 ✓ Reçus
               </div>
               <div className="text-[28px] font-extrabold text-green-500">
-                {stats.completedPayouts.toLocaleString()} DH
+                {stats.completedPayouts.toLocaleString()} €
               </div>
             </div>
             <div className="bg-amber-500/10 border border-amber-500/20 rounded-[18px] p-5">
@@ -403,7 +405,7 @@ export default function DashOverview() {
                 ⏳ En attente
               </div>
               <div className="text-[28px] font-extrabold text-amber-500">
-                {stats.pendingPayouts.toLocaleString()} DH
+                {stats.pendingPayouts.toLocaleString()} €
               </div>
             </div>
           </div>
@@ -455,7 +457,7 @@ export default function DashOverview() {
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="font-extrabold text-gold text-base">
-                      {r.total} DH
+                      {r.total} €
                     </div>
                     <span
                       className="text-xs font-semibold py-1.5 px-3.5 rounded-full tracking-wide"
@@ -526,7 +528,7 @@ export default function DashOverview() {
                       </div>
                     </div>
                     <div className="font-extrabold text-gold shrink-0 text-base bg-gold/10 py-1.5 px-3.5 rounded-full">
-                      {c.revenue.toLocaleString()} DH
+                      {c.revenue.toLocaleString()} €
                     </div>
                   </div>
                 </Link>

@@ -126,7 +126,11 @@ export default function CarDetailPage() {
                     opacity: activeImg === i ? 1 : 0.5,
                   }}
                 >
-                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <img
+                    src={img}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               ))}
             </div>
@@ -275,13 +279,13 @@ export default function CarDetailPage() {
               {/* Price header */}
               <div className="flex items-end gap-2 mb-6 pb-6 border-b border-white/[0.06]">
                 <span className="text-[38px] font-extrabold text-gold leading-none">
-                  {car.price} DH
+                  {car.price} €
                 </span>
                 <span className="text-sm text-cream/40 mb-1.5">/jour</span>
                 <div className="ml-auto text-right">
                   <div className="text-[11px] text-cream/40">à partir de</div>
                   <div className="font-bold text-base text-cream/70">
-                    {car.priceMonth} DH/mois
+                    {car.priceMonth} €/mois
                   </div>
                 </div>
               </div>
@@ -316,20 +320,20 @@ export default function CarDetailPage() {
               <div className="bg-gold/[0.06] border border-gold/20 rounded-xl p-4 mb-5">
                 <div className="flex justify-between mb-2">
                   <span className="text-[13px] text-cream/55">
-                    {car.price} DH × {days} jour{days > 1 ? "s" : ""}
+                    {car.price} € × {days} jour{days > 1 ? "s" : ""}
                   </span>
-                  <span className="text-[13px] font-semibold">{total} DH</span>
+                  <span className="text-[13px] font-semibold">{total} €</span>
                 </div>
                 <div className="flex justify-between mb-2">
                   <span className="text-[13px] text-cream/55">
                     Frais de service
                   </span>
-                  <span className="text-[13px] font-semibold">0 DH</span>
+                  <span className="text-[13px] font-semibold">0 €</span>
                 </div>
                 <div className="border-t border-white/10 pt-2.5 flex justify-between">
                   <span className="font-bold">Total</span>
                   <span className="font-extrabold text-lg text-gold">
-                    {total} DH
+                    {total} €
                   </span>
                 </div>
               </div>
@@ -357,7 +361,7 @@ export default function CarDetailPage() {
               {/* CTA */}
               <button
                 onClick={() =>
-                  alert(`Réservation confirmée pour ${car.name} — ${total} DH`)
+                  alert(`Réservation confirmée pour ${car.name} — ${total} €`)
                 }
                 className="w-full bg-gold text-dark-bg border-none py-4 rounded-[10px] font-sora font-extrabold text-[15px] tracking-[0.08em] uppercase cursor-pointer transition-all duration-[0.25s] hover:bg-[#e8be6a] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(212,168,83,0.4)]"
               >
@@ -424,7 +428,7 @@ function SimilarCard({ car }) {
         <div className="text-xs text-cream/40 mb-3">{car.category}</div>
         <div className="flex justify-between items-center">
           <span className="font-extrabold text-gold">
-            {car.price} DH
+            {car.price} €
             <span className="text-[11px] font-normal text-cream/40 ml-0.5">
               /jour
             </span>

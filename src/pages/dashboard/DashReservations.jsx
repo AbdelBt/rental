@@ -56,21 +56,21 @@ function ConfirmCashModal({ reservation, onConfirm, onClose }) {
         </h3>
         <p className="text-cream/70 mb-6 text-sm leading-relaxed">
           Avez-vous bien reçu{" "}
-          <strong className="text-gold text-lg">{solde} DH</strong> en cash de{" "}
+          <strong className="text-gold text-lg">{solde} €</strong> en cash de{" "}
           <strong>{reservation.client}</strong> pour la {reservation.carName} ?
         </p>
         <div className="bg-gold/10 rounded-2xl p-5 mb-7 border border-gold/15">
           <div className="flex justify-between mb-3 text-sm">
             <span className="text-cream/60">Prix total :</span>
-            <span className="font-bold">{reservation.prixTotal} DH</span>
+            <span className="font-bold">{reservation.prixTotal} €</span>
           </div>
           <div className="flex justify-between mb-3 text-sm">
             <span className="text-cream/60">Déjà payé en ligne :</span>
-            <span className="font-bold">{reservation.acompte} DH</span>
+            <span className="font-bold">{reservation.acompte} €</span>
           </div>
           <div className="flex justify-between border-t border-gold/30 pt-3 text-base">
             <span className="font-bold">Solde à confirmer :</span>
-            <span className="font-extrabold text-gold text-lg">{solde} DH</span>
+            <span className="font-extrabold text-gold text-lg">{solde} €</span>
           </div>
         </div>
         <div className="flex gap-3">
@@ -187,14 +187,14 @@ function ReservationSidebar({
 
         {/* Dates */}
         <div className="bg-dark rounded-2xl p-6 mb-6 border border-white/[0.07]">
-          <div className="font-bold text-lg mb-4">📅 Dates</div>
+          <div className="font-bold text-lg mb-4">📅 Dates & Horaires</div>
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gold/10 rounded-xl flex items-center justify-center text-gold">
                 🚀
               </div>
               <div>
-                <div className="text-xs text-cream/40">Début</div>
+                <div className="text-xs text-cream/40">Prise en charge</div>
                 <div className="font-semibold text-base">
                   {dateDebut.toLocaleDateString("fr-FR", {
                     weekday: "long",
@@ -203,6 +203,9 @@ function ReservationSidebar({
                     year: "numeric",
                   })}
                 </div>
+                <div className="text-sm text-gold font-bold mt-0.5">
+                  🕐 {reservation.timeFrom || "10:00"}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -210,7 +213,7 @@ function ReservationSidebar({
                 🏁
               </div>
               <div>
-                <div className="text-xs text-cream/40">Fin</div>
+                <div className="text-xs text-cream/40">Restitution</div>
                 <div className="font-semibold text-base">
                   {dateFin.toLocaleDateString("fr-FR", {
                     weekday: "long",
@@ -218,6 +221,9 @@ function ReservationSidebar({
                     month: "long",
                     year: "numeric",
                   })}
+                </div>
+                <div className="text-sm text-gold font-bold mt-0.5">
+                  🕐 {reservation.timeTo || "10:00"}
                 </div>
               </div>
             </div>
@@ -231,17 +237,32 @@ function ReservationSidebar({
         <div className="bg-dark rounded-2xl p-6 mb-6 border border-white/[0.07]">
           <div className="font-bold text-lg mb-4">💳 Paiement</div>
 
+          {/* Badge acompte payé */}
+          <div className="flex items-center gap-2 mb-4 py-2.5 px-3.5 rounded-xl bg-green-500/10 border border-green-500/25">
+            <span className="text-green-500 text-base">✅</span>
+            <div>
+              <div className="text-xs font-bold text-green-500">
+                Acompte encaissé par Drivo
+              </div>
+              <div className="text-[11px] text-cream/40 mt-0.5">
+                {reservation.acompte} € payé en ligne
+                {reservation.depositPaidAt &&
+                  ` · ${new Date(reservation.depositPaidAt).toLocaleDateString("fr-FR")}`}
+              </div>
+            </div>
+          </div>
+
           <div className="mb-6">
             <div className="flex justify-between text-[13px] mb-2">
               <span className="text-green-500">
-                ✓ En ligne: {reservation.acompte} DH
+                ✓ En ligne: {reservation.acompte} €
               </span>
               <span
                 style={{
                   color: reservation.cashConfirme ? "#22c55e" : "#f59e0b",
                 }}
               >
-                {reservation.cashConfirme ? "✓" : "⏳"} Cash: {solde} DH
+                {reservation.cashConfirme ? "✓" : "⏳"} Cash: {solde} €
               </span>
             </div>
             <div className="h-2.5 bg-white/10 rounded-[5px] overflow-hidden flex">
@@ -267,19 +288,19 @@ function ReservationSidebar({
             <div className="flex justify-between mb-2">
               <span className="text-cream/60">Prix total</span>
               <span className="font-bold text-lg">
-                {reservation.prixTotal} DH
+                {reservation.prixTotal} €
               </span>
             </div>
             <div className="flex justify-between mb-2">
               <span className="text-cream/60">Commission (10%)</span>
               <span className="font-bold text-red-500">
-                -{Math.round(reservation.prixTotal * 0.1)} DH
+                -{Math.round(reservation.prixTotal * 0.1)} €
               </span>
             </div>
             <div className="flex justify-between border-t border-white/10 pt-2">
               <span className="font-bold">Net agence</span>
               <span className="font-extrabold text-gold text-xl">
-                {Math.round(reservation.prixTotal * 0.9)} DH
+                {Math.round(reservation.prixTotal * 0.9)} €
               </span>
             </div>
           </div>
@@ -289,7 +310,7 @@ function ReservationSidebar({
               onClick={() => setShowConfirmModal(true)}
               className="w-full py-4 bg-gold/10 border border-gold/30 rounded-[40px] text-gold font-bold text-[15px] cursor-pointer mb-4 transition-all duration-200 hover:bg-gold/20"
             >
-              ✓ Confirmer paiement cash ({solde} DH)
+              ✓ Confirmer paiement cash ({solde} €)
             </button>
           )}
 
@@ -373,6 +394,8 @@ export default function DashReservations() {
     client_phone: "",
     date_from: "",
     date_to: "",
+    time_from: "10:00",
+    time_to: "10:00",
     days: 1,
     total: 0,
     deposit: 0,
@@ -414,11 +437,12 @@ export default function DashReservations() {
           .eq("agency_id", agency.id);
         setCars(carsData || []);
 
-        // Récupérer les réservations
+        // Récupérer les réservations — seulement celles dont l'acompte est payé
         const { data: resData } = await supabase
           .from("reservations")
           .select("*")
           .eq("agency_id", agency.id)
+          .eq("deposit_paid", true)
           .order("created_at", { ascending: false });
 
         if (resData) {
@@ -435,13 +459,18 @@ export default function DashReservations() {
               carImg: car.img,
               from: r.date_from,
               to: r.date_to,
+              timeFrom: r.time_from || "10:00",
+              timeTo: r.time_to || "10:00",
               total: r.total,
               days: r.days,
               city: r.city,
               phone: r.client_phone,
               note: r.note,
               prixTotal: r.total,
-              acompte: r.deposit || Math.round(r.total * 0.4),
+              acompte:
+                r.deposit_amount || r.deposit || Math.round(r.total * 0.4),
+              depositPaid: r.deposit_paid || false,
+              depositPaidAt: r.deposit_paid_at,
               cashConfirme: r.cash_confirmed || false,
               cashConfirmedAt: r.cash_confirmed_at,
             };
@@ -499,6 +528,8 @@ export default function DashReservations() {
           client_phone: newReservation.client_phone,
           date_from: newReservation.date_from,
           date_to: newReservation.date_to,
+          time_from: newReservation.time_from || "10:00",
+          time_to: newReservation.time_to || "10:00",
           days: newReservation.days,
           total: newReservation.total,
           deposit: newReservation.deposit,
@@ -511,11 +542,12 @@ export default function DashReservations() {
 
       if (error) throw error;
 
-      // Recharger les réservations
+      // Recharger les réservations — seulement acompte payé
       const { data: newRes } = await supabase
         .from("reservations")
         .select("*")
         .eq("agency_id", agencyId)
+        .eq("deposit_paid", true)
         .order("created_at", { ascending: false });
 
       // Enrichir avec les infos des voitures
@@ -531,13 +563,17 @@ export default function DashReservations() {
           carImg: car.img,
           from: r.date_from,
           to: r.date_to,
+          timeFrom: r.time_from || "10:00",
+          timeTo: r.time_to || "10:00",
           total: r.total,
           days: r.days,
           city: r.city,
           phone: r.client_phone,
           note: r.note,
           prixTotal: r.total,
-          acompte: r.deposit || Math.round(r.total * 0.4),
+          acompte: r.deposit_amount || r.deposit || Math.round(r.total * 0.4),
+          depositPaid: r.deposit_paid || false,
+          depositPaidAt: r.deposit_paid_at,
           cashConfirme: r.cash_confirmed || false,
           cashConfirmedAt: r.cash_confirmed_at,
         };
@@ -552,6 +588,8 @@ export default function DashReservations() {
         client_phone: "",
         date_from: "",
         date_to: "",
+        time_from: "10:00",
+        time_to: "10:00",
         days: 1,
         total: 0,
         deposit: 0,
@@ -810,6 +848,32 @@ export default function DashReservations() {
                         <span>🚗 {r.carName}</span>
                         <span>📍 {r.city}</span>
                       </div>
+                      <div className="flex gap-2 flex-wrap items-center text-[12px]">
+                        <span className="text-cream/70">
+                          📅{" "}
+                          {r.from
+                            ? new Date(r.from).toLocaleDateString("fr-FR", {
+                                day: "numeric",
+                                month: "short",
+                              })
+                            : "—"}
+                          <span className="text-gold font-semibold ml-1">
+                            à {r.timeFrom || "10:00"}
+                          </span>
+                        </span>
+                        <span className="text-cream/30">→</span>
+                        <span className="text-cream/70">
+                          {r.to
+                            ? new Date(r.to).toLocaleDateString("fr-FR", {
+                                day: "numeric",
+                                month: "short",
+                              })
+                            : "—"}
+                          <span className="text-gold font-semibold ml-1">
+                            à {r.timeTo || "10:00"}
+                          </span>
+                        </span>
+                      </div>
                       {r.note && (
                         <div className="text-[11px] text-gold/80 italic max-w-[300px] overflow-hidden text-ellipsis whitespace-nowrap">
                           💬 {r.note}
@@ -825,7 +889,7 @@ export default function DashReservations() {
                     className={`flex flex-col ${isMobile ? "items-start" : "items-end"}`}
                   >
                     <div className="font-extrabold text-gold text-base md:text-lg">
-                      {r.total} DH
+                      {r.total} €
                     </div>
                     <div className="text-[11px] text-cream/40">
                       {r.days} jours
@@ -957,17 +1021,24 @@ export default function DashReservations() {
                               e.stopPropagation();
                               openSidebar(r);
                             }}
-                            className="text-xs font-semibold py-2.5 px-3 rounded-lg cursor-pointer flex justify-between items-center transition-all duration-200"
+                            className="text-xs font-semibold py-2 px-3 rounded-lg cursor-pointer flex justify-between items-center gap-2 transition-all duration-200"
                             style={{
                               background: `${S_COLOR[r.status]}15`,
                               borderLeft: `4px solid ${S_COLOR[r.status]}`,
                               color: S_COLOR[r.status],
                             }}
                           >
-                            <span className="whitespace-nowrap overflow-hidden text-ellipsis max-w-[90px]">
-                              {r.client.split(" ")[0]}
+                            <div className="flex flex-col min-w-0">
+                              <span className="whitespace-nowrap overflow-hidden text-ellipsis max-w-[90px]">
+                                {r.client.split(" ")[0]}
+                              </span>
+                              <span className="text-[10px] opacity-75 font-normal">
+                                {r.timeFrom || "10:00"} → {r.timeTo || "10:00"}
+                              </span>
+                            </div>
+                            <span className="font-bold shrink-0">
+                              {r.total} €
                             </span>
-                            <span className="font-bold">{r.total} DH</span>
                           </div>
                         ))}
                         {res.length > 3 && (
@@ -1045,7 +1116,7 @@ export default function DashReservations() {
                   <option value="">Sélectionner un véhicule</option>
                   {cars.map((car) => (
                     <option key={car.id} value={car.id}>
-                      {car.name} - {car.price} DH/jour
+                      {car.name} - {car.price} €/jour
                     </option>
                   ))}
                 </select>
@@ -1151,6 +1222,42 @@ export default function DashReservations() {
                 </div>
               </div>
 
+              {/* Horaires */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-gold text-xs font-bold uppercase tracking-wide mb-1 block">
+                    🕐 Heure de prise en charge
+                  </label>
+                  <input
+                    type="time"
+                    value={newReservation.time_from}
+                    onChange={(e) =>
+                      setNewReservation((prev) => ({
+                        ...prev,
+                        time_from: e.target.value,
+                      }))
+                    }
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-cream"
+                  />
+                </div>
+                <div>
+                  <label className="text-gold text-xs font-bold uppercase tracking-wide mb-1 block">
+                    🕐 Heure de restitution
+                  </label>
+                  <input
+                    type="time"
+                    value={newReservation.time_to}
+                    onChange={(e) =>
+                      setNewReservation((prev) => ({
+                        ...prev,
+                        time_to: e.target.value,
+                      }))
+                    }
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-cream"
+                  />
+                </div>
+              </div>
+
               {/* Résumé */}
               <div className="bg-gold/10 rounded-xl p-4 border border-gold/20">
                 <div className="flex justify-between mb-2">
@@ -1160,7 +1267,7 @@ export default function DashReservations() {
                 <div className="flex justify-between mb-2">
                   <span>Prix total</span>
                   <span className="font-bold text-gold">
-                    {newReservation.total} DH
+                    {newReservation.total} €
                   </span>
                 </div>
                 <div className="flex justify-between items-center">

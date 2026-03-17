@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "../../lib/supabaseClient";
 
 const STEPS = ["Identité", "Tarifs & Options", "Équipements", "Photos"];
@@ -57,20 +57,19 @@ const EMPTY = {
   agency_id: null,
 };
 
-const inputClasses =
+const IC =
   "w-full bg-white/[0.04] border border-white/10 text-cream py-2.5 px-3.5 rounded-[10px] font-sora text-[13px] outline-none box-border";
-const labelClasses =
+const LC =
   "text-[11px] font-bold text-gold tracking-[0.12em] uppercase block mb-1.5";
 
 function Field({ label, children }) {
   return (
     <div>
-      <label className={labelClasses}>{label}</label>
+      <label className={LC}>{label}</label>
       {children}
     </div>
   );
 }
-
 function Inp({ k, form, set, type = "text", placeholder = "" }) {
   return (
     <input
@@ -80,17 +79,16 @@ function Inp({ k, form, set, type = "text", placeholder = "" }) {
       onChange={(e) =>
         set(k, type === "number" ? Number(e.target.value) || 0 : e.target.value)
       }
-      className={inputClasses}
+      className={IC}
     />
   );
 }
-
 function Sel({ k, form, set, options }) {
   return (
     <select
       value={form[k]}
       onChange={(e) => set(k, e.target.value)}
-      className={inputClasses}
+      className={IC}
     >
       {options.map((o) => (
         <option key={o} value={o} className="bg-dark">
@@ -100,13 +98,10 @@ function Sel({ k, form, set, options }) {
     </select>
   );
 }
-
 function Check({ k, form, set, label }) {
   return (
     <label
-      className={`flex items-center gap-2 cursor-pointer py-2.5 px-3 bg-white/[0.03] rounded-lg border ${
-        form[k] ? "border-gold/30" : "border-white/[0.07]"
-      }`}
+      className={`flex items-center gap-2 cursor-pointer py-2.5 px-3 bg-white/[0.03] rounded-lg border ${form[k] ? "border-gold/30" : "border-white/[0.07]"}`}
     >
       <input
         type="checkbox"
@@ -115,9 +110,7 @@ function Check({ k, form, set, label }) {
         className="accent-gold w-[15px] h-[15px] shrink-0"
       />
       <span
-        className={`text-[13px] font-semibold ${
-          form[k] ? "text-gold" : "text-cream/65"
-        }`}
+        className={`text-[13px] font-semibold ${form[k] ? "text-gold" : "text-cream/65"}`}
       >
         {label}
       </span>
@@ -125,6 +118,188 @@ function Check({ k, form, set, label }) {
   );
 }
 
+/* ── Photo uploader component ───────────────────────────────── */
+function PhotoUploader({
+  label,
+  onFile,
+  currentUrl,
+  onRemove,
+  multiple = false,
+  existingImgs = [],
+  onAddImg,
+  onRemoveImg,
+}) {
+  const ref = useRef();
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState(null);
+
+  const upload = async (files) => {
+    setErr(null);
+    setUploading(true);
+    try {
+      for (const file of files) {
+        if (!file.type.startsWith("image/")) {
+          setErr("Fichier non supporté");
+          continue;
+        }
+        if (file.size > 8 * 1024 * 1024) {
+          setErr("Fichier trop lourd (max 8 Mo)");
+          continue;
+        }
+        const ext = file.name.split(".").pop();
+        const path = `cars/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("car-photos")
+          .upload(path, file, { upsert: true });
+        if (upErr) throw upErr;
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("car-photos").getPublicUrl(path);
+        if (multiple) onAddImg(publicUrl);
+        else onFile(publicUrl);
+      }
+    } catch (e) {
+      setErr(e.message ?? "Erreur upload");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault();
+    upload([...e.dataTransfer.files]);
+  };
+
+  if (multiple) {
+    return (
+      <div>
+        <label className={LC}>{label}</label>
+        <div
+          onDrop={onDrop}
+          onDragOver={(e) => e.preventDefault()}
+          onClick={() => ref.current.click()}
+          className="border-2 border-dashed border-white/10 rounded-xl p-5 text-center cursor-pointer hover:border-gold/40 transition-colors relative"
+        >
+          {uploading ? (
+            <div className="flex items-center justify-center gap-2 text-cream/50 text-sm">
+              <div className="w-4 h-4 border-2 border-cream/30 border-t-gold rounded-full animate-spin" />
+              Téléchargement…
+            </div>
+          ) : (
+            <>
+              <div className="text-3xl mb-2">🖼️</div>
+              <div className="text-sm text-cream/40">
+                Glisser-déposer ou <span className="text-gold">cliquer</span>{" "}
+                pour ajouter des photos
+              </div>
+              <div className="text-xs text-cream/25 mt-1">
+                JPG, PNG, WEBP · max 8 Mo chacune
+              </div>
+            </>
+          )}
+          <input
+            ref={ref}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => upload([...e.target.files])}
+          />
+        </div>
+        {err && <div className="text-red-500 text-xs mt-1.5">⚠️ {err}</div>}
+        {existingImgs.length > 0 && (
+          <div className="grid grid-cols-3 gap-2 mt-3">
+            {existingImgs.map((img, i) => (
+              <div
+                key={i}
+                className="relative rounded-[10px] overflow-hidden aspect-video group"
+              >
+                <img src={img} alt="" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => onRemoveImg(i)}
+                  className="absolute top-1 right-1 bg-black/75 border-none text-white w-[22px] h-[22px] rounded-full cursor-pointer text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <label className={LC}>{label}</label>
+      <div
+        onDrop={onDrop}
+        onDragOver={(e) => e.preventDefault()}
+        onClick={() => !currentUrl && ref.current.click()}
+        className={`rounded-xl border-2 overflow-hidden transition-colors ${currentUrl ? "border-gold/30" : "border-dashed border-white/10 cursor-pointer hover:border-gold/40"}`}
+        style={{ height: "140px" }}
+      >
+        {currentUrl ? (
+          <div className="relative w-full h-full">
+            <img
+              src={currentUrl}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  ref.current.click();
+                }}
+                className="bg-gold text-[#0a0a0f] border-none rounded-lg px-3 py-1.5 text-xs font-bold cursor-pointer"
+              >
+                🔄 Changer
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove();
+                }}
+                className="bg-red-500 text-white border-none rounded-lg px-3 py-1.5 text-xs font-bold cursor-pointer"
+              >
+                🗑️
+              </button>
+            </div>
+          </div>
+        ) : uploading ? (
+          <div className="flex flex-col items-center justify-center h-full gap-2 text-cream/40">
+            <div className="w-5 h-5 border-2 border-cream/30 border-t-gold rounded-full animate-spin" />
+            <span className="text-xs">Téléchargement…</span>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full gap-2">
+            <div className="text-3xl">📷</div>
+            <div className="text-sm text-cream/40">
+              Glisser ou <span className="text-gold">cliquer</span>
+            </div>
+            <div className="text-xs text-cream/25">
+              JPG, PNG, WEBP · max 8 Mo
+            </div>
+          </div>
+        )}
+      </div>
+      {err && <div className="text-red-500 text-xs mt-1.5">⚠️ {err}</div>}
+      <input
+        ref={ref}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => upload([...e.target.files])}
+      />
+    </div>
+  );
+}
+
+/* ── Main component ─────────────────────────────────────────── */
 export default function DashVoitures() {
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -137,127 +312,61 @@ export default function DashVoitures() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [search, setSearch] = useState("");
   const [agencyId, setAgencyId] = useState(null);
-
-  // Charger l'agence ID au démarrage
-  // Dans DashVoitures.jsx - useEffect modifié
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const initAgency = async () => {
+    const init = async () => {
       try {
         setLoading(true);
-
-        // 1. Récupérer l'utilisateur connecté
         const {
           data: { user },
-          error: userError,
+          error: uErr,
         } = await supabase.auth.getUser();
-
-        if (userError) throw userError;
-        if (!user) {
-          console.error("Aucun utilisateur connecté");
+        if (uErr || !user) {
           setLoading(false);
           return;
         }
 
-        console.log("Utilisateur connecté:", user.id, user.email);
-
-        // 2. D'ABORD chercher par auth_user_id (plus fiable)
-        let { data: agencyByUserId, error: errorByUserId } = await supabase
+        let { data: ag } = await supabase
           .from("agencies")
           .select("*")
           .eq("auth_user_id", user.id)
           .maybeSingle();
 
-        if (errorByUserId && errorByUserId.code !== "PGRST116") {
-          throw errorByUserId;
+        if (!ag) {
+          const { data: newAg, error: iErr } = await supabase
+            .from("agencies")
+            .insert([
+              {
+                auth_user_id: user.id,
+                name: user.email?.split("@")[0] || "Mon agence",
+                email: user.email,
+                city: "Casablanca",
+                phone: "",
+              },
+            ])
+            .select()
+            .single();
+          if (iErr) throw iErr;
+          ag = newAg;
         }
 
-        // 3. Si trouvé par auth_user_id, on l'utilise
-        if (agencyByUserId) {
-          console.log("Agence trouvée par auth_user_id:", agencyByUserId);
-          setAgencyId(agencyByUserId.id);
-          loadCars(agencyByUserId.id);
-          setLoading(false);
-          return;
-        }
-
-        // 6. Si aucune agence trouvée, on en crée une nouvelle
-        console.log("Création d'une nouvelle agence pour", user.email);
-
-        const { data: newAgency, error: insertError } = await supabase
-          .from("agencies")
-          .insert([
-            {
-              auth_user_id: user.id,
-              name: user.email?.split("@")[0] || "Mon agence",
-              email: user.email,
-              city: "Casablanca",
-              phone: "",
-            },
-          ])
-          .select()
-          .single();
-
-        if (insertError) {
-          // Si erreur de duplicate, essayer une dernière fois de récupérer
-          if (insertError.code === "23505") {
-            console.log(
-              "Email déjà existant, récupération de l'agence existante",
-            );
-
-            const { data: existingAgency } = await supabase
-              .from("agencies")
-              .select("*")
-              .eq("email", user.email)
-              .single();
-
-            if (existingAgency) {
-              // Mettre à jour avec le bon auth_user_id
-              const { data: updated } = await supabase
-                .from("agencies")
-                .update({ auth_user_id: user.id })
-                .eq("id", existingAgency.id)
-                .select()
-                .single();
-
-              setAgencyId(updated?.id || existingAgency.id);
-              loadCars(updated?.id || existingAgency.id);
-            }
-          } else {
-            throw insertError;
-          }
-        } else {
-          setAgencyId(newAgency.id);
-          loadCars(newAgency.id);
-        }
+        setAgencyId(ag.id);
+        const { data: carsData, error: cErr } = await supabase
+          .from("cars")
+          .select("*")
+          .eq("agency_id", ag.id)
+          .order("added_at", { ascending: false });
+        if (cErr) throw cErr;
+        setCars(carsData || []);
       } catch (err) {
-        console.error("Erreur lors de l'initialisation:", err);
+        console.error("Init error:", err);
       } finally {
         setLoading(false);
       }
     };
-
-    initAgency();
+    init();
   }, []);
-
-  // Charger les voitures depuis Supabase
-  const loadCars = async (agency_id) => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("cars")
-        .select("*")
-        .eq("agency_id", agency_id)
-        .order("added_at", { ascending: false });
-
-      if (error) throw error;
-      setCars(data || []);
-    } catch (err) {
-      console.error("Erreur chargement voitures:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -266,7 +375,6 @@ export default function DashVoitures() {
     setStep(0);
     setModal("add");
   };
-
   const openEdit = (car) => {
     setForm({
       ...EMPTY,
@@ -277,15 +385,15 @@ export default function DashVoitures() {
     setStep(0);
     setModal(car);
   };
+  const closeModal = () => {
+    setModal(null);
+    setSaving(false);
+  };
 
-  const closeModal = () => setModal(null);
-
-  // Sauvegarder dans Supabase
   const save = async () => {
     if (!form.name?.trim() || !form.price) return;
-
-    // Liste des champs numériques
-    const numericFields = [
+    setSaving(true);
+    const numFields = [
       "price",
       "price_week",
       "price_month",
@@ -296,142 +404,97 @@ export default function DashVoitures() {
       "min_days",
       "year",
     ];
-
-    const cleanForm = { ...form };
-    numericFields.forEach((field) => {
-      const value = cleanForm[field];
-      if (value === "" || value === null || value === undefined) {
-        cleanForm[field] = null; // null pour les champs optionnels
-      } else if (typeof value === "string") {
-        // Convertir en nombre, garder null si pas un nombre valide
-        const num = parseFloat(value);
-        cleanForm[field] = isNaN(num) ? null : num;
-      }
+    const clean = { ...form };
+    numFields.forEach((f) => {
+      const v = clean[f];
+      clean[f] =
+        v === "" || v === null || v === undefined
+          ? null
+          : isNaN(parseFloat(v))
+            ? null
+            : parseFloat(v);
     });
+
+    const payload = {
+      agency_id: agencyId,
+      name: clean.name,
+      brand: clean.brand,
+      year: clean.year,
+      category: clean.category,
+      city: clean.city,
+      price: clean.price,
+      price_week: clean.price_week,
+      price_month: clean.price_month,
+      fuel: clean.fuel,
+      transmission: clean.transmission,
+      seats: clean.seats,
+      deposit: clean.deposit,
+      deposit_amount: clean.deposit_amount,
+      img: clean.img,
+      imgs: clean.imgs,
+      description: clean.description,
+      status: clean.status,
+      mileage: clean.mileage,
+      min_age: clean.min_age,
+      min_days: clean.min_days,
+      second_driver: clean.second_driver,
+      delivery_price: clean.delivery_price,
+      damage_rules: clean.damage_rules,
+      babyseat: clean.babyseat,
+      gps: clean.gps,
+    };
 
     try {
       if (modal === "add") {
         const { data, error } = await supabase
           .from("cars")
-          .insert([
-            {
-              agency_id: agencyId,
-              name: cleanForm.name,
-              brand: cleanForm.brand,
-              year: cleanForm.year,
-              category: cleanForm.category,
-              city: cleanForm.city,
-              price: cleanForm.price,
-              price_week: cleanForm.price_week,
-              price_month: cleanForm.price_month,
-              fuel: cleanForm.fuel,
-              transmission: cleanForm.transmission,
-              seats: cleanForm.seats,
-              deposit: cleanForm.deposit,
-              deposit_amount: cleanForm.deposit_amount,
-              img: cleanForm.img,
-              imgs: cleanForm.imgs,
-              description: cleanForm.description,
-              status: cleanForm.status,
-              mileage: cleanForm.mileage,
-              min_age: cleanForm.min_age,
-              min_days: cleanForm.min_days,
-              second_driver: cleanForm.second_driver,
-              delivery_price: cleanForm.delivery_price,
-              damage_rules: cleanForm.damage_rules,
-              babyseat: cleanForm.babyseat,
-              gps: cleanForm.gps,
-            },
-          ])
+          .insert([payload])
           .select();
-
         if (error) throw error;
-        if (data) setCars((prev) => [data[0], ...prev]);
+        setCars((prev) => [data[0], ...prev]);
       } else {
         const { error } = await supabase
           .from("cars")
-          .update({
-            name: cleanForm.name,
-            brand: cleanForm.brand,
-            year: cleanForm.year,
-            category: cleanForm.category,
-            city: cleanForm.city,
-            price: cleanForm.price,
-            price_week: cleanForm.price_week,
-            price_month: cleanForm.price_month,
-            fuel: cleanForm.fuel,
-            transmission: cleanForm.transmission,
-            seats: cleanForm.seats,
-            deposit: cleanForm.deposit,
-            deposit_amount: cleanForm.deposit_amount,
-            img: cleanForm.img,
-            imgs: cleanForm.imgs,
-            description: cleanForm.description,
-            status: cleanForm.status,
-            mileage: cleanForm.mileage,
-            min_age: cleanForm.min_age,
-            min_days: cleanForm.min_days,
-            second_driver: cleanForm.second_driver,
-            delivery_price: cleanForm.delivery_price,
-            damage_rules: cleanForm.damage_rules,
-            babyseat: cleanForm.babyseat,
-            gps: cleanForm.gps,
-          })
-          .eq("id", cleanForm.id);
-
+          .update(payload)
+          .eq("id", clean.id);
         if (error) throw error;
-
         setCars((prev) =>
-          prev.map((c) => (c.id === cleanForm.id ? { ...cleanForm } : c)),
+          prev.map((c) => (c.id === clean.id ? { ...clean } : c)),
         );
-        if (sidebarCar?.id === cleanForm.id) setSidebarCar({ ...cleanForm });
+        if (sidebarCar?.id === clean.id) setSidebarCar({ ...clean });
       }
       closeModal();
     } catch (err) {
-      console.error("Erreur sauvegarde:", err);
-      alert("Erreur lors de la sauvegarde");
+      console.error("Save error:", err);
+      alert("Erreur lors de la sauvegarde : " + err.message);
+      setSaving(false);
     }
   };
 
   const cycleStatus = async (id, e) => {
     e?.stopPropagation();
     const order = ["active", "unavailable", "maintenance"];
-
     const car = cars.find((c) => c.id === id);
-    const currentStatus = car.status || "active";
-    const nextStatus = order[(order.indexOf(currentStatus) + 1) % order.length];
-
+    const next =
+      order[(order.indexOf(car.status || "active") + 1) % order.length];
     try {
-      const { error } = await supabase
-        .from("cars")
-        .update({ status: nextStatus })
-        .eq("id", id);
-
-      if (error) throw error;
-
+      await supabase.from("cars").update({ status: next }).eq("id", id);
       setCars((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, status: nextStatus } : c)),
+        prev.map((c) => (c.id === id ? { ...c, status: next } : c)),
       );
-
-      if (sidebarCar?.id === id) {
-        setSidebarCar((s) => ({ ...s, status: nextStatus }));
-      }
+      if (sidebarCar?.id === id) setSidebarCar((s) => ({ ...s, status: next }));
     } catch (err) {
-      console.error("Erreur mise à jour statut:", err);
+      console.error(err);
     }
   };
 
   const confirmDelete = async () => {
     try {
-      const { error } = await supabase.from("cars").delete().eq("id", deleteId);
-
-      if (error) throw error;
-
+      await supabase.from("cars").delete().eq("id", deleteId);
       setCars((prev) => prev.filter((c) => c.id !== deleteId));
       if (sidebarCar?.id === deleteId) setSidebarCar(null);
     } catch (err) {
-      console.error("Erreur suppression:", err);
-      alert("Erreur lors de la suppression");
+      alert("Erreur suppression: " + err.message);
     } finally {
       setDeleteId(null);
     }
@@ -446,44 +509,11 @@ export default function DashVoitures() {
     setDmgIn({ item: "", price: "" });
   };
 
-  const addImgUrl = () => {
-    const url = prompt("Coller l'URL de la photo :");
-    if (url?.trim()) set("imgs", [...(form.imgs || []), url.trim()]);
-  };
-
   const canNext = () => {
     if (step === 0) return form.name?.trim() && form.brand?.trim();
     if (step === 1) return !!form.price;
     return true;
   };
-
-  // Charger les stats mensuelles (réservations/revenus)
-  useEffect(() => {
-    const loadStats = async () => {
-      if (!cars.length) return;
-
-      for (let car of cars) {
-        const { data } = await supabase
-          .from("reservations")
-          .select("total")
-          .eq("car_id", car.id)
-          .eq("status", "completed");
-
-        if (data) {
-          const revenue = data.reduce((sum, r) => sum + r.total, 0);
-          setCars((prev) =>
-            prev.map((c) =>
-              c.id === car.id
-                ? { ...c, reservations: data.length, revenue }
-                : c,
-            ),
-          );
-        }
-      }
-    };
-
-    loadStats();
-  }, [cars.length]);
 
   const displayed = cars.filter((c) => {
     const matchS =
@@ -497,17 +527,16 @@ export default function DashVoitures() {
     return matchS && matchQ;
   });
 
-  if (loading) {
+  if (loading)
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="w-10 h-10 border-4 border-gold/30 border-t-gold rounded-full animate-spin" />
       </div>
     );
-  }
 
   return (
     <div className="flex gap-6 items-start">
-      {/* Main */}
+      {/* ── Main ── */}
       <div className="flex-1 min-w-0 flex flex-col gap-[22px]">
         {/* Header */}
         <div className="flex justify-between items-end flex-wrap gap-3">
@@ -536,7 +565,7 @@ export default function DashVoitures() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="🔍  Nom, marque, ville…"
-            className={`${inputClasses} max-w-[210px] py-2 px-3.5 flex-[1_1_140px]`}
+            className={`${IC} max-w-[210px] py-2 px-3.5 flex-[1_1_140px]`}
           />
           <div className="flex gap-1.5 flex-wrap">
             {[
@@ -548,11 +577,7 @@ export default function DashVoitures() {
               <button
                 key={v}
                 onClick={() => setFilterStatus(v)}
-                className={`py-1.5 px-3 rounded-full font-sora text-xs font-semibold cursor-pointer transition-all whitespace-nowrap ${
-                  filterStatus === v
-                    ? "border border-gold bg-gold/10 text-gold"
-                    : "border border-white/10 text-cream/50"
-                }`}
+                className={`py-1.5 px-3 rounded-full font-sora text-xs font-semibold cursor-pointer transition-all whitespace-nowrap ${filterStatus === v ? "border border-gold bg-gold/10 text-gold" : "border border-white/10 text-cream/50"}`}
               >
                 {l} (
                 {v === "all"
@@ -564,7 +589,7 @@ export default function DashVoitures() {
           </div>
         </div>
 
-        {/* Cars grid */}
+        {/* Grid */}
         <div className="grid grid-cols-[repeat(auto-fill,minmax(265px,1fr))] gap-4">
           {displayed.map((car) => {
             const st = STATUS[car.status || "active"];
@@ -573,11 +598,7 @@ export default function DashVoitures() {
               <div
                 key={car.id}
                 onClick={() => setSidebarCar(isSel ? null : car)}
-                className={`bg-dark rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 ${
-                  isSel
-                    ? "border border-gold/55 -translate-y-1 shadow-[0_8px_32px_rgba(212,168,83,0.18)]"
-                    : "border border-white/[0.06]"
-                }`}
+                className={`bg-dark rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 ${isSel ? "border border-gold/55 -translate-y-1 shadow-[0_8px_32px_rgba(212,168,83,0.18)]" : "border border-white/[0.06]"}`}
               >
                 <div className="relative">
                   <img
@@ -591,7 +612,7 @@ export default function DashVoitures() {
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f]/85 to-transparent" />
                   <button
                     onClick={(e) => cycleStatus(car.id, e)}
-                    className="absolute top-2.5 right-2.5 text-[10px] font-bold py-1 px-2.5 rounded-full border-none cursor-pointer backdrop-blur-md transition-all"
+                    className="absolute top-2.5 right-2.5 text-[10px] font-bold py-1 px-2.5 rounded-full border-none cursor-pointer backdrop-blur-md"
                     style={{ background: st.bg, color: st.color }}
                   >
                     {st.label}
@@ -622,7 +643,7 @@ export default function DashVoitures() {
                   <div className="flex justify-between items-center mb-3">
                     <div>
                       <span className="text-xl font-extrabold text-gold">
-                        {car.price} DH
+                        {car.price} €
                       </span>
                       <span className="text-[11px] text-cream/40 ml-1">
                         /jour
@@ -631,7 +652,7 @@ export default function DashVoitures() {
                     <div className="text-right text-[11px] text-cream/35">
                       <div>{car.reservations || 0} rés.</div>
                       <div className="text-gold/70 font-semibold">
-                        {(car.revenue || 0).toLocaleString()} DH
+                        {(car.revenue || 0).toLocaleString()} €
                       </div>
                     </div>
                   </div>
@@ -641,7 +662,7 @@ export default function DashVoitures() {
                         e.stopPropagation();
                         openEdit(car);
                       }}
-                      className="flex-1 bg-white/[0.05] border border-white/10 text-cream py-2 rounded-lg font-sora text-xs font-semibold cursor-pointer transition-all hover:border-gold"
+                      className="flex-1 bg-white/[0.05] border border-white/10 text-cream py-2 rounded-lg font-sora text-xs font-semibold cursor-pointer hover:border-gold"
                     >
                       ✏️ Modifier
                     </button>
@@ -650,7 +671,7 @@ export default function DashVoitures() {
                         e.stopPropagation();
                         setDeleteId(car.id);
                       }}
-                      className="bg-red-500/10 border border-red-500/20 text-red-500 py-2 px-3 rounded-lg font-sora text-xs cursor-pointer transition-all hover:bg-red-500/20"
+                      className="bg-red-500/10 border border-red-500/20 text-red-500 py-2 px-3 rounded-lg font-sora text-xs cursor-pointer hover:bg-red-500/20"
                     >
                       🗑️
                     </button>
@@ -661,14 +682,13 @@ export default function DashVoitures() {
           })}
           {displayed.length === 0 && (
             <div className="col-span-full text-center py-[60px] text-cream/30">
-              <div className="text-4xl mb-3">🚗</div>
-              Aucun véhicule trouvé
+              <div className="text-4xl mb-3">🚗</div>Aucun véhicule trouvé
             </div>
           )}
         </div>
       </div>
 
-      {/* Sidebar - reste identique mais avec les champs Supabase */}
+      {/* ── Sidebar ── */}
       {sidebarCar &&
         (() => {
           const st = STATUS[sidebarCar.status || "active"];
@@ -677,7 +697,6 @@ export default function DashVoitures() {
               className="w-[310px] shrink-0 sticky top-20 bg-dark rounded-[20px] overflow-hidden max-h-[calc(100vh-104px)] overflow-y-auto"
               style={{ border: `1px solid ${st.color}33` }}
             >
-              {/* ... (contenu sidebar identique à votre code) ... */}
               <div className="relative">
                 <img
                   src={
@@ -709,7 +728,7 @@ export default function DashVoitures() {
               <div className="py-4 px-4 pb-5">
                 <button
                   onClick={(e) => cycleStatus(sidebarCar.id, e)}
-                  className="w-full py-2 rounded-lg font-sora font-bold text-xs cursor-pointer mb-4 transition-all"
+                  className="w-full py-2 rounded-lg font-sora font-bold text-xs cursor-pointer mb-4"
                   style={{
                     border: `1px solid ${st.color}55`,
                     background: st.bg,
@@ -718,21 +737,20 @@ export default function DashVoitures() {
                 >
                   {st.label} · cliquer pour changer
                 </button>
-                {/* KPIs */}
                 <div className="grid grid-cols-2 gap-2 mb-4">
                   {[
                     [
                       "💰",
                       "Revenu",
-                      `${(sidebarCar.revenue || 0).toLocaleString()} DH`,
+                      `${(sidebarCar.revenue || 0).toLocaleString()} €`,
                     ],
                     ["📅", "Rés.", `${sidebarCar.reservations || 0}`],
-                    ["💵", "/ jour", `${sidebarCar.price} DH`],
+                    ["💵", "/ jour", `${sidebarCar.price} €`],
                     [
                       "📆",
                       "/ sem",
                       sidebarCar.price_week
-                        ? `${sidebarCar.price_week} DH`
+                        ? `${sidebarCar.price_week} €`
                         : "—",
                     ],
                   ].map(([ic, lb, val]) => (
@@ -750,7 +768,6 @@ export default function DashVoitures() {
                     </div>
                   ))}
                 </div>
-                {/* Specs */}
                 <div className="mb-3.5">
                   <div className="text-[10px] font-bold text-cream/30 tracking-widest uppercase mb-1.5">
                     Caractéristiques
@@ -764,9 +781,9 @@ export default function DashVoitures() {
                       `🛣️ ${sidebarCar.mileage || "Illimité"}`,
                       `🎂 ${sidebarCar.min_age || 21} ans min`,
                       sidebarCar.babyseat ? "🪑 Siège bébé" : null,
-                      sidebarCar.gps ? "🗺️ gps" : null,
+                      sidebarCar.gps ? "🗺️ GPS" : null,
                       sidebarCar.deposit
-                        ? `🔐 Caution ${sidebarCar.deposit_amount || 0} MAD`
+                        ? `🔐 Caution ${sidebarCar.deposit_amount || 0} €`
                         : "✅ Sans caution",
                     ]
                       .filter(Boolean)
@@ -780,13 +797,11 @@ export default function DashVoitures() {
                       ))}
                   </div>
                 </div>
-                {/* Description */}
                 {sidebarCar.description && (
                   <div className="mb-3.5 py-2.5 px-3 bg-white/[0.03] rounded-[10px] text-xs text-cream/55 leading-relaxed">
                     {sidebarCar.description}
                   </div>
                 )}
-                {/* Damages */}
                 {sidebarCar.damage_rules?.length > 0 && (
                   <div className="mb-3.5">
                     <div className="text-[10px] font-bold text-cream/30 tracking-widest uppercase mb-1.5">
@@ -798,14 +813,11 @@ export default function DashVoitures() {
                         className="flex justify-between text-xs py-1 border-b border-white/[0.05]"
                       >
                         <span className="text-cream/55">{r.item}</span>
-                        <span className="font-bold text-gold">
-                          {r.price} MAD
-                        </span>
+                        <span className="font-bold text-gold">{r.price} €</span>
                       </div>
                     ))}
                   </div>
                 )}
-                {/* Extra photos */}
                 {sidebarCar.imgs?.length > 0 && (
                   <div className="mb-3.5">
                     <div className="text-[10px] font-bold text-cream/30 tracking-widest uppercase mb-1.5">
@@ -823,7 +835,6 @@ export default function DashVoitures() {
                     </div>
                   </div>
                 )}
-                {/* Actions */}
                 <div className="flex gap-2 mt-1.5">
                   <button
                     onClick={() => openEdit(sidebarCar)}
@@ -843,12 +854,12 @@ export default function DashVoitures() {
           );
         })()}
 
-      {/* Modal Add/Edit - adapter les noms de champs pour Supabase */}
+      {/* ── Modal ── */}
       {modal !== null && (
         <div className="fixed inset-0 z-[600] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/90" onClick={closeModal} />
           <div className="relative bg-dark border border-white/10 rounded-3xl w-full max-w-[700px] max-h-[93vh] overflow-y-auto flex flex-col">
-            {/* Header + stepper (identique) */}
+            {/* Header + stepper */}
             <div className="py-6 px-7 pb-5 border-b border-white/[0.07] sticky top-0 bg-dark z-10">
               <div className="flex justify-between items-center mb-5">
                 <div>
@@ -868,45 +879,32 @@ export default function DashVoitures() {
                   ✕
                 </button>
               </div>
-              {/* Stepper */}
               <div className="flex items-center">
                 {STEPS.map((s, i) => (
                   <div
                     key={s}
-                    className={`flex-1 flex flex-col items-center gap-1 ${
-                      i < step ? "cursor-pointer" : ""
-                    }`}
+                    className={`flex-1 flex flex-col items-center gap-1 ${i < step ? "cursor-pointer" : ""}`}
                     onClick={() => i < step && setStep(i)}
                   >
                     <div className="flex items-center w-full">
                       {i > 0 && (
                         <div
-                          className={`flex-1 h-0.5 transition-colors ${
-                            i <= step ? "bg-gold" : "bg-white/10"
-                          }`}
+                          className={`flex-1 h-0.5 ${i <= step ? "bg-gold" : "bg-white/10"}`}
                         />
                       )}
                       <div
-                        className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-extrabold shrink-0 transition-all ${
-                          i <= step
-                            ? "bg-gold border-2 border-gold text-dark-bg"
-                            : "bg-white/[0.07] border-2 border-white/15 text-cream/35"
-                        }`}
+                        className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-extrabold shrink-0 ${i <= step ? "bg-gold border-2 border-gold text-dark-bg" : "bg-white/[0.07] border-2 border-white/15 text-cream/35"}`}
                       >
                         {i < step ? "✓" : i + 1}
                       </div>
                       {i < STEPS.length - 1 && (
                         <div
-                          className={`flex-1 h-0.5 transition-colors ${
-                            i < step ? "bg-gold" : "bg-white/10"
-                          }`}
+                          className={`flex-1 h-0.5 ${i < step ? "bg-gold" : "bg-white/10"}`}
                         />
                       )}
                     </div>
                     <div
-                      className={`text-[10px] font-semibold tracking-wide text-center ${
-                        i === step ? "text-gold" : "text-cream/35"
-                      }`}
+                      className={`text-[10px] font-semibold tracking-wide text-center ${i === step ? "text-gold" : "text-cream/35"}`}
                     >
                       {s}
                     </div>
@@ -915,53 +913,11 @@ export default function DashVoitures() {
               </div>
             </div>
 
-            {/* Step body - adapter les noms de champs */}
+            {/* Body */}
             <div className="py-6 px-7 flex-1 min-h-[320px]">
+              {/* Step 0: Identité */}
               {step === 0 && (
                 <div className="flex flex-col gap-[18px]">
-                  <div className="flex gap-4 items-start">
-                    <div className="w-[150px] h-[100px] rounded-xl overflow-hidden shrink-0 border border-white/10 bg-white/[0.03] relative">
-                      {form.img ? (
-                        <img
-                          src={form.img}
-                          alt=""
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.target.style.display = "none";
-                            e.target.parentNode.querySelector(
-                              ".error-message",
-                            ).style.display = "flex";
-                          }}
-                          onLoad={(e) => {
-                            e.target.style.display = "block";
-                            e.target.parentNode.querySelector(
-                              ".error-message",
-                            ).style.display = "none";
-                          }}
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center h-full text-cream/20 text-[32px]">
-                          🚗
-                        </div>
-                      )}
-                      <div className="error-message hidden absolute inset-0 items-center justify-center bg-red-500/10 text-red-500 text-xs">
-                        ⚠️ Image invalide
-                      </div>
-                      <div className="absolute bottom-1 left-0 right-0 text-center text-[9px] text-cream/30">
-                        Aperçu
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <Field label="URL photo principale">
-                        <Inp
-                          k="img"
-                          form={form}
-                          set={set}
-                          placeholder="https://images.unsplash.com/…"
-                        />
-                      </Field>
-                    </div>
-                  </div>
                   <div className="grid grid-cols-2 gap-3.5">
                     <Field label="Nom du véhicule *">
                       <Inp
@@ -992,7 +948,7 @@ export default function DashVoitures() {
                       <select
                         value={form.status}
                         onChange={(e) => set("status", e.target.value)}
-                        className={inputClasses}
+                        className={IC}
                       >
                         {Object.entries(STATUS).map(([k, v]) => (
                           <option key={k} value={k} className="bg-dark">
@@ -1007,12 +963,13 @@ export default function DashVoitures() {
                       value={form.description || ""}
                       onChange={(e) => set("description", e.target.value)}
                       placeholder="Points forts, état du véhicule…"
-                      className={`${inputClasses} min-h-[72px] resize-y font-sans leading-normal`}
+                      className={`${IC} min-h-[72px] resize-y font-sans leading-normal`}
                     />
                   </Field>
                 </div>
               )}
 
+              {/* Step 1: Tarifs */}
               {step === 1 && (
                 <div className="flex flex-col gap-5">
                   <div className="grid grid-cols-3 gap-3.5">
@@ -1055,7 +1012,7 @@ export default function DashVoitures() {
                         placeholder="0"
                       />
                     </Field>
-                    <Field label="Livraison autre ville (MAD)">
+                    <Field label="Livraison autre ville (€)">
                       <Inp
                         k="delivery_price"
                         form={form}
@@ -1074,7 +1031,7 @@ export default function DashVoitures() {
                     />
                     {form.deposit && (
                       <div className="mt-3">
-                        <Field label="Montant caution (MAD)">
+                        <Field label="Montant caution (€)">
                           <Inp
                             k="deposit_amount"
                             form={form}
@@ -1087,10 +1044,8 @@ export default function DashVoitures() {
                     )}
                   </div>
                   <div>
-                    <label className={labelClasses}>
-                      Grille tarifaire dommages (MAD)
-                    </label>
-                    {(form.damage_rules || []).length === 0 && (
+                    <label className={LC}>Grille tarifaire dommages (€)</label>
+                    {!(form.damage_rules || []).length && (
                       <p className="text-xs text-cream/30 mb-2.5 -mt-1">
                         Aucun tarif défini.
                       </p>
@@ -1104,7 +1059,7 @@ export default function DashVoitures() {
                           <span className="text-[13px]">{r.item}</span>
                           <div className="flex items-center gap-3">
                             <span className="font-bold text-gold text-[13px]">
-                              {r.price} MAD
+                              {r.price} €
                             </span>
                             <button
                               onClick={() =>
@@ -1128,7 +1083,7 @@ export default function DashVoitures() {
                           setDmgIn((d) => ({ ...d, item: e.target.value }))
                         }
                         placeholder="ex: Jante rayée"
-                        className={inputClasses}
+                        className={IC}
                       />
                       <input
                         type="number"
@@ -1136,8 +1091,8 @@ export default function DashVoitures() {
                         onChange={(e) =>
                           setDmgIn((d) => ({ ...d, price: e.target.value }))
                         }
-                        placeholder="MAD"
-                        className={inputClasses}
+                        placeholder="€"
+                        className={IC}
                       />
                       <button
                         onClick={addDmg}
@@ -1150,6 +1105,7 @@ export default function DashVoitures() {
                 </div>
               )}
 
+              {/* Step 2: Équipements */}
               {step === 2 && (
                 <div className="flex flex-col gap-5">
                   <div className="grid grid-cols-3 gap-3.5">
@@ -1180,9 +1136,7 @@ export default function DashVoitures() {
                     </Field>
                   </div>
                   <div>
-                    <label className={labelClasses}>
-                      Options &amp; équipements
-                    </label>
+                    <label className={LC}>Options &amp; équipements</label>
                     <div className="grid grid-cols-2 gap-2">
                       <Check
                         k="babyseat"
@@ -1201,67 +1155,32 @@ export default function DashVoitures() {
                 </div>
               )}
 
+              {/* Step 3: Photos — upload depuis galerie */}
               {step === 3 && (
-                <div className="flex flex-col gap-[18px]">
-                  <div>
-                    <label className={labelClasses}>
-                      Photo principale (aperçu)
-                    </label>
-                    {form.img ? (
-                      <img
-                        src={form.img}
-                        alt=""
-                        className="w-full h-40 object-cover rounded-xl border border-white/10"
-                      />
-                    ) : (
-                      <div className="h-20 rounded-xl border border-dashed border-white/10 flex items-center justify-center text-cream/30 text-[13px]">
-                        Pas de photo principale — définir à l'étape 1
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <div className="flex justify-between items-center mb-2.5">
-                      <label className={`${labelClasses} mb-0`}>
-                        Photos supplémentaires
-                      </label>
-                      <button
-                        onClick={addImgUrl}
-                        className="bg-gold/10 border border-gold/30 text-gold py-1.5 px-3.5 rounded-md font-sora font-bold text-xs cursor-pointer"
-                      >
-                        + Ajouter URL
-                      </button>
-                    </div>
-                    {(form.imgs || []).length === 0 ? (
-                      <div className="py-6 border border-dashed border-white/10 rounded-xl text-center text-cream/30 text-[13px]">
-                        🖼️ Aucune photo supplémentaire
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-3 gap-2">
-                        {form.imgs.map((img, i) => (
-                          <div
-                            key={i}
-                            className="relative rounded-[10px] overflow-hidden aspect-video"
-                          >
-                            <img
-                              src={img}
-                              alt=""
-                              className="w-full h-full object-cover"
-                            />
-                            <button
-                              onClick={() =>
-                                set(
-                                  "imgs",
-                                  form.imgs.filter((_, j) => j !== i),
-                                )
-                              }
-                              className="absolute top-1 right-1 bg-black/75 border-none text-white w-[22px] h-[22px] rounded-full cursor-pointer text-xs flex items-center justify-center"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                <div className="flex flex-col gap-6">
+                  <PhotoUploader
+                    label="Photo principale"
+                    currentUrl={form.img}
+                    onFile={(url) => set("img", url)}
+                    onRemove={() => set("img", "")}
+                  />
+                  <PhotoUploader
+                    label="Photos supplémentaires"
+                    multiple
+                    existingImgs={form.imgs || []}
+                    onAddImg={(url) => set("imgs", [...(form.imgs || []), url])}
+                    onRemoveImg={(i) =>
+                      set(
+                        "imgs",
+                        (form.imgs || []).filter((_, j) => j !== i),
+                      )
+                    }
+                  />
+                  <div className="bg-gold/5 border border-gold/15 rounded-xl p-4 text-xs text-cream/45 leading-relaxed">
+                    💡 Les photos sont uploadées directement dans votre galerie
+                    Supabase Storage (bucket{" "}
+                    <code className="text-gold">car-photos</code>). Les formats
+                    JPG, PNG et WEBP sont acceptés.
                   </div>
                 </div>
               )}
@@ -1279,13 +1198,7 @@ export default function DashVoitures() {
                 {STEPS.map((_, i) => (
                   <div
                     key={i}
-                    className={`h-1.5 rounded-sm transition-all ${
-                      i === step
-                        ? "w-[18px] bg-gold"
-                        : i < step
-                          ? "w-1.5 bg-gold/45"
-                          : "w-1.5 bg-white/15"
-                    }`}
+                    className={`h-1.5 rounded-sm transition-all ${i === step ? "w-[18px] bg-gold" : i < step ? "w-1.5 bg-gold/45" : "w-1.5 bg-white/15"}`}
                   />
                 ))}
               </div>
@@ -1303,7 +1216,6 @@ export default function DashVoitures() {
                     fontWeight: "700",
                     fontSize: "14px",
                     cursor: canNext() ? "pointer" : "not-allowed",
-                    transition: "all 0.2s",
                   }}
                 >
                   Suivant →
@@ -1311,9 +1223,14 @@ export default function DashVoitures() {
               ) : (
                 <button
                   onClick={save}
-                  className="bg-gold text-dark-bg border-none py-2.5 px-6 rounded-[10px] font-sora font-bold text-sm cursor-pointer shadow-[0_4px_16px_rgba(212,168,83,0.35)]"
+                  disabled={saving}
+                  className="bg-gold text-dark-bg border-none py-2.5 px-6 rounded-[10px] font-sora font-bold text-sm cursor-pointer disabled:opacity-50 shadow-[0_4px_16px_rgba(212,168,83,0.35)]"
                 >
-                  {modal === "add" ? "✓ Ajouter le véhicule" : "✓ Enregistrer"}
+                  {saving
+                    ? "Enregistrement…"
+                    : modal === "add"
+                      ? "✓ Ajouter le véhicule"
+                      : "✓ Enregistrer"}
                 </button>
               )}
             </div>

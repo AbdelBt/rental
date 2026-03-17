@@ -1,4 +1,4 @@
-import { useState, useMemo ,useEffect} from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link, useSearchParams, useParams } from "react-router-dom";
 import { cars, categories, addDays } from "../data";
 import useBreakpoint from "../hooks/useBreakpoint";
@@ -19,7 +19,9 @@ export default function ResultsPage() {
   const { isMobile, isTablet } = useBreakpoint();
   const [searchParams] = useSearchParams();
   const { id } = useParams();
-  const [category, setCategory] = useState(searchParams.get("category") || "Toutes");
+  const [category, setCategory] = useState(
+    searchParams.get("category") || "Toutes",
+  );
   const [sort, setSort] = useState("price_asc");
   const [fuel, setFuel] = useState("Tous");
   const [transmission, setTransmission] = useState("Toutes");
@@ -34,26 +36,37 @@ export default function ResultsPage() {
 
   const filtered = useMemo(() => {
     let list = [...cars];
-    if (category !== "Toutes") list = list.filter((c) => c.category === category);
+    if (category !== "Toutes")
+      list = list.filter((c) => c.category === category);
     if (fuel !== "Tous") list = list.filter((c) => c.fuel === fuel);
-    if (transmission !== "Toutes") list = list.filter((c) => c.transmission === transmission);
+    if (transmission !== "Toutes")
+      list = list.filter((c) => c.transmission === transmission);
     if (depositOnly) list = list.filter((c) => !c.deposit);
     list = list.filter((c) => c.price <= maxPrice);
 
     switch (sort) {
-      case "price_asc": list.sort((a, b) => a.price - b.price); break;
-      case "price_desc": list.sort((a, b) => b.price - a.price); break;
-      case "rating_desc": list.sort((a, b) => b.rating - a.rating); break;
-      case "name_asc": list.sort((a, b) => a.name.localeCompare(b.name)); break;
+      case "price_asc":
+        list.sort((a, b) => a.price - b.price);
+        break;
+      case "price_desc":
+        list.sort((a, b) => b.price - a.price);
+        break;
+      case "rating_desc":
+        list.sort((a, b) => b.rating - a.rating);
+        break;
+      case "name_asc":
+        list.sort((a, b) => a.name.localeCompare(b.name));
+        break;
     }
     return list;
   }, [category, sort, fuel, transmission, maxPrice, depositOnly]);
 
-  const gridCols = view === "list" || isMobile
-    ? "1fr"
-    : isTablet
-    ? "repeat(2, 1fr)"
-    : "repeat(3, 1fr)";
+  const gridCols =
+    view === "list" || isMobile
+      ? "1fr"
+      : isTablet
+        ? "repeat(2, 1fr)"
+        : "repeat(3, 1fr)";
 
   return (
     <div className="font-sora bg-dark-bg text-cream min-h-screen">
@@ -62,7 +75,9 @@ export default function ResultsPage() {
       <div className="pt-[100px] px-5 md:px-10 pb-10 max-w-[1200px] mx-auto">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 mb-6 text-[13px] text-cream/40">
-          <Link to="/" className="text-cream/40 no-underline">Accueil</Link>
+          <Link to="/" className="text-cream/40 no-underline">
+            Accueil
+          </Link>
           <span>›</span>
           <span className="text-gold">Résultats</span>
         </div>
@@ -74,7 +89,8 @@ export default function ResultsPage() {
               Tous les véhicules
             </h1>
             <p className="text-cream/45 mt-2 text-sm">
-              {filtered.length} véhicule{filtered.length > 1 ? "s" : ""} disponible{filtered.length > 1 ? "s" : ""}
+              {filtered.length} véhicule{filtered.length > 1 ? "s" : ""}{" "}
+              disponible{filtered.length > 1 ? "s" : ""}
             </p>
           </div>
 
@@ -86,7 +102,9 @@ export default function ResultsPage() {
                     key={v}
                     onClick={() => setView(v)}
                     className={`w-9 h-9 rounded-lg border border-white/10 flex items-center justify-center text-base cursor-pointer transition-all ${
-                      view === v ? "bg-gold text-dark-bg" : "bg-transparent text-cream/50"
+                      view === v
+                        ? "bg-gold text-dark-bg"
+                        : "bg-transparent text-cream/50"
                     }`}
                   >
                     {v === "grid" ? "⊞" : "☰"}
@@ -100,7 +118,9 @@ export default function ResultsPage() {
               className="bg-white/[0.05] border border-white/10 text-cream py-2 px-3.5 rounded-lg font-sora text-[13px] cursor-pointer outline-none"
             >
               {SORT_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value} className="bg-dark">{o.label}</option>
+                <option key={o.value} value={o.value} className="bg-dark">
+                  {o.label}
+                </option>
               ))}
             </select>
 
@@ -108,7 +128,9 @@ export default function ResultsPage() {
               <button
                 onClick={() => setFiltersOpen((o) => !o)}
                 className={`py-2 px-4 rounded-lg font-sora text-[13px] font-semibold cursor-pointer ${
-                  filtersOpen ? "bg-gold text-dark-bg" : "bg-white/[0.05] border border-white/10 text-cream"
+                  filtersOpen
+                    ? "bg-gold text-dark-bg"
+                    : "bg-white/[0.05] border border-white/10 text-cream"
                 }`}
               >
                 ⚙ Filtres
@@ -142,7 +164,13 @@ export default function ResultsPage() {
                       category === c ? "text-gold" : "text-cream/65"
                     }`}
                   >
-                    <input type="radio" name="category" checked={category === c} onChange={() => setCategory(c)} className="accent-gold" />
+                    <input
+                      type="radio"
+                      name="category"
+                      checked={category === c}
+                      onChange={() => setCategory(c)}
+                      className="accent-gold"
+                    />
                     {c}
                   </label>
                 ))}
@@ -160,7 +188,8 @@ export default function ResultsPage() {
                 className="w-full accent-gold"
               />
               <div className="flex justify-between text-xs text-cream/35 mt-1">
-                <span>45 DH</span><span>1000 DH</span>
+                <span>45 DH</span>
+                <span>1000 DH</span>
               </div>
             </FilterBlock>
 
@@ -173,7 +202,13 @@ export default function ResultsPage() {
                       fuel === f ? "text-gold" : "text-cream/65"
                     }`}
                   >
-                    <input type="radio" name="fuel" checked={fuel === f} onChange={() => setFuel(f)} className="accent-gold" />
+                    <input
+                      type="radio"
+                      name="fuel"
+                      checked={fuel === f}
+                      onChange={() => setFuel(f)}
+                      className="accent-gold"
+                    />
                     {f}
                   </label>
                 ))}
@@ -189,7 +224,13 @@ export default function ResultsPage() {
                       transmission === t ? "text-gold" : "text-cream/65"
                     }`}
                   >
-                    <input type="radio" name="trans" checked={transmission === t} onChange={() => setTransmission(t)} className="accent-gold" />
+                    <input
+                      type="radio"
+                      name="trans"
+                      checked={transmission === t}
+                      onChange={() => setTransmission(t)}
+                      className="accent-gold"
+                    />
                     {t}
                   </label>
                 ))}
@@ -198,13 +239,25 @@ export default function ResultsPage() {
 
             <FilterBlock title="Caution" last>
               <label className="flex items-center gap-2.5 cursor-pointer text-sm text-cream/65">
-                <input type="checkbox" checked={depositOnly} onChange={(e) => setDepositOnly(e.target.checked)} className="accent-gold w-4 h-4" />
+                <input
+                  type="checkbox"
+                  checked={depositOnly}
+                  onChange={(e) => setDepositOnly(e.target.checked)}
+                  className="accent-gold w-4 h-4"
+                />
                 Sans caution uniquement
               </label>
             </FilterBlock>
 
             <button
-              onClick={() => { setCategory("Toutes"); setSort("price_asc"); setFuel("Tous"); setTransmission("Toutes"); setMaxPrice(1000); setDepositOnly(false); }}
+              onClick={() => {
+                setCategory("Toutes");
+                setSort("price_asc");
+                setFuel("Tous");
+                setTransmission("Toutes");
+                setMaxPrice(1000);
+                setDepositOnly(false);
+              }}
               className="mt-2 bg-transparent border border-white/10 text-cream/40 py-2 px-4 rounded-lg font-sora text-xs cursor-pointer w-full transition-all hover:border-gold hover:text-gold"
             >
               Réinitialiser les filtres
@@ -216,12 +269,22 @@ export default function ResultsPage() {
           {filtered.length === 0 ? (
             <div className="text-center py-20 text-cream/30">
               <div className="text-5xl mb-4">🔍</div>
-              <div className="text-lg">Aucun véhicule ne correspond à vos filtres.</div>
+              <div className="text-lg">
+                Aucun véhicule ne correspond à vos filtres.
+              </div>
             </div>
           ) : (
-            <div className="grid gap-5" style={{ gridTemplateColumns: gridCols }}>
+            <div
+              className="grid gap-5"
+              style={{ gridTemplateColumns: gridCols }}
+            >
               {filtered.map((car, i) => (
-                <ResultCard key={car.id} car={car} listView={view === "list"} index={i} />
+                <ResultCard
+                  key={car.id}
+                  car={car}
+                  listView={view === "list"}
+                  index={i}
+                />
               ))}
             </div>
           )}
@@ -235,7 +298,9 @@ export default function ResultsPage() {
 
 function FilterBlock({ title, children, last = false }) {
   return (
-    <div className={`mb-6 pb-6 border-b border-white/[0.06] ${last ? "mb-0 pb-0 border-b-0" : ""}`}>
+    <div
+      className={`mb-6 pb-6 border-b border-white/[0.06] ${last ? "mb-0 pb-0 border-b-0" : ""}`}
+    >
       <div className="font-semibold text-[13px] text-cream/70 mb-3 tracking-wide">
         {title}
       </div>
@@ -257,14 +322,19 @@ function ResultCard({ car, listView, index }) {
         } ${hovered ? "border-gold/40 -translate-y-1.5 shadow-2xl" : "border border-white/[0.06]"}`}
         style={{ animationDelay: `${index * 0.05}s` }}
       >
-        <div className={`relative overflow-hidden shrink-0 ${listView ? "w-[220px]" : "w-full"}`}>
+        <div
+          className={`relative overflow-hidden shrink-0 ${listView ? "w-[220px]" : "w-full"}`}
+        >
           <img
             src={car.img}
             alt={car.name}
             className={`w-full block object-cover transition-transform duration-500 ${
               hovered ? "scale-[1.04]" : "scale-100"
             }`}
-            style={{ height: listView ? "100%" : "200px", minHeight: listView ? "160px" : undefined }}
+            style={{
+              height: listView ? "100%" : "200px",
+              minHeight: listView ? "160px" : undefined,
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f]/60 to-transparent" />
           {car.badge && (
@@ -276,17 +346,29 @@ function ResultCard({ car, listView, index }) {
           )}
         </div>
 
-        <div className={`flex flex-col justify-between flex-1 ${listView ? "py-5 px-6" : "py-4 px-4"}`}>
+        <div
+          className={`flex flex-col justify-between flex-1 ${listView ? "py-5 px-6" : "py-4 px-4"}`}
+        >
           <div>
             <div className="flex justify-between items-start mb-1.5">
-              <div className={`font-bold ${listView ? "text-lg" : "text-base"}`}>{car.name}</div>
-              <div className="text-xs text-cream/40 bg-white/[0.05] py-0.5 px-2.5 rounded-full">{car.category}</div>
+              <div
+                className={`font-bold ${listView ? "text-lg" : "text-base"}`}
+              >
+                {car.name}
+              </div>
+              <div className="text-xs text-cream/40 bg-white/[0.05] py-0.5 px-2.5 rounded-full">
+                {car.category}
+              </div>
             </div>
 
             <div className="flex items-center gap-1.5 mb-3">
-              <span className="text-gold text-[13px]">{"★".repeat(Math.round(car.rating))}</span>
+              <span className="text-gold text-[13px]">
+                {"★".repeat(Math.round(car.rating))}
+              </span>
               <span className="text-xs font-semibold">{car.rating}</span>
-              <span className="text-xs text-cream/35">({car.reviews} avis)</span>
+              <span className="text-xs text-cream/35">
+                ({car.reviews} avis)
+              </span>
             </div>
 
             <div className={`flex gap-3.5 flex-wrap ${listView ? "mb-3" : ""}`}>
@@ -296,7 +378,10 @@ function ResultCard({ car, listView, index }) {
                 { icon: "⛽", val: car.fuel },
                 { icon: "🛣️", val: car.mileage },
               ].map((s) => (
-                <span key={s.val} className="text-xs text-cream/45 flex items-center gap-1">
+                <span
+                  key={s.val}
+                  className="text-xs text-cream/45 flex items-center gap-1"
+                >
                   {s.icon} {s.val}
                 </span>
               ))}
@@ -311,7 +396,9 @@ function ResultCard({ car, listView, index }) {
 
           <div className="flex justify-between items-center mt-4">
             <div>
-              <span className="text-[22px] font-extrabold text-gold">{car.price} DH</span>
+              <span className="text-[22px] font-extrabold text-gold">
+                {car.price} DH
+              </span>
               <span className="text-xs text-cream/40 ml-1">/jour</span>
             </div>
             <span
