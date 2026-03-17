@@ -1,11 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 export function useClientAuth() {
-  const [user, setUser] = useState(null);
+  const [user, setUser]       = useState(null);
   const [session, setSession] = useState(null);
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Stable ref to current auth user — lets refresh() work without dependencies
+  const userRef = useRef(null);
 
   // Fetch customer row from public.customers, auto-create if missing
   // Also checks Supabase Storage to know which documents have been uploaded
@@ -56,10 +59,14 @@ export function useClientAuth() {
     setCustomer(row);
   };
 
+  // Expose refresh so profile page can re-fetch after saving changes
+  const refresh = () => fetchCustomer(userRef.current);
+
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      userRef.current = session?.user ?? null;
       await fetchCustomer(session?.user ?? null);
       setLoading(false);
     });
@@ -67,17 +74,18 @@ export function useClientAuth() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      userRef.current = session?.user ?? null;
       await fetchCustomer(session?.user ?? null);
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Normalized client object — uses the customers table row (has the real UUID for reservations)
-  const client = customer
+  // Memoized client object — stable reference prevents infinite loops in consumers using [client] deps
+  const client = useMemo(() => customer
     ? {
-      id: customer.id,           // customers table PK (used as customer_id in reservations)
+      id: customer.id,
       auth_id: customer.auth_user_id,
       email: customer.email,
       first_name: customer.first_name ?? "",
@@ -87,9 +95,10 @@ export function useClientAuth() {
       id_front_verified: customer.id_front_verified,
       id_back_verified: customer.id_back_verified,
     }
-    : null;
+    : null,
+  [customer]);
 
   const logout = () => supabase.auth.signOut();
 
-  return { user, client, customer, session, loading, logout, isLoggedIn: !!user };
+  return { user, client, customer, session, loading, logout, refresh, isLoggedIn: !!user };
 }
