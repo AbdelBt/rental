@@ -40,7 +40,7 @@ export default function DashProfil() {
         if (agencyError) throw agencyError;
 
         if (!agencyData) {
-          // Création automatique si l'agence n'existe pas
+          // Auto-create the agency record if it doesn't exist
           const { data: newAgency, error: insertError } = await supabase
             .from("agencies")
             .insert([
@@ -235,7 +235,7 @@ export default function DashProfil() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {/* Informations générales */}
+        {/* General information */}
         <div className="bg-dark border border-white/[0.07] rounded-2xl p-6 flex flex-col gap-4">
           <div className="font-bold text-[15px] mb-1">
             📋 Informations générales
@@ -313,7 +313,7 @@ export default function DashProfil() {
                 <input
                   value={form.iban || ""}
                   onChange={(e) => {
-                    // Ne garder que les caractères alphanumériques et les convertir en majuscules
+                    // Keep only alphanumeric characters and convert to uppercase
                     const value = e.target.value
                       .toUpperCase()
                       .replace(/[^A-Z0-9]/g, "");

@@ -7,7 +7,7 @@ export function useSupabaseAuth() {
     const [session, setSession] = useState(null);
 
     useEffect(() => {
-        // Récupérer la session initiale
+        // Get initial session
         const getInitialSession = async () => {
             try {
                 const { data: { session }, error } = await supabase.auth.getSession();
@@ -29,16 +29,15 @@ export function useSupabaseAuth() {
 
         getInitialSession();
 
-        // Écouter les changements d'auth
+        // Listen for auth state changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (event, session) => {
                 setSession(session);
                 setUser(session?.user ?? null);
                 setLoading(false);
 
-                // Force le re-rendu
                 if (event === 'SIGNED_IN') {
-                    // La session est établie
+                    // Session established
                 }
             }
         );

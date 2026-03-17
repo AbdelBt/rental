@@ -915,7 +915,7 @@ export default function DashVoitures() {
 
             {/* Body */}
             <div className="py-6 px-7 flex-1 min-h-[320px]">
-              {/* Step 0: Identité */}
+              {/* Step 0: Identity */}
               {step === 0 && (
                 <div className="flex flex-col gap-[18px]">
                   <div className="grid grid-cols-2 gap-3.5">
@@ -1105,7 +1105,7 @@ export default function DashVoitures() {
                 </div>
               )}
 
-              {/* Step 2: Équipements */}
+              {/* Step 2: Equipment */}
               {step === 2 && (
                 <div className="flex flex-col gap-5">
                   <div className="grid grid-cols-3 gap-3.5">

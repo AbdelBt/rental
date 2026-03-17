@@ -108,7 +108,7 @@ export default function DashOverview() {
       try {
         setLoading(true);
 
-        // 1. Récupérer l'utilisateur connecté
+        // 1. Get the logged-in user
         const {
           data: { user },
           error: userError,
@@ -116,7 +116,7 @@ export default function DashOverview() {
         if (userError) throw userError;
         if (!user) throw new Error("Non authentifié");
 
-        // 2. Récupérer l'agence
+        // 2. Get the agency
         const { data: agencyData, error: agencyError } = await supabase
           .from("agencies")
           .select("*")
@@ -127,7 +127,7 @@ export default function DashOverview() {
         if (!agencyData) throw new Error("Agence non trouvée");
         setAgency(agencyData);
 
-        // 3. Récupérer toutes les voitures de l'agence
+        // 3. Get all agency cars
         const { data: cars, error: carsError } = await supabase
           .from("cars")
           .select("*")
@@ -137,8 +137,8 @@ export default function DashOverview() {
         const totalCars = cars.length;
         const activeCars = cars.filter((c) => c.status === "active").length;
 
-        // 4. Récupérer les réservations — uniquement acompte payé
-        // Les données client sont masquées tant que deposit_paid = false
+        // 4. Fetch reservations — deposit paid only
+        // Client data is hidden while deposit_paid = false
         const { data: reservations, error: resError } = await supabase
           .from("reservations")
           .select("*")
@@ -161,7 +161,7 @@ export default function DashOverview() {
         let reservationsMonth = 0;
         let reservationsLastMonth = 0;
 
-        // Préparer les données pour le graphique (6 derniers mois)
+        // Prepare chart data (last 6 months)
         const monthNames = [
           "Jan",
           "Fév",
@@ -214,7 +214,7 @@ export default function DashOverview() {
           }
         });
 
-        // 5. Calcul des paiements (simulé avec les réservations terminées)
+        // 5. Compute payouts (simulated from completed reservations)
         const completedReservations = reservations.filter(
           (r) => r.status === "completed",
         );
@@ -230,10 +230,10 @@ export default function DashOverview() {
           0,
         );
 
-        // 6. Note moyenne (depuis agency ou calculée à partir des avis)
-        const avgRating = agencyData.rating || 4.8; // à ajuster selon vos données
+        // 6. Average rating (from agency record or computed from reviews)
+        const avgRating = agencyData.rating || 4.8; // adjust based on your data
 
-        // 7. Réservations récentes
+        // 7. Recent reservations
         const recent = reservations.slice(0, 5).map((r) => ({
           ...r,
           client: r.client_name,
@@ -262,7 +262,7 @@ export default function DashOverview() {
           .slice(0, 3);
         setTopCars(sortedCars);
 
-        // Mettre à jour les stats
+        // Update stats
         setStats({
           revenueMonth,
           revenueLastMonth,
@@ -354,7 +354,7 @@ export default function DashOverview() {
           icon="🚗"
           label="Voitures actives"
           value={`${stats.activeCars} / ${stats.totalCars}`}
-          sub="1 en maintenance" // à calculer plus tard si besoin
+          sub="1 en maintenance" // compute later if needed
           color="#f0eeea"
           link="/dashboard/voitures"
         />

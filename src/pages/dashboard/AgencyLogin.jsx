@@ -21,7 +21,7 @@ export default function AgencyLogin() {
     });
 
     if (error) {
-      // Message d'erreur personnalisé
+      // Custom error message
       if (error.message.includes("Invalid login credentials")) {
         setErrorMsg("Email ou mot de passe incorrect");
       } else if (error.message.includes("Email not confirmed")) {
@@ -80,7 +80,7 @@ export default function AgencyLogin() {
                 </p>
               </div>
 
-              {/* Message d'erreur - AJOUTÉ */}
+              {/* Error message */}
               {errorMsg && (
                 <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm">
                   ⚠️ {errorMsg}

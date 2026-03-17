@@ -92,7 +92,7 @@ function ConfirmCashModal({ reservation, onConfirm, onClose }) {
   );
 }
 
-// Sidebar des détails
+// Details sidebar
 function ReservationSidebar({
   reservation,
   onClose,
@@ -120,7 +120,7 @@ function ReservationSidebar({
           Détails de la réservation
         </h2>
 
-        {/* Image du véhicule */}
+        {/* Vehicle image */}
         <div className="w-full h-[200px] rounded-2xl overflow-hidden mb-6 relative border border-gold/30">
           <img
             src={reservation.carImg}
@@ -154,7 +154,7 @@ function ReservationSidebar({
           </div>
         </div>
 
-        {/* Infos véhicule */}
+        {/* Vehicle info */}
         <div className="bg-dark rounded-2xl p-6 mb-6 border border-white/[0.07]">
           <div className="font-bold text-lg mb-4">🚗 Véhicule</div>
           <div className="grid grid-cols-2 gap-4">
@@ -237,7 +237,7 @@ function ReservationSidebar({
         <div className="bg-dark rounded-2xl p-6 mb-6 border border-white/[0.07]">
           <div className="font-bold text-lg mb-4">💳 Paiement</div>
 
-          {/* Badge acompte payé */}
+          {/* Deposit paid badge */}
           <div className="flex items-center gap-2 mb-4 py-2.5 px-3.5 rounded-xl bg-green-500/10 border border-green-500/25">
             <span className="text-green-500 text-base">✅</span>
             <div>
@@ -385,7 +385,7 @@ export default function DashReservations() {
   const [calMonth, setCalMonth] = useState(new Date().getMonth());
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [selectedCar, setSelectedCar] = useState("all");
-  // États pour l'ajout de réservation
+  // State for adding a reservation
   const [showAddModal, setShowAddModal] = useState(false);
   const [newReservation, setNewReservation] = useState({
     car_id: "",
@@ -410,7 +410,7 @@ export default function DashReservations() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Charger l'agence et les données
+  // Load agency and reservation data
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -420,7 +420,7 @@ export default function DashReservations() {
         } = await supabase.auth.getUser();
         if (!user) return;
 
-        // Récupérer l'agence
+        // Get the agency
         const { data: agency } = await supabase
           .from("agencies")
           .select("id")
@@ -430,14 +430,14 @@ export default function DashReservations() {
         if (!agency) return;
         setAgencyId(agency.id);
 
-        // Récupérer les voitures de l'agence (sans plate pour éviter erreur si colonne absente)
+        // Get agency cars (without plate to avoid error if column is missing)
         const { data: carsData } = await supabase
           .from("cars")
-          .select("id, name, brand, year, category, img, price") // price ajouté pour le calcul
+          .select("id, name, brand, year, category, img, price")
           .eq("agency_id", agency.id);
         setCars(carsData || []);
 
-        // Récupérer les réservations — seulement celles dont l'acompte est payé
+        // Get reservations — deposit paid only
         const { data: resData } = await supabase
           .from("reservations")
           .select("*")
@@ -506,7 +506,7 @@ export default function DashReservations() {
     }
   };
 
-  // Ajout d'une réservation
+  // Add a reservation
   const handleAddReservation = async () => {
     try {
       if (
@@ -542,7 +542,7 @@ export default function DashReservations() {
 
       if (error) throw error;
 
-      // Recharger les réservations — seulement acompte payé
+      // Reload reservations — deposit paid only
       const { data: newRes } = await supabase
         .from("reservations")
         .select("*")
@@ -580,7 +580,7 @@ export default function DashReservations() {
       });
       setReservations(enriched);
       setShowAddModal(false);
-      // Réinitialiser le formulaire
+      // Reset the form
       setNewReservation({
         car_id: "",
         client_name: "",
@@ -712,7 +712,7 @@ export default function DashReservations() {
         </div>
 
         <div className="flex gap-2">
-          {/* Bouton Nouvelle réservation */}
+          {/* New reservation button */}
           <button
             onClick={() => setShowAddModal(true)}
             className="bg-gold text-dark-bg py-2 px-4 rounded-lg font-bold text-sm flex items-center gap-2"
@@ -1073,7 +1073,7 @@ export default function DashReservations() {
         </>
       )}
 
-      {/* Modal d'ajout de réservation */}
+      {/* Add reservation modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center z-[2000] p-4">
           <div className="bg-dark border border-gold/30 rounded-3xl p-6 md:p-8 max-w-[600px] w-full shadow-2xl max-h-[90vh] overflow-y-auto">
@@ -1094,7 +1094,7 @@ export default function DashReservations() {
               }}
               className="space-y-4"
             >
-              {/* Véhicule */}
+              {/* Vehicle */}
               <div>
                 <label className="text-gold text-xs font-bold uppercase tracking-wide mb-1 block">
                   Véhicule *
@@ -1258,7 +1258,7 @@ export default function DashReservations() {
                 </div>
               </div>
 
-              {/* Résumé */}
+              {/* Summary */}
               <div className="bg-gold/10 rounded-xl p-4 border border-gold/20">
                 <div className="flex justify-between mb-2">
                   <span>Nombre de jours</span>

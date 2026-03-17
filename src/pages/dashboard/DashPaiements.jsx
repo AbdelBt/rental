@@ -24,7 +24,7 @@ export default function DashPaiements() {
   const isMobile = useBreakpoint(800);
   const isSmallMobile = useBreakpoint(600);
 
-  // ── Fetch : uniquement réservations avec acompte payé ──────
+  // ── Fetch: deposit-paid reservations only ───────────────────
   useEffect(() => {
     const load = async () => {
       try {
@@ -44,7 +44,7 @@ export default function DashPaiements() {
 
         const commission = ag.commission ?? 10;
 
-        // Seules les réservations dont l'acompte est payé sont visibles
+        // Only reservations with a paid deposit are visible
         const { data: rows, error } = await supabase
           .from("reservations")
           .select(
@@ -56,7 +56,7 @@ export default function DashPaiements() {
 
         if (error) throw error;
 
-        // Récupérer les noms de voitures
+        // Fetch car names
         const carIds = [
           ...new Set((rows || []).map((r) => r.car_id).filter(Boolean)),
         ];
@@ -75,7 +75,7 @@ export default function DashPaiements() {
           const amount = r.total || 0;
           const comm = Math.round((amount * commission) / 100);
           const net = amount - comm;
-          // Versé = réservation terminée (cash confirmé) ; En attente sinon
+          // Paid = completed reservation (cash confirmed); pending otherwise
           const status = r.cash_confirmed ? "paid" : "pending";
           return {
             id: r.id,

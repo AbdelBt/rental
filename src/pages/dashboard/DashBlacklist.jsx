@@ -53,7 +53,7 @@ export default function DashBlacklist() {
   }, []);
 
   const loadList = async () => {
-    // Utilise la vue blacklist_with_votes qui agrège tout
+    // Uses the blacklist_with_votes view which aggregates everything
     const { data, error } = await supabase
       .from("blacklist_with_votes")
       .select("*")
@@ -128,7 +128,7 @@ export default function DashBlacklist() {
 
     try {
       if (myCurrentVote === voteType) {
-        // Cliquer sur le même vote → annuler
+        // Clicking the same vote → cancel it
         await supabase
           .from("blacklist_votes")
           .delete()
@@ -136,7 +136,7 @@ export default function DashBlacklist() {
           .eq("agency_id", agencyId);
         flash("↩️ Vote annulé");
       } else {
-        // Upsert — change ou crée le vote
+        // Upsert — update or create the vote
         await supabase.from("blacklist_votes").upsert(
           {
             entry_id: entryId,
@@ -153,11 +153,11 @@ export default function DashBlacklist() {
         );
       }
 
-      // Recharger pour refléter le trigger Supabase (auto-suppression si score <= 0)
+      // Reload to reflect the Supabase trigger (auto-delete if score <= 0)
       const prevList = [...list];
       await loadList();
 
-      // Détecter les entrées supprimées par le trigger
+      // Detect entries removed by the trigger
       setList((curr) => {
         const removed = prevList.filter(
           (b) => !curr.find((c) => c.id === b.id),

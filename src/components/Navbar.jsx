@@ -82,9 +82,9 @@ export default function Navbar() {
                 ))}
               </div>
             </div>
-            <button className="btn-primary py-2.5 px-5 text-xs">
+            <Link to="/compte" className="btn-primary py-2.5 px-5 text-xs">
               Se connecter
-            </button>
+            </Link>
           </div>
         )}
 
@@ -135,7 +135,7 @@ export default function Navbar() {
           </nav>
 
           <div className="mt-8 flex flex-col gap-3">
-            <button className="btn-primary w-full py-4 text-sm">Se connecter</button>
+            <Link to="/compte" className="btn-primary w-full py-4 text-sm text-center" onClick={() => setMenuOpen(false)}>Se connecter</Link>
             <button className="btn-ghost w-full py-4 text-sm">Contactez-nous</button>
           </div>
 

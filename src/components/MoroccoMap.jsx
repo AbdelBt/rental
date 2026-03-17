@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { cities } from "../data";
 import useBreakpoint from "../hooks/useBreakpoint";
 
-// Contour réel du Maroc (Natural Earth 110m, GeoJSON → SVG path) — viewBox 0 0 60 90
+// Morocco outline (Natural Earth 110m, GeoJSON → SVG path) — viewBox 0 0 60 90
 const MOROCCO_PATH =
   "M 56.05 3.71 L 57.48 7.73 L 57.70 11.55 L 59.01 18.18 L 60.00 19.51 L 59.31 21.95 L 54.37 23.01 L 52.66 25.33 L 50.48 25.88 L 50.31 30.52 L 45.90 33.01 L 44.46 36.15 L 41.37 37.84 L 37.60 38.79 L 31.50 43.43 L 31.54 50.86 L 30.96 50.86 L 31.05 54.22 L 28.71 54.43 L 27.50 55.85 L 25.78 55.85 L 24.42 55.04 L 21.24 55.71 L 20.01 60.61 L 18.83 61.06 L 17.06 68.98 L 11.81 75.75 L 10.57 84.42 L 9.02 87.24 L 8.57 89.50 L 0.07 90.00 L 0.00 89.99 L 0.18 87.08 L 1.63 85.37 L 2.86 82.10 L 2.62 79.98 L 3.92 75.55 L 6.02 71.56 L 7.29 70.55 L 8.29 66.88 L 8.38 63.54 L 9.74 59.66 L 12.25 57.37 L 14.65 50.96 L 14.72 50.88 L 16.61 48.47 L 20.12 47.77 L 23.10 43.48 L 24.99 41.81 L 28.14 36.57 L 27.20 28.76 L 28.63 23.36 L 29.14 20.06 L 31.57 15.82 L 35.35 12.95 L 38.15 10.35 L 40.68 3.85 L 41.86 0.00 L 44.64 0.03 L 46.92 2.69 L 50.51 2.26 L 54.41 3.65 L 56.05 3.71 Z";
 
@@ -41,7 +41,7 @@ export default function MoroccoMap() {
               className="w-full h-full drop-shadow-[0_8px_32px_rgba(212,168,83,0.12)]"
               aria-hidden="true"
             >
-              {/* Territoire du Maroc uniquement */}
+              {/* Morocco territory */}
               <path
                 d={MOROCCO_PATH}
                 fill="rgba(212,168,83,0.08)"
@@ -49,7 +49,7 @@ export default function MoroccoMap() {
                 strokeWidth="0.6"
                 className="transition-all duration-500"
               />
-              {/* Villes (position calculée depuis lat/lng) */}
+              {/* Cities (position computed from lat/lng) */}
               {cities.map((city) => {
                 const { x, y } = latLngToView(city.lat, city.lng);
                 const isHovered = hoveredCity === city.name;
