@@ -1,14 +1,68 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
-import { cars, addDays } from "../data";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { cars as staticCars, addDays } from "../data";
+import { supabase } from "../lib/supabaseClient";
 import useBreakpoint from "../hooks/useBreakpoint";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import BookingModal from "../components/BookingModal";
+
+const BACKEND = process.env.REACT_APP_BACKEND_URL || "http://localhost:4000";
 
 export default function CarDetailPage() {
   const { id } = useParams();
-  const car = cars.find((c) => c.id === Number(id));
+  const navigate = useNavigate();
   const { isMobile, isTablet } = useBreakpoint();
+  const [car, setCar] = useState(null);
+  const [carsLoading, setCarsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setCarsLoading(true);
+      // Supabase car: id starts with "sb-"
+      if (id.startsWith("sb-")) {
+        const numId = id.replace("sb-", "");
+        const { data, error } = await supabase.from("cars").select("*").eq("id", numId).maybeSingle();
+        if (!cancelled) {
+          if (!error && data) {
+            setCar({
+              id: `sb-${data.id}`,
+              name: data.name,
+              brand: data.brand,
+              year: data.year,
+              category: data.category,
+              price: data.price,
+              priceMonth: data.price_month ?? null,
+              img: data.img,
+              imgs: [data.img, ...(Array.isArray(data.imgs) ? data.imgs : [])].filter(Boolean),
+              badge: null,
+              fuel: data.fuel,
+              seats: data.seats,
+              transmission: data.transmission,
+              mileage: data.mileage ?? "Illimité",
+              deposit: data.deposit_amount > 0,
+              rating: 4.8,
+              reviews: 0,
+              description: data.description ?? "",
+              features: [data.gps && "GPS", data.babyseat && "Siège bébé"].filter(Boolean),
+              available: true,
+            });
+          }
+          setCarsLoading(false);
+        }
+      } else {
+        // Static car
+        const found = staticCars.find((c) => c.id === Number(id));
+        if (!cancelled) {
+          setCar(found ?? null);
+          setCarsLoading(false);
+        }
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [id]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -18,6 +72,15 @@ export default function CarDetailPage() {
   const [pickupDate, setPickupDate] = useState(addDays(new Date(), 2));
   const [returnDate, setReturnDate] = useState(addDays(new Date(), 5));
   const [activeTab, setActiveTab] = useState("specs"); // "specs" | "features" | "reviews"
+  const [showBookingModal, setShowBookingModal] = useState(false);
+
+  if (carsLoading) {
+    return (
+      <div className="font-sora bg-dark-bg text-cream min-h-screen flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-gold/30 border-t-gold rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!car) {
     return (
@@ -36,7 +99,7 @@ export default function CarDetailPage() {
   const stacked = isMobile || isTablet;
 
   // Similar cars
-  const similar = cars
+  const similar = staticCars
     .filter((c) => c.category === car.category && c.id !== car.id)
     .slice(0, 3);
 
@@ -360,9 +423,14 @@ export default function CarDetailPage() {
 
               {/* CTA */}
               <button
-                onClick={() =>
-                  alert(`Réservation confirmée pour ${car.name} — ${total} €`)
-                }
+                onClick={async () => {
+                  const { data: { session } } = await supabase.auth.getSession();
+                  if (!session) {
+                    navigate(`/compte?redirect=/car/${id}`);
+                    return;
+                  }
+                  setShowBookingModal(true);
+                }}
                 className="w-full bg-gold text-dark-bg border-none py-4 rounded-[10px] font-sora font-extrabold text-[15px] tracking-[0.08em] uppercase cursor-pointer transition-all duration-[0.25s] hover:bg-[#e8be6a] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(212,168,83,0.4)]"
               >
                 Réserver maintenant
@@ -400,6 +468,19 @@ export default function CarDetailPage() {
       </div>
 
       <Footer />
+
+      {showBookingModal && (
+        <BookingModal
+          car={car}
+          pickupDate={pickupDate}
+          returnDate={returnDate}
+          days={days}
+          total={total}
+          deposit={Math.round(total * 0.4)}
+          backendUrl={BACKEND}
+          onClose={() => setShowBookingModal(false)}
+        />
+      )}
     </div>
   );
 }

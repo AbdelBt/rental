@@ -98,8 +98,8 @@ function ReservationSidebar({
   onClose,
   onUpdateStatus,
   onConfirmCash,
+  onOpenCashModal,
 }) {
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const solde = reservation.prixTotal - reservation.acompte;
 
   const dateDebut = new Date(reservation.from);
@@ -108,7 +108,7 @@ function ReservationSidebar({
 
   return (
     <>
-      <div className="fixed top-0 right-0 bottom-0 w-full max-w-[500px] bg-[#0f0f14] border-l border-gold/20 shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-[1000] overflow-y-auto p-6 md:p-8 animate-slide-in">
+      <div className="h-full w-full bg-[#0f0f14] border-l border-gold/20 shadow-[-20px_0_40px_rgba(0,0,0,0.6)] overflow-y-auto p-6 md:p-8">
         <button
           onClick={onClose}
           className="absolute top-6 right-6 bg-white/5 border-none w-11 h-11 rounded-full text-xl text-cream cursor-pointer flex items-center justify-center transition-all duration-200 z-10 hover:bg-gold/20 hover:text-gold"
@@ -307,7 +307,7 @@ function ReservationSidebar({
 
           {!reservation.cashConfirme && reservation.status !== "cancelled" && (
             <button
-              onClick={() => setShowConfirmModal(true)}
+              onClick={() => onOpenCashModal()}
               className="w-full py-4 bg-gold/10 border border-gold/30 rounded-[40px] text-gold font-bold text-[15px] cursor-pointer mb-4 transition-all duration-200 hover:bg-gold/20"
             >
               ✓ Confirmer paiement cash ({solde} €)
@@ -358,16 +358,6 @@ function ReservationSidebar({
         </div>
       </div>
 
-      {showConfirmModal && (
-        <ConfirmCashModal
-          reservation={reservation}
-          onConfirm={() => {
-            onConfirmCash(reservation.id);
-            setShowConfirmModal(false);
-          }}
-          onClose={() => setShowConfirmModal(false)}
-        />
-      )}
     </>
   );
 }
@@ -387,6 +377,7 @@ export default function DashReservations() {
   const [selectedCar, setSelectedCar] = useState("all");
   // State for adding a reservation
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showCashModal, setShowCashModal] = useState(false);
   const [newReservation, setNewReservation] = useState({
     car_id: "",
     client_name: "",
@@ -442,7 +433,6 @@ export default function DashReservations() {
           .from("reservations")
           .select("*")
           .eq("agency_id", agency.id)
-          .eq("deposit_paid", true)
           .order("created_at", { ascending: false });
 
         if (resData) {
@@ -475,7 +465,6 @@ export default function DashReservations() {
               cashConfirmedAt: r.cash_confirmed_at,
             };
           });
-          console.log("[DashReservations] réservations:", enriched);
           setReservations(enriched);
         }
       } catch (err) {
@@ -658,13 +647,17 @@ export default function DashReservations() {
   };
 
   const openSidebar = (reservation) => {
-    setSelected(reservation);
-    setSidebarOpen(true);
+    setSelected(reservation);        // 1. monte le composant à translateX(100%)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setSidebarOpen(true);        // 2. au frame suivant → déclenche la transition vers translateX(0)
+      });
+    });
   };
 
   const closeSidebar = () => {
-    setSidebarOpen(false);
-    setTimeout(() => setSelected(null), 300);
+    setSidebarOpen(false);           // 1. transition vers translateX(100%)
+    setTimeout(() => setSelected(null), 300); // 2. démonte après l'animation
   };
 
   // Filtrage
@@ -1138,34 +1131,55 @@ export default function DashReservations() {
                           </div>
 
                           {/* Réservations */}
-                          <div className="flex flex-col gap-1 flex-1">
-                            {res.slice(0, 2).map((r) => (
-                              <button
-                                key={r.id}
-                                onClick={() => openSidebar(r)}
-                                className="w-full text-left text-[10px] font-semibold px-2 py-1.5 rounded-md cursor-pointer transition-all hover:brightness-125 border-l-[3px]"
-                                style={{
-                                  background: `${S_COLOR[r.status]}12`,
-                                  borderLeftColor: S_COLOR[r.status],
-                                  color: S_COLOR[r.status],
-                                }}
-                              >
-                                <div className="truncate">
-                                  {r.client.split(" ")[0]}
-                                </div>
-                                <div className="opacity-70 font-normal text-[9px]">
-                                  {r.carName || "Véhicule"}
-                                </div>
-                              </button>
-                            ))}
-                            {res.length > 2 && (
-                              <button
-                                onClick={() => openSidebar(res[2])}
-                                className="text-[10px] text-cream/40 hover:text-cream/70 text-center py-0.5 cursor-pointer bg-transparent border-none"
-                              >
-                                +{res.length - 2} autre
-                                {res.length - 2 > 1 ? "s" : ""}
-                              </button>
+                          <div className="flex flex-col gap-1 flex-1 -mx-2.5">
+                            {res.slice(0, 3).map((r) => {
+                              const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                              const isStart = r.from === dateStr;
+                              const isEnd   = r.to   === dateStr;
+                              const isFirstOfWeek = i % 7 === 0;
+                              const isLastOfWeek  = i % 7 === 6;
+                              const roundL = isStart || isFirstOfWeek;
+                              const roundR = isEnd   || isLastOfWeek;
+                              const color  = S_COLOR[r.status];
+                              return (
+                                <button
+                                  key={r.id}
+                                  onClick={() => openSidebar(r)}
+                                  title={`${r.client} · ${r.carName} · ${r.phone || ""}`}
+                                  className="w-full text-left cursor-pointer transition-all hover:brightness-125 border-none"
+                                  style={{
+                                    background: `${color}22`,
+                                    borderLeft:  roundL ? `3px solid ${color}` : "none",
+                                    borderRight: "none",
+                                    borderRadius: roundL && roundR ? "6px" : roundL ? "6px 0 0 6px" : roundR ? "0 6px 6px 0" : "0",
+                                    paddingLeft:  roundL ? 6 : 4,
+                                    paddingRight: roundR ? 6 : 4,
+                                    paddingTop: 3,
+                                    paddingBottom: 3,
+                                    marginLeft:  roundL ? 0 : -1,
+                                    marginRight: roundR ? 0 : -1,
+                                    color,
+                                  }}
+                                >
+                                  {isStart && (
+                                    <>
+                                      <div className="text-[10px] font-bold truncate leading-tight">{r.client.split(" ")[0]}</div>
+                                      <div className="text-[9px] font-normal opacity-75 truncate">{r.timeFrom || "—"} · {r.carName}</div>
+                                    </>
+                                  )}
+                                  {isEnd && !isStart && (
+                                    <div className="text-[9px] font-semibold opacity-80 text-right">↩ {r.timeTo || "—"}</div>
+                                  )}
+                                  {!isStart && !isEnd && (
+                                    <div className="h-3.5" />
+                                  )}
+                                </button>
+                              );
+                            })}
+                            {res.length > 3 && (
+                              <div className="text-[9px] text-cream/35 text-center px-2">
+                                +{res.length - 3} autre{res.length - 3 > 1 ? "s" : ""}
+                              </div>
                             )}
                           </div>
                         </>
@@ -1195,18 +1209,32 @@ export default function DashReservations() {
         })()}
 
       {/* Sidebar overlay */}
-      {sidebarOpen && (
+      {selected && (
         <>
           <div
             onClick={closeSidebar}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999] animate-fade-in"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999] transition-opacity duration-300"
+            style={{ opacity: sidebarOpen ? 1 : 0, pointerEvents: sidebarOpen ? "auto" : "none" }}
           />
-          <ReservationSidebar
-            reservation={selected}
-            onClose={closeSidebar}
-            onUpdateStatus={updateStatus}
-            onConfirmCash={confirmCash}
-          />
+          <div
+            className="fixed top-0 right-0 bottom-0 w-full max-w-[500px] z-[1000] transition-transform duration-300 ease-out"
+            style={{ transform: sidebarOpen ? "translateX(0)" : "translateX(100%)" }}
+          >
+            <ReservationSidebar
+              reservation={selected}
+              onClose={closeSidebar}
+              onUpdateStatus={updateStatus}
+              onConfirmCash={confirmCash}
+              onOpenCashModal={() => setShowCashModal(true)}
+            />
+          </div>
+          {showCashModal && (
+            <ConfirmCashModal
+              reservation={selected}
+              onConfirm={() => { confirmCash(selected.id); setShowCashModal(false); }}
+              onClose={() => setShowCashModal(false)}
+            />
+          )}
         </>
       )}
 

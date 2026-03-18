@@ -5,6 +5,7 @@ import carsRouter from "./routes/cars.js";
 import reservationsRouter from "./routes/reservations.js";
 import agencyRouter from "./routes/agency.js";
 import customersRouter from "./routes/customers.js";
+import stripeRouter from "./routes/stripe.js";
 
 dotenv.config();
 
@@ -12,6 +13,10 @@ const app = express();
 const port = process.env.PORT || 4000;
 
 app.use(cors({ origin: true, credentials: true }));
+
+// ⚠️ Le webhook Stripe a besoin du raw body — doit être AVANT express.json()
+app.use("/api/stripe/webhook", express.raw({ type: "application/json" }));
+
 app.use(express.json());
 
 // Health check
@@ -24,9 +29,9 @@ app.use("/api/cars", carsRouter);
 app.use("/api/reservations", reservationsRouter);
 app.use("/api/agency", agencyRouter);
 app.use("/api/customers", customersRouter);
+app.use("/api/stripe", stripeRouter);
 
 app.listen(port, () => {
   // eslint-disable-next-line no-console
   console.log(`[backend] Server running on http://localhost:${port}`);
 });
-

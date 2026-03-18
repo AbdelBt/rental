@@ -31,5 +31,6 @@ export default function ClientProtectedRoute({ children }) {
   }
 
   if (!session) return <Navigate to="/compte" replace />;
+  if (session.user?.user_metadata?.role === "agency") return <Navigate to="/compte" replace />;
   return children;
 }

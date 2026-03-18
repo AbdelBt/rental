@@ -1,5 +1,5 @@
 import { useState, cloneElement } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 
 /* ── SVG icons ─────────────────────────────────────────────── */
@@ -196,7 +196,7 @@ function LoginForm({ onSuccess }) {
     if (loading) return;
     setLoading(true);
     setError("");
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: form.email,
       password: form.password,
     });
@@ -207,7 +207,13 @@ function LoginForm({ onSuccess }) {
           : error.message,
       );
     } else {
-      onSuccess();
+      const role = data.user?.user_metadata?.role;
+      if (role === "agency") {
+        await supabase.auth.signOut();
+        setError("Cet espace est réservé aux clients. Connectez-vous sur l'espace agence.");
+      } else {
+        onSuccess();
+      }
     }
     setLoading(false);
   };
@@ -672,6 +678,8 @@ const FEATURES = [
 export default function ClientAuth() {
   const [tab, setTab] = useState("login");
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get("redirect") || "/client/dashboard";
 
   return (
     <div
@@ -834,7 +842,7 @@ export default function ClientAuth() {
                 </div>
 
                 {tab === "login" ? (
-                  <LoginForm onSuccess={() => navigate("/client/dashboard")} />
+                  <LoginForm onSuccess={() => navigate(redirect)} />
                 ) : (
                   <SignupForm />
                 )}

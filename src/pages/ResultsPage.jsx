@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { Link, useSearchParams, useParams } from "react-router-dom";
-import { cars, categories, addDays } from "../data";
+import { cars as staticCars, categories } from "../data";
+import { supabase } from "../lib/supabaseClient";
 import useBreakpoint from "../hooks/useBreakpoint";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -19,6 +20,8 @@ export default function ResultsPage() {
   const { isMobile, isTablet } = useBreakpoint();
   const [searchParams] = useSearchParams();
   const { id } = useParams();
+  const [cars, setCars] = useState(staticCars);
+  const [carsLoading, setCarsLoading] = useState(false);
   const [category, setCategory] = useState(
     searchParams.get("category") || "Toutes",
   );
@@ -29,6 +32,54 @@ export default function ResultsPage() {
   const [depositOnly, setDepositOnly] = useState(false);
   const [view, setView] = useState("grid");
   const [filtersOpen, setFiltersOpen] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchCars() {
+
+      setCarsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("cars")
+          .select("*")
+          .order("price", { ascending: true });
+        if (cancelled) return;
+
+        if (!error && data && data.length > 0) {
+          const normalized = data.map((c) => ({
+            id: `sb-${c.id}`,
+            name: c.name,
+            brand: c.brand,
+            year: c.year,
+            category: c.category,
+            price: c.price,
+            priceMonth: c.price_month ?? null,
+            img: c.img,
+            imgs: [c.img, ...(Array.isArray(c.imgs) ? c.imgs : [])].filter(Boolean),
+            badge: null,
+            fuel: c.fuel,
+            seats: c.seats,
+            transmission: c.transmission,
+            mileage: c.mileage ?? "Illimité",
+            deposit: c.deposit_amount > 0,
+            rating: 4.8,
+            reviews: 0,
+            description: c.description ?? "",
+            features: [c.gps && "GPS", c.babyseat && "Siège bébé"].filter(Boolean),
+            available: true,
+          }));
+          const supabaseNames = new Set(normalized.map((c) => c.name.toLowerCase()));
+          const extras = staticCars.filter((c) => !supabaseNames.has(c.name.toLowerCase()));
+          setCars([...normalized, ...extras]);
+        }
+      } catch (_) {
+      } finally {
+        if (!cancelled) setCarsLoading(false);
+      }
+    }
+    fetchCars();
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -59,7 +110,7 @@ export default function ResultsPage() {
         break;
     }
     return list;
-  }, [category, sort, fuel, transmission, maxPrice, depositOnly]);
+  }, [cars, category, sort, fuel, transmission, maxPrice, depositOnly]);
 
   const gridCols =
     view === "list" || isMobile
@@ -266,7 +317,11 @@ export default function ResultsPage() {
         )}
 
         <div>
-          {filtered.length === 0 ? (
+          {carsLoading ? (
+            <div className="flex justify-center py-20">
+              <div className="w-10 h-10 border-4 border-gold/30 border-t-gold rounded-full animate-spin" />
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="text-center py-20 text-cream/30">
               <div className="text-5xl mb-4">🔍</div>
               <div className="text-lg">

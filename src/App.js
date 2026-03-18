@@ -6,6 +6,8 @@ import HomePage from "./pages/HomePage";
 import ResultsPage from "./pages/ResultsPage";
 import CarDetailPage from "./pages/CarDetailPage";
 import InfoPage from "./pages/InfoPage";
+import BookingSuccess from "./pages/BookingSuccess";
+import BookingCancel from "./pages/BookingCancel";
 
 // Auth
 import AgencyLogin from "./pages/dashboard/AgencyLogin";
@@ -38,6 +40,8 @@ export default function App() {
           <Route path="/cars" element={<ResultsPage />} />
           <Route path="/car/:id" element={<CarDetailPage />} />
           <Route path="/info/:slug" element={<InfoPage />} />
+          <Route path="/booking/success" element={<BookingSuccess />} />
+          <Route path="/booking/cancel" element={<BookingCancel />} />
 
           {/* Auth routes */}
           <Route path="/agence" element={<AgencyLogin />} />

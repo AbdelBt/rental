@@ -15,13 +15,12 @@ export default function AgencyLogin() {
 
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
-      // Custom error message
       if (error.message.includes("Invalid login credentials")) {
         setErrorMsg("Email ou mot de passe incorrect");
       } else if (error.message.includes("Email not confirmed")) {
@@ -29,7 +28,14 @@ export default function AgencyLogin() {
       } else {
         setErrorMsg("Erreur de connexion. Veuillez réessayer.");
       }
+      setLoading(false);
+      return;
+    }
 
+    const role = data.user?.user_metadata?.role;
+    if (role !== "agency") {
+      await supabase.auth.signOut();
+      setErrorMsg("Cet espace est réservé aux agences. Connectez-vous sur l'espace client.");
       setLoading(false);
       return;
     }
