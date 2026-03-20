@@ -3,7 +3,7 @@ import { useSearchParams, Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
-const BACKEND = process.env.REACT_APP_BACKEND_URL || "http://localhost:4000";
+const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
 
 export default function BookingSuccess() {
   const [params] = useSearchParams();

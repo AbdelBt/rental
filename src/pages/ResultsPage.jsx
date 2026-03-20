@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabaseClient";
 import useBreakpoint from "../hooks/useBreakpoint";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import DateRangeButton from "../components/DateRangeButton";
 
 const SORT_OPTIONS = [
   { value: "price_asc", label: "Prix croissant" },
@@ -31,6 +32,9 @@ export default function ResultsPage() {
   const [maxPrice, setMaxPrice] = useState(1000);
   const [view, setView] = useState("grid");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [pickupDate, setPickupDate] = useState(searchParams.get("from") ? new Date(searchParams.get("from")) : null);
+  const [returnDate, setReturnDate] = useState(searchParams.get("to") ? new Date(searchParams.get("to")) : null);
+  const [reservedCarIds, setReservedCarIds] = useState(new Set());
 
   useEffect(() => {
     let cancelled = false;
@@ -80,6 +84,26 @@ export default function ResultsPage() {
     return () => { cancelled = true; };
   }, []);
 
+  // Fetch reserved car IDs for the selected date range
+  useEffect(() => {
+    if (!pickupDate || !returnDate) { setReservedCarIds(new Set()); return; }
+    const from = pickupDate.toISOString().split("T")[0];
+    const to   = returnDate.toISOString().split("T")[0];
+    let cancelled = false;
+    async function fetchReserved() {
+      const { data } = await supabase
+        .from("reservations")
+        .select("car_id")
+        .in("status", ["confirmed", "pending"])
+        .lte("date_from", to)
+        .gte("date_to", from);
+      if (cancelled) return;
+      setReservedCarIds(new Set((data ?? []).map((r) => `sb-${r.car_id}`)));
+    }
+    fetchReserved();
+    return () => { cancelled = true; };
+  }, [pickupDate, returnDate]);
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
@@ -92,6 +116,8 @@ export default function ResultsPage() {
     if (transmission !== "Toutes")
       list = list.filter((c) => c.transmission === transmission);
     list = list.filter((c) => c.price <= maxPrice);
+    if (pickupDate && returnDate && reservedCarIds.size > 0)
+      list = list.filter((c) => !reservedCarIds.has(c.id));
 
     switch (sort) {
       case "price_asc":
@@ -108,7 +134,7 @@ export default function ResultsPage() {
         break;
     }
     return list;
-  }, [cars, category, sort, fuel, transmission, maxPrice]);
+  }, [cars, category, sort, fuel, transmission, maxPrice, pickupDate, returnDate, reservedCarIds]);
 
   const gridCols =
     view === "list" || isMobile
@@ -204,6 +230,14 @@ export default function ResultsPage() {
               Filtres
             </h3>
 
+            <FilterBlock title="Disponibilité">
+              <DateRangeButton
+                pickupDate={pickupDate}
+                returnDate={returnDate}
+                onChange={({ start, end }) => { setPickupDate(start ?? null); setReturnDate(end ?? null); }}
+              />
+            </FilterBlock>
+
             <FilterBlock title="Catégorie">
               <div className="flex flex-col gap-2">
                 {categories.map((c) => (
@@ -293,6 +327,8 @@ export default function ResultsPage() {
                 setFuel("Tous");
                 setTransmission("Toutes");
                 setMaxPrice(1000);
+                setPickupDate(null);
+                setReturnDate(null);
               }}
               className="mt-2 bg-transparent border border-white/10 text-cream/40 py-2 px-4 rounded-lg font-sora text-xs cursor-pointer w-full transition-all hover:border-gold hover:text-gold"
             >

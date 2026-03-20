@@ -49,6 +49,7 @@ const EMPTY = {
   min_days: 1,
   second_driver: "",
   delivery_price: "",
+  plate: "",
   damage_rules: [],
   status: "active",
   img: "",
@@ -432,6 +433,7 @@ export default function DashVoitures() {
       deposit_amount: clean.deposit_amount,
       img: clean.img,
       imgs: clean.imgs,
+      plate: clean.plate || null,
       description: clean.description,
       status: clean.status,
       mileage: clean.mileage,
@@ -934,6 +936,9 @@ export default function DashVoitures() {
                     </Field>
                     <Field label="Année">
                       <Inp k="year" form={form} set={set} type="number" />
+                    </Field>
+                    <Field label="Plaque d'immatriculation">
+                      <Inp k="plate" form={form} set={set} placeholder="ex: 12345-A-1" />
                     </Field>
                     <Field label="Catégorie">
                       <Sel k="category" form={form} set={set} options={CATS} />
