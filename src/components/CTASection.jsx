@@ -21,8 +21,7 @@ export default function CTASection() {
       <div className="relative max-w-[640px] mx-auto">
         <h2 className="section-title mb-5">Prêt à prendre la route ?</h2>
         <p className="text-cream/55 text-[clamp(14px,2vw,16px)] leading-relaxed mb-9">
-          Réservez en 2 minutes. Aucune caution pour la plupart des véhicules.
-          Annulation gratuite jusqu'à 24h avant.
+          Réservez en 2 minutes. Annulation gratuite jusqu'à 24h avant.
         </p>
         <div
           className={`flex gap-3.5 justify-center items-center ${

@@ -782,9 +782,6 @@ export default function DashVoitures() {
                       `🎂 ${sidebarCar.min_age || 21} ans min`,
                       sidebarCar.babyseat ? "🪑 Siège bébé" : null,
                       sidebarCar.gps ? "🗺️ GPS" : null,
-                      sidebarCar.deposit
-                        ? `🔐 Caution ${sidebarCar.deposit_amount || 0} €`
-                        : "✅ Sans caution",
                     ]
                       .filter(Boolean)
                       .map((s) => (
@@ -1021,27 +1018,6 @@ export default function DashVoitures() {
                         placeholder="0"
                       />
                     </Field>
-                  </div>
-                  <div className="bg-white/[0.03] rounded-xl p-4">
-                    <Check
-                      k="deposit"
-                      form={form}
-                      set={set}
-                      label="Caution requise à la prise en charge"
-                    />
-                    {form.deposit && (
-                      <div className="mt-3">
-                        <Field label="Montant caution (€)">
-                          <Inp
-                            k="deposit_amount"
-                            form={form}
-                            set={set}
-                            type="number"
-                            placeholder="0"
-                          />
-                        </Field>
-                      </div>
-                    )}
                   </div>
                   <div>
                     <label className={LC}>Grille tarifaire dommages (€)</label>

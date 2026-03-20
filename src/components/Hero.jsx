@@ -77,13 +77,13 @@ export default function Hero() {
             isMobile ? "text-[15px]" : "text-base"
           } ${stacked ? "text-center max-w-full" : "text-left"}`}>
             Des milliers de véhicules disponibles à la journée ou au mois.
-            Aucune caution sur la plupart des réservations. Livraison à domicile incluse.
+            Livraison à domicile incluse.
           </p>
 
           <SearchWidget isMobile={isMobile} />
 
           <div className={`flex gap-3 md:gap-6 mt-6 flex-wrap ${stacked ? "justify-center" : "justify-start"}`}>
-            {["🛡️ Sans caution", "🚗 1200+ véhicules", "📞 24/7"].map((t) => (
+            {["🚗 1200+ véhicules", "📞 24/7"].map((t) => (
               <span key={t} className="text-xs text-cream/50 font-medium">{t}</span>
             ))}
           </div>

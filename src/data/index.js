@@ -14,7 +14,7 @@ export const cars = [
       "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=800&q=80",
       "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&q=80",
     ],
-    badge: "Sans caution",
+    badge: null,
     fuel: "Essence",
     seats: 4,
     transmission: "Auto",
@@ -254,16 +254,16 @@ export const faqs = [
 
 // ─── Offers strip ────────────────────────────────────────────────────────────
 export const offers = [
-  { label: "Sans caution", sub: "À partir de 450 € / jour", icon: "🔓" },
-  { label: "Réductions", sub: "Jusqu'à 40% de remise", icon: "🏷️" },
-  { label: "Kilométrage illimité", sub: "À partir de 750 € / jour", icon: "🛣️" },
-  { label: "Longue durée", sub: "À partir de 8 000 € / mois", icon: "📅" },
+  { label: "Paiement sécurisé", sub: "Acompte en ligne via Stripe", icon: "🔒" },
+  { label: "Livraison possible", sub: "Hôtel, domicile ou aéroport", icon: "🚗" },
+  { label: "Kilométrage illimité", sub: "Sur tous nos véhicules", icon: "🛣️" },
+  { label: "Longue durée", sub: "Tarifs dégressifs au mois", icon: "📅" },
 ];
 
 // ─── Features (Why us) ───────────────────────────────────────────────────────
 export const features = [
   { icon: "📱", title: "100% Digital", desc: "Réservation, documents et paiement entièrement en ligne." },
-  { icon: "💳", title: "Sans caution sur la plupart des offres", desc: "Aucun blocage de fonds sur votre carte bancaire." },
+  { icon: "💳", title: "Paiement sécurisé", desc: "Acompte en ligne via Stripe, solde réglé sur place à la remise du véhicule." },
   { icon: "🚀", title: "Livraison rapide", desc: "Votre véhicule livré à l'hôtel, domicile ou aéroport." },
   { icon: "🔧", title: "Support 24h/24", desc: "Une équipe disponible à tout moment en cas de besoin." },
 ];

@@ -443,7 +443,7 @@ export default function ClientReservations() {
                               ))}
                             </div>
                           )}
-                          {(extras.length > 0 || r.cars.deposit_amount) && (
+                          {extras.length > 0 && (
                             <div className="flex gap-2 flex-wrap mb-3">
                               {extras.map((e) => (
                                 <span
@@ -453,15 +453,6 @@ export default function ClientReservations() {
                                   ✓ {e}
                                 </span>
                               ))}
-                              {r.cars.deposit_amount > 0 && (
-                                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/[0.05] border border-white/[0.08] text-cream/45">
-                                  Caution :{" "}
-                                  {Number(r.cars.deposit_amount).toLocaleString(
-                                    "fr-FR",
-                                  )}{" "}
-                                  €
-                                </span>
-                              )}
                             </div>
                           )}
                           {r.cars.description && (

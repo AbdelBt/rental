@@ -13,7 +13,6 @@ const PAGES = {
       { icon: "💳", title: "Paiement sécurisé", body: "Vous payez uniquement l'acompte (40%) sur notre plateforme. Le reste est réglé directement au loueur sur place. Zéro mauvaise surprise." },
       { icon: "🔍", title: "Véhicules vérifiés", body: "Chaque véhicule sur Drivo est contrôlé : assurance à jour, contrôle technique valide, photos réelles. Pas de mauvaises surprises à l'arrivée." },
       { icon: "🚀", title: "Livraison à domicile", body: "Votre voiture livrée à l'hôtel, à l'aéroport ou à domicile. Disponible dans toutes nos villes partenaires." },
-      { icon: "🛡️", title: "Sans caution sur la majorité", body: "Contrairement aux grandes agences, la plupart de nos loueurs ne demandent pas de caution. Votre carte bancaire reste libre." },
       { icon: "📞", title: "Support 24h/24", body: "Une équipe disponible à tout moment pour vous aider avant, pendant et après votre location. En français, néerlandais et arabe." },
     ],
   },

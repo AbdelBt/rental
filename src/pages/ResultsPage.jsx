@@ -29,7 +29,6 @@ export default function ResultsPage() {
   const [fuel, setFuel] = useState("Tous");
   const [transmission, setTransmission] = useState("Toutes");
   const [maxPrice, setMaxPrice] = useState(1000);
-  const [depositOnly, setDepositOnly] = useState(false);
   const [view, setView] = useState("grid");
   const [filtersOpen, setFiltersOpen] = useState(false);
 
@@ -92,7 +91,6 @@ export default function ResultsPage() {
     if (fuel !== "Tous") list = list.filter((c) => c.fuel === fuel);
     if (transmission !== "Toutes")
       list = list.filter((c) => c.transmission === transmission);
-    if (depositOnly) list = list.filter((c) => !c.deposit);
     list = list.filter((c) => c.price <= maxPrice);
 
     switch (sort) {
@@ -110,7 +108,7 @@ export default function ResultsPage() {
         break;
     }
     return list;
-  }, [cars, category, sort, fuel, transmission, maxPrice, depositOnly]);
+  }, [cars, category, sort, fuel, transmission, maxPrice]);
 
   const gridCols =
     view === "list" || isMobile
@@ -266,7 +264,7 @@ export default function ResultsPage() {
               </div>
             </FilterBlock>
 
-            <FilterBlock title="Transmission">
+            <FilterBlock title="Transmission" last>
               <div className="flex flex-col gap-2">
                 {TRANSMISSIONS.map((t) => (
                   <label
@@ -288,18 +286,6 @@ export default function ResultsPage() {
               </div>
             </FilterBlock>
 
-            <FilterBlock title="Caution" last>
-              <label className="flex items-center gap-2.5 cursor-pointer text-sm text-cream/65">
-                <input
-                  type="checkbox"
-                  checked={depositOnly}
-                  onChange={(e) => setDepositOnly(e.target.checked)}
-                  className="accent-gold w-4 h-4"
-                />
-                Sans caution uniquement
-              </label>
-            </FilterBlock>
-
             <button
               onClick={() => {
                 setCategory("Toutes");
@@ -307,7 +293,6 @@ export default function ResultsPage() {
                 setFuel("Tous");
                 setTransmission("Toutes");
                 setMaxPrice(1000);
-                setDepositOnly(false);
               }}
               className="mt-2 bg-transparent border border-white/10 text-cream/40 py-2 px-4 rounded-lg font-sora text-xs cursor-pointer w-full transition-all hover:border-gold hover:text-gold"
             >

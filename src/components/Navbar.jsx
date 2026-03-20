@@ -174,7 +174,7 @@ export default function Navbar() {
           </div>
 
           <div className="mt-7 flex justify-center gap-5 flex-wrap">
-            {["🛡️ Sans caution", "🚗 1200+ véhicules", "📞 24/7"].map((t) => (
+            {["🚗 1200+ véhicules", "📞 24/7"].map((t) => (
               <span key={t} className="text-xs text-cream/40 font-medium">
                 {t}
               </span>

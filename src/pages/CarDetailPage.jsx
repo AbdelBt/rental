@@ -6,6 +6,7 @@ import useBreakpoint from "../hooks/useBreakpoint";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import BookingModal from "../components/BookingModal";
+import DateRangePicker from "../components/DateRangePicker";
 
 const BACKEND = process.env.REACT_APP_BACKEND_URL || "http://localhost:4000";
 
@@ -257,11 +258,6 @@ export default function CarDetailPage() {
                   { icon: "⚙️", label: "Transmission", val: car.transmission },
                   { icon: "⛽", label: "Carburant", val: car.fuel },
                   { icon: "🛣️", label: "Kilométrage", val: car.mileage },
-                  {
-                    icon: "💳",
-                    label: "Caution",
-                    val: car.deposit ? "Requise" : "Non requise",
-                  },
                   { icon: "📅", label: "Année", val: car.year },
                 ].map((s) => (
                   <div
@@ -353,30 +349,16 @@ export default function CarDetailPage() {
                 </div>
               </div>
 
-              {/* Date inputs */}
-              <div className="flex flex-col gap-3.5 mb-5">
-                <div>
-                  <label className="block text-[11px] font-semibold text-gold tracking-[0.15em] uppercase mb-2">
-                    Date de prise en charge
-                  </label>
-                  <input
-                    type="date"
-                    className="input-field"
-                    value={pickupDate.toISOString().split("T")[0]}
-                    onChange={(e) => setPickupDate(new Date(e.target.value))}
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-semibold text-gold tracking-[0.15em] uppercase mb-2">
-                    Date de retour
-                  </label>
-                  <input
-                    type="date"
-                    className="input-field"
-                    value={returnDate.toISOString().split("T")[0]}
-                    onChange={(e) => setReturnDate(new Date(e.target.value))}
-                  />
-                </div>
+              {/* Date range picker */}
+              <div className="mb-5 bg-white/[0.02] border border-white/[0.07] rounded-xl p-4">
+                <DateRangePicker
+                  pickupDate={pickupDate}
+                  returnDate={returnDate}
+                  onChange={({ start, end }) => {
+                    if (start !== undefined) setPickupDate(start);
+                    if (end !== undefined) setReturnDate(end ?? addDays(start ?? pickupDate, 3));
+                  }}
+                />
               </div>
 
               {/* Summary */}
@@ -404,10 +386,6 @@ export default function CarDetailPage() {
               {/* Perks */}
               <div className="flex flex-col gap-2 mb-6">
                 {[
-                  {
-                    icon: !car.deposit ? "✅" : "⚠️",
-                    text: car.deposit ? "Caution requise" : "Sans caution",
-                  },
                   { icon: "🔄", text: "Annulation gratuite 24h avant" },
                   { icon: "📍", text: "Livraison à domicile disponible" },
                 ].map((p) => (
