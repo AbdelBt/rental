@@ -1,63 +1,85 @@
-import { useState, useRef, useEffect } from "react";
+import * as React from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
-import DateRangePicker from "./DateRangePicker";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
-export default function DateRangeButton({ pickupDate, returnDate, onChange, placeholder = "Sélectionner les dates" }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
+export default function DateRangeButton({ pickupDate, returnDate, onChange, className }) {
+  const [open, setOpen] = React.useState(false);
+  const [range, setRange] = React.useState({ from: pickupDate ?? undefined, to: returnDate ?? undefined });
 
-  // Close on outside click
-  useEffect(() => {
-    function handleClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+  React.useEffect(() => {
+    if (!pickupDate && !returnDate) setRange({ from: undefined, to: undefined });
+  }, [pickupDate, returnDate]);
+
+  function handleSelect(selection) {
+    if (!selection) { setRange({ from: undefined, to: undefined }); return; }
+    setRange(selection);
+    if (selection.from && selection.to && selection.from.getTime() !== selection.to.getTime()) {
+      onChange({ start: selection.from, end: selection.to });
+      setOpen(false);
     }
-    if (open) document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [open]);
+  }
 
-  const label = pickupDate
-    ? returnDate
-      ? `${format(pickupDate, "dd MMM", { locale: fr })} → ${format(returnDate, "dd MMM", { locale: fr })}`
-      : `${format(pickupDate, "dd MMM", { locale: fr })} → ...`
-    : placeholder;
+  const displayFrom = range?.from;
+  const displayTo = range?.to;
 
   return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-[13px] font-medium transition-all cursor-pointer ${
-          open || pickupDate
-            ? "border-gold/50 bg-gold/[0.07] text-cream"
-            : "border-white/10 bg-white/[0.04] text-cream/50 hover:border-white/20 hover:text-cream/75"
-        }`}
-      >
-        <CalendarIcon size={15} className={pickupDate ? "text-gold" : "text-cream/40"} />
-        <span className="flex-1 text-left truncate">{label}</span>
-        {(pickupDate || returnDate) && (
-          <span
-            onClick={(e) => { e.stopPropagation(); onChange({ start: null, end: null }); setOpen(false); }}
-            className="text-cream/30 hover:text-cream/70 text-base leading-none cursor-pointer"
-          >
-            ✕
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className={cn(
+            "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-[13px] font-medium transition-all cursor-pointer",
+            open || pickupDate
+              ? "border-[#d4a853]/50 bg-[#d4a853]/[0.07] text-[#f0eeea]"
+              : "border-white/10 bg-white/[0.04] text-[#f0eeea]/50 hover:border-white/20 hover:text-[#f0eeea]/75",
+            className
+          )}
+        >
+          <CalendarIcon size={15} className={pickupDate ? "text-[#d4a853]" : "text-[#f0eeea]/40"} />
+          <span className="flex-1 text-left truncate">
+            {displayFrom ? (
+              displayTo && displayFrom.getTime() !== displayTo.getTime() ? (
+                <>
+                  {format(displayFrom, "dd MMM", { locale: fr })}
+                  {" — "}
+                  {format(displayTo, "dd MMM yyyy", { locale: fr })}
+                </>
+              ) : (
+                <>Départ : {format(displayFrom, "dd MMM yyyy", { locale: fr })}</>
+              )
+            ) : (
+              "Sélectionner les dates"
+            )}
           </span>
-        )}
-      </button>
-
-      {open && (
-        <div className="absolute z-[200] top-full mt-2 left-1/2 -translate-x-1/2 bg-[#0f0e1a] border border-white/[0.1] rounded-2xl shadow-2xl p-4 w-[300px]">
-          <DateRangePicker
-            pickupDate={pickupDate}
-            returnDate={returnDate}
-            onChange={({ start, end }) => {
-              onChange({ start, end });
-              if (start && end) setOpen(false);
-            }}
-          />
-        </div>
-      )}
-    </div>
+          {(pickupDate || returnDate) && (
+            <span
+              onClick={(e) => {
+                e.stopPropagation();
+                setRange({ from: undefined, to: undefined });
+                onChange({ start: null, end: null });
+                setOpen(false);
+              }}
+              className="text-[#f0eeea]/30 hover:text-[#f0eeea]/70 text-sm leading-none cursor-pointer shrink-0"
+            >
+              ✕
+            </span>
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0 bg-[#0f0e1a] border-white/10 text-[#f0eeea]" align="start">
+        <Calendar
+          mode="range"
+          defaultMonth={displayFrom ?? new Date()}
+          selected={range}
+          onSelect={handleSelect}
+          numberOfMonths={2}
+          disabled={{ before: new Date() }}
+          locale={fr}
+        />
+      </PopoverContent>
+    </Popover>
   );
 }

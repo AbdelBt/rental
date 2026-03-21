@@ -32,14 +32,17 @@ export default function ResultsPage() {
   const [maxPrice, setMaxPrice] = useState(1000);
   const [view, setView] = useState("grid");
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [pickupDate, setPickupDate] = useState(searchParams.get("from") ? new Date(searchParams.get("from")) : null);
-  const [returnDate, setReturnDate] = useState(searchParams.get("to") ? new Date(searchParams.get("to")) : null);
+  const [pickupDate, setPickupDate] = useState(
+    searchParams.get("from") ? new Date(searchParams.get("from")) : null,
+  );
+  const [returnDate, setReturnDate] = useState(
+    searchParams.get("to") ? new Date(searchParams.get("to")) : null,
+  );
   const [reservedCarIds, setReservedCarIds] = useState(new Set());
 
   useEffect(() => {
     let cancelled = false;
     async function fetchCars() {
-
       setCarsLoading(true);
       try {
         const { data, error } = await supabase
@@ -58,7 +61,9 @@ export default function ResultsPage() {
             price: c.price,
             priceMonth: c.price_month ?? null,
             img: c.img,
-            imgs: [c.img, ...(Array.isArray(c.imgs) ? c.imgs : [])].filter(Boolean),
+            imgs: [c.img, ...(Array.isArray(c.imgs) ? c.imgs : [])].filter(
+              Boolean,
+            ),
             badge: null,
             fuel: c.fuel,
             seats: c.seats,
@@ -68,11 +73,17 @@ export default function ResultsPage() {
             rating: 4.8,
             reviews: 0,
             description: c.description ?? "",
-            features: [c.gps && "GPS", c.babyseat && "Siège bébé"].filter(Boolean),
+            features: [c.gps && "GPS", c.babyseat && "Siège bébé"].filter(
+              Boolean,
+            ),
             available: true,
           }));
-          const supabaseNames = new Set(normalized.map((c) => c.name.toLowerCase()));
-          const extras = staticCars.filter((c) => !supabaseNames.has(c.name.toLowerCase()));
+          const supabaseNames = new Set(
+            normalized.map((c) => c.name.toLowerCase()),
+          );
+          const extras = staticCars.filter(
+            (c) => !supabaseNames.has(c.name.toLowerCase()),
+          );
           setCars([...normalized, ...extras]);
         }
       } catch (_) {
@@ -81,14 +92,19 @@ export default function ResultsPage() {
       }
     }
     fetchCars();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Fetch reserved car IDs for the selected date range
   useEffect(() => {
-    if (!pickupDate || !returnDate) { setReservedCarIds(new Set()); return; }
+    if (!pickupDate || !returnDate) {
+      setReservedCarIds(new Set());
+      return;
+    }
     const from = pickupDate.toISOString().split("T")[0];
-    const to   = returnDate.toISOString().split("T")[0];
+    const to = returnDate.toISOString().split("T")[0];
     let cancelled = false;
     async function fetchReserved() {
       const { data } = await supabase
@@ -101,7 +117,9 @@ export default function ResultsPage() {
       setReservedCarIds(new Set((data ?? []).map((r) => `sb-${r.car_id}`)));
     }
     fetchReserved();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [pickupDate, returnDate]);
 
   useEffect(() => {
@@ -134,7 +152,17 @@ export default function ResultsPage() {
         break;
     }
     return list;
-  }, [cars, category, sort, fuel, transmission, maxPrice, pickupDate, returnDate, reservedCarIds]);
+  }, [
+    cars,
+    category,
+    sort,
+    fuel,
+    transmission,
+    maxPrice,
+    pickupDate,
+    returnDate,
+    reservedCarIds,
+  ]);
 
   const gridCols =
     view === "list" || isMobile
@@ -234,7 +262,10 @@ export default function ResultsPage() {
               <DateRangeButton
                 pickupDate={pickupDate}
                 returnDate={returnDate}
-                onChange={({ start, end }) => { setPickupDate(start ?? null); setReturnDate(end ?? null); }}
+                onChange={({ start, end }) => {
+                  setPickupDate(start ?? null);
+                  setReturnDate(end ?? null);
+                }}
               />
             </FilterBlock>
 
