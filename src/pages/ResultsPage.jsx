@@ -39,6 +39,7 @@ export default function ResultsPage() {
     searchParams.get("to") ? new Date(searchParams.get("to")) : null,
   );
   const [reservedCarIds, setReservedCarIds] = useState(new Set());
+  const [brand, setBrand] = useState("Toutes");
 
   useEffect(() => {
     let cancelled = false;
@@ -126,10 +127,16 @@ export default function ResultsPage() {
     window.scrollTo(0, 0);
   }, [id]);
 
+  const brands = useMemo(() => {
+    const set = new Set(cars.map((c) => c.brand).filter(Boolean));
+    return ["Toutes", ...Array.from(set).sort()];
+  }, [cars]);
+
   const filtered = useMemo(() => {
     let list = [...cars];
     if (category !== "Toutes")
       list = list.filter((c) => c.category === category);
+    if (brand !== "Toutes") list = list.filter((c) => c.brand === brand);
     if (fuel !== "Tous") list = list.filter((c) => c.fuel === fuel);
     if (transmission !== "Toutes")
       list = list.filter((c) => c.transmission === transmission);
@@ -152,17 +159,7 @@ export default function ResultsPage() {
         break;
     }
     return list;
-  }, [
-    cars,
-    category,
-    sort,
-    fuel,
-    transmission,
-    maxPrice,
-    pickupDate,
-    returnDate,
-    reservedCarIds,
-  ]);
+  }, [cars, category, brand, sort, fuel, transmission, maxPrice, pickupDate, returnDate, reservedCarIds]);
 
   const gridCols =
     view === "list" || isMobile
@@ -269,6 +266,26 @@ export default function ResultsPage() {
               />
             </FilterBlock>
 
+            <FilterBlock title="Marque">
+              <div className="flex flex-col gap-2">
+                {brands.map((b) => (
+                  <label
+                    key={b}
+                    className={`flex items-center gap-2.5 cursor-pointer text-sm ${brand === b ? "text-gold" : "text-cream/65"}`}
+                  >
+                    <input
+                      type="radio"
+                      name="brand"
+                      checked={brand === b}
+                      onChange={() => setBrand(b)}
+                      className="accent-gold"
+                    />
+                    {b}
+                  </label>
+                ))}
+              </div>
+            </FilterBlock>
+
             <FilterBlock title="Catégorie">
               <div className="flex flex-col gap-2">
                 {categories.map((c) => (
@@ -354,6 +371,7 @@ export default function ResultsPage() {
             <button
               onClick={() => {
                 setCategory("Toutes");
+                setBrand("Toutes");
                 setSort("price_asc");
                 setFuel("Tous");
                 setTransmission("Toutes");
