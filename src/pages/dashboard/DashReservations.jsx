@@ -606,6 +606,14 @@ export default function DashReservations() {
         prev.map((r) => (r.id === id ? { ...r, status } : r)),
       );
       if (selected?.id === id) setSelected((prev) => ({ ...prev, status }));
+
+      if (status === "cancelled") {
+        await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/stripe/cancel`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reservationId: id }),
+        });
+      }
     } catch (err) {
       console.error("Erreur mise à jour statut:", err);
     }

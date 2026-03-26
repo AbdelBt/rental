@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import stripeRouter from "./routes/stripe.js";
+import { startReminderCron } from "./cron/reminders.js";
 
 dotenv.config();
 
@@ -25,4 +26,5 @@ app.use("/api/stripe", stripeRouter);
 app.listen(port, () => {
   // eslint-disable-next-line no-console
   console.log(`[backend] Server running on http://localhost:${port}`);
+  startReminderCron();
 });

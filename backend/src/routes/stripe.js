@@ -185,6 +185,35 @@ router.post("/webhook", express.raw({ type: "application/json" }), async (req, r
   res.json({ received: true });
 });
 
+// ─── POST /api/stripe/cancel ─────────────────────────────────────────────────
+// Dashboard agence appelle cette route pour annuler une réservation + envoyer mail
+router.post("/cancel", async (req, res) => {
+  const { reservationId } = req.body;
+  if (!reservationId) return res.status(400).json({ error: "reservationId requis" });
+
+  try {
+    const { data: r, error } = await supabaseAdmin
+      .from("reservations")
+      .select("id, client_name, client_email, date_from, date_to, total, deposit, cars(name, img)")
+      .eq("id", reservationId)
+      .single();
+
+    if (error || !r) throw new Error("Réservation introuvable");
+
+    await resend.emails.send({
+      from: "Drivo <onboarding@resend.dev>",
+      to: process.env.RESEND_TEST_EMAIL || r.client_email,
+      subject: `❌ Réservation annulée — ${r.cars?.name}`,
+      html: buildCancellationEmailHtml(r),
+    });
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[cancel] error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── GET /api/stripe/session/:id ─────────────────────────────────────────────
 // Frontend appelle cette route sur la page success pour afficher les détails
 router.get("/session/:id", async (req, res) => {
@@ -332,6 +361,69 @@ function buildEmailHtml({ meta, reservationId }) {
   </div>
 
   <!-- Footer -->
+  <div style="border-top:1px solid #ffffff0a;padding-top:24px;text-align:center">
+    <p style="margin:0;font-size:12px;font-weight:900;color:#c9a84c;letter-spacing:4px">DRIVO</p>
+    <p style="margin:8px 0 0;font-size:11px;color:#ffffff25;line-height:1.8">contact@drivo.ma · Maroc<br>Cet email est généré automatiquement — merci de ne pas y répondre directement.</p>
+  </div>
+
+</div>
+</body>
+</html>`;
+}
+
+function buildCancellationEmailHtml(r) {
+  const fmtDate = (d) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  const refId = String(r.id).padStart(6, "0");
+  const firstName = r.client_name?.split(" ")[0] || "Client";
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#07070c;font-family:'Helvetica Neue',Arial,sans-serif;color:#f5efe0">
+<div style="max-width:600px;margin:0 auto;padding:48px 24px">
+
+  <div style="text-align:center;margin-bottom:40px">
+    <h1 style="margin:0;font-size:36px;color:#c9a84c;letter-spacing:6px;font-weight:900;text-transform:uppercase">DRIVO</h1>
+    <p style="margin:8px 0 0;font-size:11px;color:#ffffff35;letter-spacing:4px;text-transform:uppercase">Location de véhicules premium</p>
+    <div style="width:60px;height:2px;background:linear-gradient(90deg,transparent,#c9a84c,transparent);margin:16px auto 0"></div>
+  </div>
+
+  <div style="background:linear-gradient(135deg,#1a0808,#120a0a);border:1px solid #ef444440;border-radius:16px;padding:20px 24px;margin-bottom:28px">
+    <div style="font-size:28px;margin-bottom:8px">❌</div>
+    <p style="margin:0;font-size:18px;font-weight:800;color:#ef4444">Réservation annulée</p>
+    <p style="margin:6px 0 0;font-size:13px;color:#ffffff60">Bonjour <strong style="color:#f5efe0">${firstName}</strong>, votre réservation a été annulée par l'agence.</p>
+  </div>
+
+  <div style="text-align:center;background:#ffffff06;border:1px dashed #c9a84c50;border-radius:12px;padding:16px;margin-bottom:28px">
+    <p style="margin:0;font-size:11px;color:#ffffff40;letter-spacing:3px;text-transform:uppercase">Numéro de réservation</p>
+    <p style="margin:6px 0 0;font-size:26px;font-weight:900;color:#c9a84c;letter-spacing:4px">#${refId}</p>
+  </div>
+
+  ${r.cars?.img ? `<img src="${r.cars.img}" alt="${r.cars.name}" style="width:100%;height:180px;object-fit:cover;border-radius:16px;margin-bottom:28px;display:block;opacity:0.6">` : ""}
+
+  <div style="background:linear-gradient(135deg,#1a1830,#0f0e1a);border:1px solid #c9a84c30;border-radius:20px;padding:28px;margin-bottom:24px">
+    <h2 style="margin:0 0 20px;font-size:13px;color:#c9a84c;letter-spacing:3px;text-transform:uppercase;font-weight:700">Détails annulés</h2>
+    <table style="width:100%;border-collapse:collapse">
+      <tr style="border-bottom:1px solid #ffffff08">
+        <td style="padding:12px 0;font-size:13px;color:#ffffff55;width:40%">🚗 Véhicule</td>
+        <td style="padding:12px 0;font-size:14px;font-weight:800;text-align:right">${r.cars?.name || "—"}</td>
+      </tr>
+      <tr style="border-bottom:1px solid #ffffff08">
+        <td style="padding:12px 0;font-size:13px;color:#ffffff55">📅 Prise en charge</td>
+        <td style="padding:12px 0;font-size:13px;font-weight:700;text-align:right">${fmtDate(r.date_from)}</td>
+      </tr>
+      <tr>
+        <td style="padding:12px 0;font-size:13px;color:#ffffff55">🏁 Restitution</td>
+        <td style="padding:12px 0;font-size:13px;font-weight:700;text-align:right">${fmtDate(r.date_to)}</td>
+      </tr>
+    </table>
+  </div>
+
+  <div style="background:#22c55e10;border:1px solid #22c55e30;border-radius:16px;padding:20px 24px;margin-bottom:28px">
+    <p style="margin:0;font-size:13px;color:#22c55e;font-weight:700">💳 Remboursement</p>
+    <p style="margin:8px 0 0;font-size:13px;color:#ffffff70;line-height:1.6">L'acompte de <strong style="color:#f5efe0">${r.deposit} €</strong> sera remboursé sous 5–10 jours ouvrés sur votre moyen de paiement d'origine.</p>
+  </div>
+
   <div style="border-top:1px solid #ffffff0a;padding-top:24px;text-align:center">
     <p style="margin:0;font-size:12px;font-weight:900;color:#c9a84c;letter-spacing:4px">DRIVO</p>
     <p style="margin:8px 0 0;font-size:11px;color:#ffffff25;line-height:1.8">contact@drivo.ma · Maroc<br>Cet email est généré automatiquement — merci de ne pas y répondre directement.</p>
