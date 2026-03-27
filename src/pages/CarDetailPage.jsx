@@ -24,7 +24,7 @@ export default function CarDetailPage() {
       // Supabase car: id starts with "sb-"
       if (id.startsWith("sb-")) {
         const numId = id.replace("sb-", "");
-        const { data, error } = await supabase.from("cars").select("*").eq("id", numId).maybeSingle();
+        const { data, error } = await supabase.from("cars").select("*, agencies(name, address, city, phone, delivery, delivery_zones)").eq("id", numId).maybeSingle();
         if (!cancelled) {
           if (!error && data) {
             setCar({
@@ -48,6 +48,7 @@ export default function CarDetailPage() {
               description: data.description ?? "",
               features: [data.gps && "GPS", data.babyseat && "Siège bébé"].filter(Boolean),
               available: true,
+              agency: data.agencies ?? null,
             });
           }
           setCarsLoading(false);
@@ -383,11 +384,50 @@ export default function CarDetailPage() {
                 </div>
               </div>
 
+              {/* Pickup & Delivery */}
+              {car.agency && (
+                <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4 mb-5">
+                  <div className="text-[11px] font-bold text-gold tracking-widest uppercase mb-3">
+                    📍 Retrait & Livraison
+                  </div>
+                  <div className="flex flex-col gap-2.5">
+                    <div className="flex gap-2.5">
+                      <span className="text-base">🏢</span>
+                      <div>
+                        <div className="text-[13px] font-semibold text-cream/90">{car.agency.name}</div>
+                        {(car.agency.address || car.agency.city) && (
+                          <div className="text-[12px] text-cream/45 mt-0.5">
+                            {[car.agency.address, car.agency.city].filter(Boolean).join(", ")}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    {car.agency.delivery && (
+                      <div className="flex gap-2.5">
+                        <span className="text-base">🚗</span>
+                        <div>
+                          <div className="text-[13px] font-semibold text-green-400">Livraison disponible</div>
+                          {car.agency.delivery_zones && (
+                            <div className="text-[12px] text-cream/45 mt-0.5">{car.agency.delivery_zones}</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    {car.agency.phone && (
+                      <div className="flex gap-2.5 items-center">
+                        <span className="text-base">📞</span>
+                        <span className="text-[13px] text-cream/60">{car.agency.phone}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Perks */}
               <div className="flex flex-col gap-2 mb-6">
                 {[
                   { icon: "🔄", text: "Annulation gratuite 24h avant" },
-                  { icon: "📍", text: "Livraison à domicile disponible" },
+                  ...(car.agency?.delivery ? [] : [{ icon: "📍", text: "Retrait en agence uniquement" }]),
                 ].map((p) => (
                   <div
                     key={p.text}

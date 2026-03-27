@@ -81,7 +81,7 @@ function ClientLayoutInner() {
   );
 
   return (
-    <div className="font-sora bg-[#07070c] text-cream min-h-screen flex">
+    <div className="font-sora bg-[#07070c] text-cream h-screen flex overflow-hidden">
       {/* Sidebar desktop */}
       {!isMobile && (
         <aside
@@ -156,7 +156,7 @@ function ClientLayoutInner() {
             className="absolute inset-0 bg-black/60"
             onClick={() => setDrawerOpen(false)}
           />
-          <aside className="relative w-[260px] bg-dark-bg h-screen flex flex-col border-r border-white/[0.08] z-10">
+          <aside className="relative w-[260px] bg-dark-bg h-dvh flex flex-col border-r border-white/[0.08] z-10">
             <div className="py-5 px-4 border-b border-white/[0.06] flex justify-between items-center">
               <div className="font-playfair text-xl font-bold text-gold">
                 DRIVO
@@ -241,7 +241,7 @@ function ClientLayoutInner() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-7 overflow-y-auto relative">
+        <main className="flex-1 p-4 md:p-7 overflow-y-auto h-0 relative">
           {/* Decorative background */}
           <div className="pointer-events-none select-none fixed inset-0 z-0 overflow-hidden">
             {/* Ambient glow top-right — gold */}

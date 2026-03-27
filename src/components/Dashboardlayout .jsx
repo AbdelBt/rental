@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation, Outlet } from "react-router-dom";
+import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
 import { agency } from "../data/dashboardData";
+import { supabase } from "../lib/supabaseClient";
 
 const NAV = [
   { path: "/dashboard", icon: "⊞", label: "Vue d'ensemble" },
@@ -13,7 +14,13 @@ const NAV = [
 
 export default function DashboardLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/dashboard/login");
+  };
   const [isMobile, setIsMobile] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -31,11 +38,11 @@ export default function DashboardLayout() {
   const sidebarW = collapsed ? "64px" : "220px";
 
   return (
-    <div className="font-sora bg-[#07070c] text-cream min-h-screen flex">
+    <div className="font-sora bg-[#07070c] text-cream h-screen flex overflow-hidden">
       {/* Sidebar desktop */}
       {!isMobile && (
         <aside
-          className="flex-shrink-0 bg-dark-bg border-r border-white/[0.06] flex flex-col sticky top-0 overflow-hidden transition-[width] duration-300 ease-out"
+          className="flex-shrink-0 bg-dark-bg border-r border-white/[0.06] flex flex-col sticky top-0 h-screen overflow-hidden transition-[width] duration-300 ease-out"
           style={{ width: sidebarW }}
         >
           {/* Logo */}
@@ -78,7 +85,7 @@ export default function DashboardLayout() {
           )}
 
           {/* Nav */}
-          <nav className="flex-1 py-3 px-2 flex flex-col gap-0.5">
+          <nav className="flex-1 py-3 px-2 flex flex-col gap-0.5 overflow-y-auto">
             {NAV.map((item) => {
               const active =
                 location.pathname === item.path ||
@@ -104,7 +111,7 @@ export default function DashboardLayout() {
           </nav>
 
           {/* Bottom */}
-          <div className="py-3 px-2 border-t border-white/[0.06]">
+          <div className="py-3 px-2 border-t border-white/[0.06] flex flex-col gap-0.5">
             <Link
               to="/"
               className="flex items-center gap-2 py-2.5 px-3 rounded-[10px] no-underline text-cream/35 text-[13px] justify-start hover:text-cream"
@@ -112,6 +119,13 @@ export default function DashboardLayout() {
               <span>🌐</span>
               {!collapsed && <span>Site public</span>}
             </Link>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 py-2.5 px-3 rounded-[10px] text-red-400/60 text-[13px] hover:text-red-400 hover:bg-red-500/[0.06] cursor-pointer bg-transparent border-none w-full"
+            >
+              <span>🚪</span>
+              {!collapsed && <span>Déconnexion</span>}
+            </button>
           </div>
         </aside>
       )}
@@ -123,7 +137,7 @@ export default function DashboardLayout() {
             className="absolute inset-0 bg-black/60"
             onClick={() => setDrawerOpen(false)}
           />
-          <aside className="relative w-[260px] bg-dark-bg h-screen flex flex-col border-r border-white/[0.08] z-10">
+          <aside className="relative w-[260px] bg-dark-bg h-dvh flex flex-col border-r border-white/[0.08] z-10">
             <div className="py-5 px-4 border-b border-white/[0.06] flex justify-between items-center">
               <div className="font-playfair text-xl font-bold text-gold">
                 DRIVO
@@ -158,6 +172,15 @@ export default function DashboardLayout() {
                 );
               })}
             </nav>
+            <div className="py-3 px-2 border-t border-white/[0.06]">
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-3 py-3 px-3.5 rounded-[10px] text-red-400/60 hover:text-red-400 hover:bg-red-500/[0.06] cursor-pointer bg-transparent border-none w-full text-[13px]"
+              >
+                <span>🚪</span>
+                <span>Déconnexion</span>
+              </button>
+            </div>
           </aside>
         </div>
       )}
@@ -204,7 +227,7 @@ export default function DashboardLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-4 md:p-7 overflow-y-auto">
+        <main className="flex-1 p-4 md:p-7 overflow-y-auto h-0">
           <Outlet />
         </main>
       </div>
