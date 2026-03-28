@@ -1,5 +1,17 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabaseClient";
+import { Calendar, dateFnsLocalizer, Views } from "react-big-calendar";
+import { format, parse, startOfWeek, getDay } from "date-fns";
+import { fr } from "date-fns/locale";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+
+const localizer = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek: (d) => startOfWeek(d, { weekStartsOn: 1 }),
+  getDay,
+  locales: { fr },
+});
 
 const S_COLOR = {
   confirmed: "#22c55e",
@@ -13,21 +25,6 @@ const S_LABEL = {
   completed: "Terminée",
   cancelled: "Annulée",
 };
-const MONTHS = [
-  "Janvier",
-  "Février",
-  "Mars",
-  "Avril",
-  "Mai",
-  "Juin",
-  "Juillet",
-  "Août",
-  "Septembre",
-  "Octobre",
-  "Novembre",
-  "Décembre",
-];
-const DAYS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
 function StatusBadge({ status }) {
   return (
@@ -97,7 +94,6 @@ function ReservationSidebar({
   reservation,
   onClose,
   onUpdateStatus,
-  onConfirmCash,
   onOpenCashModal,
 }) {
   const solde = reservation.prixTotal - reservation.acompte;
@@ -371,10 +367,8 @@ export default function DashReservations() {
   const [filter, setFilter] = useState("all");
   const [selected, setSelected] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [calYear, setCalYear] = useState(new Date().getFullYear());
-  const [calMonth, setCalMonth] = useState(new Date().getMonth());
+  const [calDate, setCalDate] = useState(new Date());
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const [selectedCar, setSelectedCar] = useState("all");
   // State for adding a reservation
   const [showAddModal, setShowAddModal] = useState(false);
   const [showCashModal, setShowCashModal] = useState(false);
@@ -665,7 +659,7 @@ export default function DashReservations() {
 
   const closeSidebar = () => {
     setSidebarOpen(false);           // 1. transition vers translateX(100%)
-    setTimeout(() => setSelected(null), 300); // 2. démonte après l'animation
+    setTimeout(() => setSelected(null), 420); // 2. démonte après l'animation
   };
 
   // Filtrage
@@ -673,23 +667,6 @@ export default function DashReservations() {
     (r) => filter === "all" || r.status === filter,
   );
 
-  // Calendrier
-  const firstDay = new Date(calYear, calMonth, 1);
-  const lastDay = new Date(calYear, calMonth + 1, 0);
-  const startDow = (firstDay.getDay() + 6) % 7;
-  const totalDays = lastDay.getDate();
-  const cells = Array.from(
-    { length: Math.ceil((startDow + totalDays) / 7) * 7 },
-    (_, i) => {
-      const day = i - startDow + 1;
-      return day >= 1 && day <= totalDays ? day : null;
-    },
-  );
-
-  const resOnDay = (day) => {
-    const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    return filtered.filter((r) => r.from <= dateStr && r.to >= dateStr);
-  };
 
   if (loading) {
     return (
@@ -728,7 +705,8 @@ export default function DashReservations() {
           >
             {[
               ["list", "☰ Liste"],
-              ["calendar", "📅 Calendrier"],
+              ["week", "📅 Semaine"],
+              ["calendar", "🗓 Mois"],
             ].map(([v, l]) => (
               <button
                 key={v}
@@ -910,311 +888,175 @@ export default function DashReservations() {
         </div>
       )}
 
-      {/* Calendar view */}
-      {view === "calendar" &&
-        (() => {
-          const now = new Date();
-          const isCurrentMonth =
-            calMonth === now.getMonth() && calYear === now.getFullYear();
-          const monthRes = reservations.filter((r) => {
-            const d = new Date(r.dateFrom);
+      {/* Big Calendar (week + month) */}
+      {(view === "week" || view === "calendar") && (() => {
+        // Pickup + return events, offset duplicates to avoid side-by-side layout
+        const rawEvents = filtered.flatMap(r => {
+          const [ph, pm] = (r.timeFrom || "09:00").split(":").map(Number);
+          const pickupStart = new Date(r.from + "T00:00:00");
+          pickupStart.setHours(ph, pm, 0, 0);
+          const pickupEnd = new Date(pickupStart);
+          pickupEnd.setHours(ph + 1, pm, 0, 0);
+
+          const [rh, rm] = (r.timeTo || "10:00").split(":").map(Number);
+          const returnStart = new Date(r.to + "T00:00:00");
+          returnStart.setHours(rh, rm, 0, 0);
+          const returnEnd = new Date(returnStart);
+          returnEnd.setHours(rh + 1, rm, 0, 0);
+
+          const isOneDay = r.from === r.to;
+          const pickup = { id: `${r.id}-pickup`, title: `🚗 ${r.client} — ${r.carName}`, start: pickupStart, end: pickupEnd, resource: { ...r, eventType: "pickup" } };
+          const ret = { id: `${r.id}-return`, title: `🔑 Retour — ${r.client}`, start: returnStart, end: returnEnd, resource: { ...r, eventType: "return" } };
+          return isOneDay ? [pickup] : [pickup, ret];
+        });
+
+        // Group events at same day+hour into a single block with stacked labels
+        const groups = {};
+        rawEvents.forEach(ev => {
+          const key = `${ev.start.toDateString()}-${ev.start.getHours()}`;
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(ev);
+        });
+        const events = Object.values(groups).flatMap(group => {
+          if (group.length === 1) return group;
+          return [{
+            id: `group-${group[0].start.toISOString()}`,
+            title: "",
+            start: group[0].start,
+            end: group[0].end,
+            resource: { grouped: true, items: group },
+          }];
+        });
+        const EventComponent = ({ event }) => {
+          if (event.resource?.grouped) {
             return (
-              d.getMonth() === calMonth &&
-              d.getFullYear() === calYear &&
-              (selectedCar === "all" || r.carId === selectedCar)
-            );
-          });
-          const prevMonth = () => {
-            if (calMonth === 0) {
-              setCalMonth(11);
-              setCalYear((y) => y - 1);
-            } else setCalMonth((m) => m - 1);
-          };
-          const nextMonth = () => {
-            if (calMonth === 11) {
-              setCalMonth(0);
-              setCalYear((y) => y + 1);
-            } else setCalMonth((m) => m + 1);
-          };
-
-          return (
-            <div className="bg-dark border border-white/[0.07] rounded-3xl overflow-hidden">
-              {/* Calendar header */}
-              <div className="px-6 pt-6 pb-5 border-b border-white/[0.06]">
-                <div className="flex items-center justify-between gap-4 flex-wrap">
-                  {/* Navigation mois */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={prevMonth}
-                      className="w-9 h-9 rounded-xl bg-white/[0.05] border border-white/[0.08] text-cream/70 hover:text-cream hover:bg-white/[0.08] transition-all cursor-pointer flex items-center justify-center"
-                    >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                      >
-                        <polyline points="15 18 9 12 15 6" />
-                      </svg>
-                    </button>
-                    <div className="min-w-[200px] text-center">
-                      <span className="font-playfair text-xl font-bold">
-                        {MONTHS[calMonth]}
-                      </span>
-                      <span className="text-cream/40 text-lg ml-2">
-                        {calYear}
-                      </span>
-                    </div>
-                    <button
-                      onClick={nextMonth}
-                      className="w-9 h-9 rounded-xl bg-white/[0.05] border border-white/[0.08] text-cream/70 hover:text-cream hover:bg-white/[0.08] transition-all cursor-pointer flex items-center justify-center"
-                    >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                      >
-                        <polyline points="9 18 15 12 9 6" />
-                      </svg>
-                    </button>
-                    {!isCurrentMonth && (
-                      <button
-                        onClick={() => {
-                          setCalMonth(now.getMonth());
-                          setCalYear(now.getFullYear());
-                        }}
-                        className="ml-1 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/25 text-gold text-[11px] font-semibold hover:bg-gold/20 transition-all cursor-pointer"
-                      >
-                        Aujourd'hui
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    {/* Stats du mois */}
-                    <div className="hidden md:flex items-center gap-3">
-                      {[
-                        {
-                          key: "confirmed",
-                          count: monthRes.filter(
-                            (r) => r.status === "confirmed",
-                          ).length,
-                        },
-                        {
-                          key: "pending",
-                          count: monthRes.filter((r) => r.status === "pending")
-                            .length,
-                        },
-                        {
-                          key: "completed",
-                          count: monthRes.filter(
-                            (r) => r.status === "completed",
-                          ).length,
-                        },
-                      ].map(
-                        ({ key, count }) =>
-                          count > 0 && (
-                            <div
-                              key={key}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border"
-                              style={{
-                                background: `${S_COLOR[key]}10`,
-                                borderColor: `${S_COLOR[key]}30`,
-                              }}
-                            >
-                              <div
-                                className="w-2 h-2 rounded-full"
-                                style={{ background: S_COLOR[key] }}
-                              />
-                              <span
-                                className="text-[11px] font-semibold"
-                                style={{ color: S_COLOR[key] }}
-                              >
-                                {count} {S_LABEL[key]}
-                                {count > 1 ? "s" : ""}
-                              </span>
-                            </div>
-                          ),
-                      )}
-                    </div>
-
-                    {/* Filtre voiture */}
-                    <select
-                      value={selectedCar}
-                      onChange={(e) => setSelectedCar(e.target.value)}
-                      className="rounded-xl py-2 px-4 text-[12px] cursor-pointer border border-white/[0.08]"
-                      style={{ background: "#1a1a2e", color: "#f5efe0" }}
-                    >
-                      <option
-                        value="all"
-                        style={{ background: "#1a1a2e", color: "#f5efe0" }}
-                      >
-                        Tous les véhicules
-                      </option>
-                      {cars.map((car) => (
-                        <option
-                          key={car.id}
-                          value={car.id}
-                          style={{ background: "#1a1a2e", color: "#f5efe0" }}
-                        >
-                          {car.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Jours de la semaine */}
-              <div className="grid grid-cols-7 border-b border-white/[0.06]">
-                {DAYS.map((d, i) => (
-                  <div
-                    key={d}
-                    className={`py-3 text-center text-[11px] font-bold tracking-widest uppercase ${i >= 5 ? "text-gold/60" : "text-cream/30"}`}
-                  >
-                    {d}
-                  </div>
-                ))}
-              </div>
-
-              {/* Grille jours */}
-              <div className="grid grid-cols-7">
-                {cells.map((day, i) => {
-                  const isToday =
-                    day === now.getDate() &&
-                    calMonth === now.getMonth() &&
-                    calYear === now.getFullYear();
-                  const isWeekend = i % 7 >= 5;
-                  const res = day ? resOnDay(day) : [];
-                  const hasRes = res.length > 0;
-                  const isPast =
-                    day &&
-                    new Date(calYear, calMonth, day) <
-                      new Date(
-                        now.getFullYear(),
-                        now.getMonth(),
-                        now.getDate(),
-                      );
-
+              <div className="flex flex-col gap-0.5 h-full overflow-hidden p-0.5">
+                {event.resource.items.map((e) => {
+                  const isRet = e.resource.eventType === "return";
+                  const color = isRet ? "#a78bfa" : S_COLOR[e.resource.status];
                   return (
                     <div
-                      key={i}
-                      className={`min-h-[130px] p-2.5 flex flex-col border-b border-r border-white/[0.04] transition-colors ${
-                        !day
-                          ? "bg-black/20"
-                          : isToday
-                            ? "bg-gold/[0.04]"
-                            : isWeekend
-                              ? "bg-white/[0.015]"
-                              : ""
-                      } ${i % 7 === 6 ? "border-r-0" : ""}`}
+                      key={e.id}
+                      style={{
+                        background: `${color}22`,
+                        border: `1px solid ${color}60`,
+                        borderRadius: 5,
+                        padding: "1px 5px",
+                        fontSize: 10,
+                        fontWeight: 700,
+                        color,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        lineHeight: 1.4,
+                      }}
                     >
-                      {day && (
-                        <>
-                          {/* Numéro du jour */}
-                          <div className="flex items-center justify-between mb-2">
-                            <span
-                              className={`w-7 h-7 flex items-center justify-center rounded-full text-[13px] font-bold transition-all ${
-                                isToday
-                                  ? "bg-gold text-[#0a0a0f]"
-                                  : isPast
-                                    ? "text-cream/25"
-                                    : isWeekend
-                                      ? "text-gold/70"
-                                      : "text-cream/70"
-                              }`}
-                            >
-                              {day}
-                            </span>
-                            {hasRes && (
-                              <span className="text-[10px] font-bold w-5 h-5 rounded-full bg-gold/20 text-gold flex items-center justify-center">
-                                {res.length}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Réservations */}
-                          <div className="flex flex-col gap-1 flex-1 -mx-2.5">
-                            {res.slice(0, 3).map((r) => {
-                              const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-                              const isStart = r.from === dateStr;
-                              const isEnd   = r.to   === dateStr;
-                              const isFirstOfWeek = i % 7 === 0;
-                              const isLastOfWeek  = i % 7 === 6;
-                              const roundL = isStart || isFirstOfWeek;
-                              const roundR = isEnd   || isLastOfWeek;
-                              const color  = S_COLOR[r.status];
-                              return (
-                                <button
-                                  key={r.id}
-                                  onClick={() => openSidebar(r)}
-                                  title={`${r.client} · ${r.carName} · ${r.phone || ""}`}
-                                  className="w-full text-left cursor-pointer transition-all hover:brightness-125 border-none"
-                                  style={{
-                                    background: `${color}22`,
-                                    borderLeft:  roundL ? `3px solid ${color}` : "none",
-                                    borderRight: "none",
-                                    borderRadius: roundL && roundR ? "6px" : roundL ? "6px 0 0 6px" : roundR ? "0 6px 6px 0" : "0",
-                                    paddingLeft:  roundL ? 6 : 4,
-                                    paddingRight: roundR ? 6 : 4,
-                                    paddingTop: 3,
-                                    paddingBottom: 3,
-                                    marginLeft:  roundL ? 0 : -1,
-                                    marginRight: roundR ? 0 : -1,
-                                    color,
-                                  }}
-                                >
-                                  {isStart && (
-                                    <>
-                                      <div className="text-[10px] font-bold truncate leading-tight">{r.client.split(" ")[0]}</div>
-                                      <div className="text-[9px] font-normal opacity-75 truncate">{r.timeFrom || "—"} · {r.carName}</div>
-                                    </>
-                                  )}
-                                  {isEnd && !isStart && (
-                                    <div className="text-[9px] font-semibold opacity-80 text-right">↩ {r.timeTo || "—"}</div>
-                                  )}
-                                  {!isStart && !isEnd && (
-                                    <div className="h-3.5" />
-                                  )}
-                                </button>
-                              );
-                            })}
-                            {res.length > 3 && (
-                              <div className="text-[9px] text-cream/35 text-center px-2">
-                                +{res.length - 3} autre{res.length - 3 > 1 ? "s" : ""}
-                              </div>
-                            )}
-                          </div>
-                        </>
-                      )}
+                      {isRet ? "🔑" : "🚗"} {e.resource.client} — {e.resource.carName}
                     </div>
                   );
                 })}
               </div>
-
-              {/* Légende */}
-              <div className="px-6 py-4 border-t border-white/[0.06] flex items-center gap-5 flex-wrap">
-                <span className="text-[11px] text-cream/30 font-semibold uppercase tracking-wider">
-                  Statuts :
-                </span>
-                {Object.entries(S_LABEL).map(([key, label]) => (
-                  <div key={key} className="flex items-center gap-1.5">
-                    <div
-                      className="w-2.5 h-2.5 rounded-sm"
-                      style={{ background: S_COLOR[key] }}
-                    />
-                    <span className="text-[11px] text-cream/50">{label}</span>
-                  </div>
-                ))}
+            );
+          }
+          const isReturn = event.resource.eventType === "return";
+          return (
+            <div className="h-full flex flex-col justify-start gap-0.5 overflow-hidden">
+              <div style={{ fontSize: 10, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {isReturn ? "🔑" : "🚗"} {event.resource.client}
+              </div>
+              <div style={{ fontSize: 9, opacity: 0.75, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {event.resource.carName}
+              </div>
+              <div style={{ fontSize: 9, opacity: 0.6, whiteSpace: "nowrap" }}>
+                {isReturn ? event.resource.timeTo : event.resource.timeFrom}
               </div>
             </div>
           );
-        })()}
+        };
+
+        const CustomToolbar = ({ label, onNavigate }) => (
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+            <div className="flex items-center gap-2">
+              <button onClick={() => onNavigate("PREV")} className="w-9 h-9 rounded-xl bg-white/[0.05] border border-white/[0.08] text-cream/70 hover:text-cream hover:bg-white/[0.08] transition-all cursor-pointer flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <span className="font-playfair text-lg font-bold min-w-[180px] text-center capitalize">{label}</span>
+              <button onClick={() => onNavigate("NEXT")} className="w-9 h-9 rounded-xl bg-white/[0.05] border border-white/[0.08] text-cream/70 hover:text-cream hover:bg-white/[0.08] transition-all cursor-pointer flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+              <button onClick={() => onNavigate("TODAY")} className="px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/25 text-gold text-[11px] font-semibold hover:bg-gold/20 transition-all cursor-pointer">
+                Aujourd'hui
+              </button>
+            </div>
+          </div>
+        );
+        const Legend = () => (
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-4 px-1">
+            {/* Event types */}
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: "#22c55e" }} />
+              <span className="text-sm leading-none">🚗</span>
+              <span className="text-[11px] text-cream/60 font-medium">Livraison / Remise des clés</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: "#a78bfa" }} />
+              <span className="text-sm leading-none">🔑</span>
+              <span className="text-[11px] text-cream/60 font-medium">Restitution du véhicule</span>
+            </div>
+            {/* Divider */}
+            <div className="w-px h-4 bg-white/10 hidden sm:block" />
+            {/* Statuses */}
+            {Object.entries(S_COLOR).map(([status, color]) => (
+              <div key={status} className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: color }} />
+                <span className="text-[11px] text-cream/60 font-medium">{S_LABEL[status]}</span>
+              </div>
+            ))}
+          </div>
+        );
+
+        return (
+          <div className="bg-dark border border-white/[0.07] rounded-3xl overflow-hidden p-5" style={{ height: 700 }}>
+            <Legend />
+            <Calendar
+              localizer={localizer}
+              events={events}
+              view={view === "week" ? Views.WEEK : Views.MONTH}
+              date={calDate}
+              onNavigate={setCalDate}
+              onView={() => {}}
+              culture="fr"
+              startAccessor="start"
+              endAccessor="end"
+              min={new Date(0, 0, 0, 7, 0)}
+              max={new Date(0, 0, 0, 22, 0)}
+              step={60}
+              timeslots={1}
+              onSelectEvent={(e) => { if (!e.resource?.grouped) openSidebar(e.resource); }}
+              components={{ toolbar: CustomToolbar, event: EventComponent }}
+              messages={{ noEventsInRange: "Aucune réservation" }}
+              eventPropGetter={(event) => {
+                if (event.resource?.grouped) {
+                  return { style: { backgroundColor: "transparent", border: "none", padding: 0 } };
+                }
+                const isReturn = event.resource.eventType === "return";
+                const bg = isReturn ? "rgba(167,139,250,0.18)" : `${S_COLOR[event.resource.status]}25`;
+                const border = isReturn ? "1px solid rgba(167,139,250,0.6)" : `1px solid ${S_COLOR[event.resource.status]}70`;
+                const color = isReturn ? "#a78bfa" : S_COLOR[event.resource.status];
+                return { style: { backgroundColor: bg, border, color, borderRadius: "8px", fontSize: "11px", fontWeight: 600 } };
+              }}
+              formats={{
+                dayHeaderFormat: (date) =>
+                  date.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" }),
+                monthHeaderFormat: (date) =>
+                  date.toLocaleDateString("fr-FR", { month: "long", year: "numeric" }),
+                timeGutterFormat: (date) =>
+                  date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
+              }}
+            />
+          </div>
+        );
+      })()}
 
       {/* Sidebar overlay */}
       {selected && (
@@ -1225,14 +1067,17 @@ export default function DashReservations() {
             style={{ opacity: sidebarOpen ? 1 : 0, pointerEvents: sidebarOpen ? "auto" : "none" }}
           />
           <div
-            className="fixed top-0 right-0 bottom-0 w-full max-w-[500px] z-[1000] transition-transform duration-300 ease-out"
-            style={{ transform: sidebarOpen ? "translateX(0)" : "translateX(100%)" }}
+            className="fixed top-0 right-0 bottom-0 w-full max-w-[500px] z-[1000]"
+            style={{
+              transform: sidebarOpen ? "translateX(0)" : "translateX(100%)",
+              transition: "transform 420ms cubic-bezier(0.32, 0.72, 0, 1)",
+              willChange: "transform",
+            }}
           >
             <ReservationSidebar
               reservation={selected}
               onClose={closeSidebar}
               onUpdateStatus={updateStatus}
-              onConfirmCash={confirmCash}
               onOpenCashModal={() => setShowCashModal(true)}
             />
           </div>

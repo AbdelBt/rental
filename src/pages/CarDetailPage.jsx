@@ -423,20 +423,25 @@ export default function CarDetailPage() {
                 </div>
               )}
 
-              {/* Perks */}
-              <div className="flex flex-col gap-2 mb-6">
-                {[
-                  { icon: "🔄", text: "Annulation gratuite 24h avant" },
-                  ...(car.agency?.delivery ? [] : [{ icon: "📍", text: "Retrait en agence uniquement" }]),
-                ].map((p) => (
-                  <div
-                    key={p.text}
-                    className="flex items-center gap-2.5 text-[13px] text-cream/60"
-                  >
-                    <span>{p.icon}</span>
-                    <span>{p.text}</span>
+              {/* Politique d'annulation */}
+              <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4 mb-5 flex flex-col gap-2.5">
+                <div className="text-[11px] font-bold text-gold tracking-widest uppercase mb-1">
+                  Politique d'annulation
+                </div>
+                <div className="flex gap-2.5">
+                  <span className="text-base shrink-0">❌</span>
+                  <span className="text-[12px] text-cream/60">Réservation <span className="text-cream/90 font-semibold">non remboursable</span> — aucune annulation possible par le client</span>
+                </div>
+                <div className="flex gap-2.5">
+                  <span className="text-base shrink-0">✈️</span>
+                  <span className="text-[12px] text-cream/60">Exception : <span className="text-cream/90 font-semibold">vol annulé</span> (justificatif requis)</span>
+                </div>
+                {!car.agency?.delivery && (
+                  <div className="flex gap-2.5">
+                    <span className="text-base shrink-0">📍</span>
+                    <span className="text-[12px] text-cream/60">Retrait en agence uniquement</span>
                   </div>
-                ))}
+                )}
               </div>
 
               {/* CTA */}
