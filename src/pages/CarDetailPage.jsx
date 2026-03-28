@@ -24,7 +24,13 @@ export default function CarDetailPage() {
       // Supabase car: id starts with "sb-"
       if (id.startsWith("sb-")) {
         const numId = id.replace("sb-", "");
-        const { data, error } = await supabase.from("cars").select("*, agencies(name, address, city, phone, delivery, delivery_zones)").eq("id", numId).maybeSingle();
+        const { data, error } = await supabase
+          .from("cars")
+          .select(
+            "*, agencies(name, address, city, phone, delivery, delivery_zones)",
+          )
+          .eq("id", numId)
+          .maybeSingle();
         if (!cancelled) {
           if (!error && data) {
             setCar({
@@ -34,9 +40,13 @@ export default function CarDetailPage() {
               year: data.year,
               category: data.category,
               price: data.price,
+              priceWeek: data.price_week ?? null,
               priceMonth: data.price_month ?? null,
               img: data.img,
-              imgs: [data.img, ...(Array.isArray(data.imgs) ? data.imgs : [])].filter(Boolean),
+              imgs: [
+                data.img,
+                ...(Array.isArray(data.imgs) ? data.imgs : []),
+              ].filter(Boolean),
               badge: null,
               fuel: data.fuel,
               seats: data.seats,
@@ -46,7 +56,10 @@ export default function CarDetailPage() {
               rating: 4.8,
               reviews: 0,
               description: data.description ?? "",
-              features: [data.gps && "GPS", data.babyseat && "Siège bébé"].filter(Boolean),
+              features: [
+                data.gps && "GPS",
+                data.babyseat && "Siège bébé",
+              ].filter(Boolean),
               available: true,
               agency: data.agencies ?? null,
             });
@@ -63,7 +76,9 @@ export default function CarDetailPage() {
       }
     }
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   useEffect(() => {
@@ -97,7 +112,34 @@ export default function CarDetailPage() {
   }
 
   const days = Math.max(1, Math.round((returnDate - pickupDate) / 86400000));
-  const total = car.price * days;
+
+  // Tarif optimal selon la durée
+  const weeks = Math.floor(days / 7);
+  const remainingDays = days % 7;
+  const useMonthly = car.priceMonth && days >= 30;
+  const useWeekly = !useMonthly && car.priceWeek && days >= 7;
+
+  let total, rateLabel, rateDetail;
+  if (useMonthly) {
+    const months = Math.floor(days / 30);
+    const leftDays = days % 30;
+    total = months * car.priceMonth + leftDays * car.price;
+    rateLabel = `${car.priceMonth} €/mois`;
+    rateDetail = leftDays > 0
+      ? `${months} mois × ${car.priceMonth} € + ${leftDays} j × ${car.price} €`
+      : `${months} mois × ${car.priceMonth} €`;
+  } else if (useWeekly) {
+    total = weeks * car.priceWeek + remainingDays * car.price;
+    rateLabel = `${car.priceWeek} €/semaine`;
+    rateDetail = remainingDays > 0
+      ? `${weeks} sem × ${car.priceWeek} € + ${remainingDays} j × ${car.price} €`
+      : `${weeks} sem × ${car.priceWeek} €`;
+  } else {
+    total = car.price * days;
+    rateLabel = `${car.price} €/jour`;
+    rateDetail = `${car.price} € × ${days} jour${days > 1 ? "s" : ""}`;
+  }
+
   const stacked = isMobile || isTablet;
 
   // Similar cars
@@ -342,11 +384,9 @@ export default function CarDetailPage() {
                   {car.price} €
                 </span>
                 <span className="text-sm text-cream/40 mb-1.5">/jour</span>
-                <div className="ml-auto text-right">
-                  <div className="text-[11px] text-cream/40">à partir de</div>
-                  <div className="font-bold text-base text-cream/70">
-                    {car.priceMonth} €/mois
-                  </div>
+                <div className="ml-auto text-right flex flex-col gap-0.5">
+                  {car.priceWeek && <div className="text-[12px] text-cream/50">{car.priceWeek} €<span className="text-cream/35">/sem</span></div>}
+                  {car.priceMonth && <div className="text-[12px] text-cream/50">{car.priceMonth} €<span className="text-cream/35">/mois</span></div>}
                 </div>
               </div>
 
@@ -357,30 +397,31 @@ export default function CarDetailPage() {
                   returnDate={returnDate}
                   onChange={({ start, end }) => {
                     if (start !== undefined) setPickupDate(start);
-                    if (end !== undefined) setReturnDate(end ?? addDays(start ?? pickupDate, 3));
+                    if (end !== undefined)
+                      setReturnDate(end ?? addDays(start ?? pickupDate, 3));
                   }}
                 />
               </div>
 
               {/* Summary */}
               <div className="bg-gold/[0.06] border border-gold/20 rounded-xl p-4 mb-5">
+                {(useWeekly || useMonthly) && (
+                  <div className="flex items-center gap-1.5 mb-3 bg-gold/10 rounded-lg px-2.5 py-1.5">
+                    <span className="text-[11px]">🏷️</span>
+                    <span className="text-[11px] font-semibold text-gold">Tarif {useMonthly ? "mensuel" : "hebdomadaire"} appliqué</span>
+                  </div>
+                )}
                 <div className="flex justify-between mb-2">
-                  <span className="text-[13px] text-cream/55">
-                    {car.price} € × {days} jour{days > 1 ? "s" : ""}
-                  </span>
+                  <span className="text-[13px] text-cream/55">{rateDetail}</span>
                   <span className="text-[13px] font-semibold">{total} €</span>
                 </div>
                 <div className="flex justify-between mb-2">
-                  <span className="text-[13px] text-cream/55">
-                    Frais de service
-                  </span>
+                  <span className="text-[13px] text-cream/55">Frais de service</span>
                   <span className="text-[13px] font-semibold">0 €</span>
                 </div>
                 <div className="border-t border-white/10 pt-2.5 flex justify-between">
                   <span className="font-bold">Total</span>
-                  <span className="font-extrabold text-lg text-gold">
-                    {total} €
-                  </span>
+                  <span className="font-extrabold text-lg text-gold">{total} €</span>
                 </div>
               </div>
 
@@ -394,10 +435,14 @@ export default function CarDetailPage() {
                     <div className="flex gap-2.5">
                       <span className="text-base">🏢</span>
                       <div>
-                        <div className="text-[13px] font-semibold text-cream/90">{car.agency.name}</div>
+                        <div className="text-[13px] font-semibold text-cream/90">
+                          {car.agency.name}
+                        </div>
                         {(car.agency.address || car.agency.city) && (
                           <div className="text-[12px] text-cream/45 mt-0.5">
-                            {[car.agency.address, car.agency.city].filter(Boolean).join(", ")}
+                            {[car.agency.address, car.agency.city]
+                              .filter(Boolean)
+                              .join(", ")}
                           </div>
                         )}
                       </div>
@@ -406,9 +451,13 @@ export default function CarDetailPage() {
                       <div className="flex gap-2.5">
                         <span className="text-base">🚗</span>
                         <div>
-                          <div className="text-[13px] font-semibold text-green-400">Livraison disponible</div>
+                          <div className="text-[13px] font-semibold text-green-400">
+                            Livraison disponible
+                          </div>
                           {car.agency.delivery_zones && (
-                            <div className="text-[12px] text-cream/45 mt-0.5">{car.agency.delivery_zones}</div>
+                            <div className="text-[12px] text-cream/45 mt-0.5">
+                              {car.agency.delivery_zones}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -416,7 +465,9 @@ export default function CarDetailPage() {
                     {car.agency.phone && (
                       <div className="flex gap-2.5 items-center">
                         <span className="text-base">📞</span>
-                        <span className="text-[13px] text-cream/60">{car.agency.phone}</span>
+                        <span className="text-[13px] text-cream/60">
+                          {car.agency.phone}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -430,16 +481,29 @@ export default function CarDetailPage() {
                 </div>
                 <div className="flex gap-2.5">
                   <span className="text-base shrink-0">❌</span>
-                  <span className="text-[12px] text-cream/60">Réservation <span className="text-cream/90 font-semibold">non remboursable</span> — aucune annulation possible par le client</span>
+                  <span className="text-[12px] text-cream/60">
+                    Réservation{" "}
+                    <span className="text-cream/90 font-semibold">
+                      non remboursable
+                    </span>
+                  </span>
                 </div>
                 <div className="flex gap-2.5">
                   <span className="text-base shrink-0">✈️</span>
-                  <span className="text-[12px] text-cream/60">Exception : <span className="text-cream/90 font-semibold">vol annulé</span> (justificatif requis)</span>
+                  <span className="text-[12px] text-cream/60">
+                    Exception :{" "}
+                    <span className="text-cream/90 font-semibold">
+                      vol annulé
+                    </span>{" "}
+                    (justificatif requis)
+                  </span>
                 </div>
                 {!car.agency?.delivery && (
                   <div className="flex gap-2.5">
                     <span className="text-base shrink-0">📍</span>
-                    <span className="text-[12px] text-cream/60">Retrait en agence uniquement</span>
+                    <span className="text-[12px] text-cream/60">
+                      Retrait en agence uniquement
+                    </span>
                   </div>
                 )}
               </div>
@@ -447,7 +511,9 @@ export default function CarDetailPage() {
               {/* CTA */}
               <button
                 onClick={async () => {
-                  const { data: { session } } = await supabase.auth.getSession();
+                  const {
+                    data: { session },
+                  } = await supabase.auth.getSession();
                   if (!session) {
                     navigate(`/compte?redirect=/car/${id}`);
                     return;

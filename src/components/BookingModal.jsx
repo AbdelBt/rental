@@ -3,25 +3,49 @@ import { useState } from "react";
 function getCustomerDefaults() {
   try {
     const cached = JSON.parse(localStorage.getItem("drivo_customer"));
-    if (cached) return {
-      firstName: cached.first_name ?? "",
-      lastName:  cached.last_name  ?? "",
-      email:     cached.email      ?? "",
-      phone:     cached.phone      ?? "",
-      city:      cached.city       ?? "",
-    };
+    if (cached)
+      return {
+        firstName: cached.first_name ?? "",
+        lastName: cached.last_name ?? "",
+        email: cached.email ?? "",
+        phone: cached.phone ?? "",
+        city: cached.city ?? "",
+      };
   } catch (_) {}
   return { firstName: "", lastName: "", email: "", phone: "", city: "" };
 }
 
+const TIME_SLOTS = Array.from({ length: 48 }, (_, i) => {
+  const h = Math.floor(i / 2);
+  const m = i % 2 === 0 ? "00" : "30";
+  return `${String(h).padStart(2, "0")}:${m}`;
+});
+
 export default function BookingModal({
-  car, pickupDate, returnDate, days, total, deposit, backendUrl, onClose,
+  car,
+  pickupDate: initPickup,
+  returnDate: initReturn,
+  backendUrl,
+  onClose,
 }) {
+  const [pickupDate, setPickupDate] = useState(initPickup);
+  const [returnDate, setReturnDate] = useState(initReturn);
   const [form, setForm] = useState(getCustomerDefaults);
+  const [pickupTime, setPickupTime] = useState("10:00");
+  const [returnTime, setReturnTime] = useState("10:00");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const fmtDate = (d) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  const days = Math.max(1, Math.round((returnDate - pickupDate) / 86400000));
+  const total = car.price * days;
+  const deposit = Math.round(total * 0.4);
+
+  const fmtDate = (d) =>
+    new Date(d).toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
   const update = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   const handleSubmit = async (e) => {
@@ -38,19 +62,21 @@ export default function BookingModal({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          carId:             car.id,
-          carName:           `${car.brand ? car.brand + " " : ""}${car.name}`,
-          carImg:            car.img || "",
-          dateFrom:          pickupDate.toISOString().split("T")[0],
-          dateTo:            returnDate.toISOString().split("T")[0],
+          carId: car.id,
+          carName: `${car.brand ? car.brand + " " : ""}${car.name}`,
+          carImg: car.img || "",
+          dateFrom: pickupDate.toISOString().split("T")[0],
+          dateTo: returnDate.toISOString().split("T")[0],
+          timeFrom: pickupTime ?? "10:00",
+          timeTo: returnTime ?? "10:00",
           days,
           total,
           deposit,
-          customerEmail:     form.email,
+          customerEmail: form.email,
           customerFirstName: form.firstName,
-          customerLastName:  form.lastName,
-          customerPhone:     form.phone,
-          city:              form.city,
+          customerLastName: form.lastName,
+          customerPhone: form.phone,
+          city: form.city,
         }),
       });
 
@@ -67,28 +93,60 @@ export default function BookingModal({
 
   return (
     <div className="fixed inset-0 z-[600] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className="absolute inset-0 bg-black/75 backdrop-blur-sm"
+        onClick={onClose}
+      />
 
       <div className="relative bg-[#0f0e1a] border border-white/[0.1] rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="p-6 border-b border-white/[0.07] flex items-start justify-between gap-3">
           <div>
-            <h2 className="font-playfair text-xl font-bold">Finaliser la réservation</h2>
+            <h2 className="font-playfair text-xl font-bold">
+              Finaliser la réservation
+            </h2>
             <p className="text-[12px] text-cream/45 mt-0.5">
-              {car.brand ? `${car.brand} ` : ""}{car.name} · {fmtDate(pickupDate)} → {fmtDate(returnDate)}
+              {car.brand ? `${car.brand} ` : ""}
+              {car.name}
+            </p>
+            <p className="text-[12px] text-cream/45 mt-0.5">
+              🚗 {fmtDate(pickupDate)} à {pickupTime ?? "10:00"} &nbsp;→&nbsp;
+              🔑 {fmtDate(returnDate)} à {returnTime ?? "10:00"}
             </p>
           </div>
-          <button onClick={onClose} className="text-cream/40 hover:text-cream text-xl bg-transparent border-none cursor-pointer shrink-0">✕</button>
+          <button
+            onClick={onClose}
+            className="text-cream/40 hover:text-cream text-xl bg-transparent border-none cursor-pointer shrink-0"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Dates modifiables */}
+        <div className="mx-6 mt-5">
+          <label className="block text-[11px] font-semibold text-cream/50 tracking-widest uppercase mb-1.5">Dates de location</label>
+          <DateRangeButton
+            pickupDate={pickupDate}
+            returnDate={returnDate}
+            onChange={({ start, end }) => {
+              if (start) setPickupDate(start);
+              if (end) setReturnDate(end);
+            }}
+          />
         </div>
 
         {/* Récap prix */}
         <div className="mx-6 mt-5 bg-gold/[0.07] border border-gold/20 rounded-xl p-4">
           <div className="flex justify-between text-[13px] mb-1.5">
-            <span className="text-cream/55">{car.price} € × {days} jour{days > 1 ? "s" : ""}</span>
+            <span className="text-cream/55">
+              {car.price} € × {days} jour{days > 1 ? "s" : ""}
+            </span>
             <span className="font-semibold">{total} €</span>
           </div>
           <div className="flex justify-between text-[13px] mb-2">
-            <span className="text-cream/55">Acompte à payer maintenant (40%)</span>
+            <span className="text-cream/55">
+              Acompte à payer maintenant (40%)
+            </span>
             <span className="font-bold text-gold">{deposit} €</span>
           </div>
           <div className="flex justify-between text-[12px] pt-2 border-t border-white/[0.07]">
@@ -101,7 +159,9 @@ export default function BookingModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-semibold text-cream/50 tracking-widest uppercase mb-1.5">Prénom *</label>
+              <label className="block text-[11px] font-semibold text-cream/50 tracking-widest uppercase mb-1.5">
+                Prénom *
+              </label>
               <input
                 className="input-field"
                 placeholder="Mohamed"
@@ -111,7 +171,9 @@ export default function BookingModal({
               />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-cream/50 tracking-widest uppercase mb-1.5">Nom *</label>
+              <label className="block text-[11px] font-semibold text-cream/50 tracking-widest uppercase mb-1.5">
+                Nom *
+              </label>
               <input
                 className="input-field"
                 placeholder="Benali"
@@ -123,7 +185,9 @@ export default function BookingModal({
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold text-cream/50 tracking-widest uppercase mb-1.5">Email *</label>
+            <label className="block text-[11px] font-semibold text-cream/50 tracking-widest uppercase mb-1.5">
+              Email *
+            </label>
             <input
               type="email"
               className="input-field"
@@ -136,7 +200,9 @@ export default function BookingModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-semibold text-cream/50 tracking-widest uppercase mb-1.5">Téléphone</label>
+              <label className="block text-[11px] font-semibold text-cream/50 tracking-widest uppercase mb-1.5">
+                Téléphone
+              </label>
               <input
                 type="tel"
                 className="input-field"
@@ -146,7 +212,9 @@ export default function BookingModal({
               />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-cream/50 tracking-widest uppercase mb-1.5">Ville</label>
+              <label className="block text-[11px] font-semibold text-cream/50 tracking-widest uppercase mb-1.5">
+                Ville
+              </label>
               <input
                 className="input-field"
                 placeholder="Marrakech"
@@ -154,6 +222,74 @@ export default function BookingModal({
                 onChange={update("city")}
               />
             </div>
+          </div>
+
+          {/* Politique d'annulation */}
+          <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4 flex flex-col gap-2">
+            <div className="text-[11px] font-bold text-gold tracking-widest uppercase mb-0.5">
+              Politique d'annulation
+            </div>
+            <div className="flex gap-2">
+              <span className="shrink-0">❌</span>
+              <span className="text-[12px] text-cream/60">
+                Réservation{" "}
+                <span className="text-cream/90 font-semibold">
+                  non remboursable
+                </span>{" "}
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <span className="shrink-0">✈️</span>
+              <span className="text-[12px] text-cream/60">
+                Exception :{" "}
+                <span className="text-cream/90 font-semibold">vol annulé</span>{" "}
+                (justificatif requis)
+              </span>
+            </div>
+          </div>
+
+          {/* Heures */}
+          <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4">
+            <div className="text-[11px] font-bold text-gold tracking-widest uppercase mb-3">
+              🕙 Heure de remise & restitution
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-semibold text-cream/50 tracking-widest uppercase mb-1.5">
+                  🚗 Remise des clés
+                </label>
+                <select
+                  value={pickupTime}
+                  onChange={(e) => setPickupTime(e.target.value)}
+                  className="input-field cursor-pointer"
+                >
+                  {TIME_SLOTS.map((t) => (
+                    <option key={t} value={t} className="bg-[#0f0e1a]">
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-cream/50 tracking-widest uppercase mb-1.5">
+                  🔑 Restitution
+                </label>
+                <select
+                  value={returnTime}
+                  onChange={(e) => setReturnTime(e.target.value)}
+                  className="input-field cursor-pointer"
+                >
+                  {TIME_SLOTS.map((t) => (
+                    <option key={t} value={t} className="bg-[#0f0e1a]">
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <p className="text-[11px] text-cream/35 mt-2.5">
+              Par défaut 10h00 — modifiez selon vos besoins.
+            </p>
           </div>
 
           {error && (

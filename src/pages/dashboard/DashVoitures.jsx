@@ -855,9 +855,9 @@ export default function DashVoitures() {
 
       {/* ── Modal ── */}
       {modal !== null && (
-        <div className="fixed inset-0 z-[600] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[600] flex items-end sm:items-center justify-center sm:p-4">
           <div className="absolute inset-0 bg-black/90" onClick={closeModal} />
-          <div className="relative bg-dark border border-white/10 rounded-3xl w-full max-w-[700px] max-h-[93vh] overflow-y-auto flex flex-col">
+          <div className="relative bg-dark border border-white/10 rounded-t-3xl sm:rounded-3xl w-full max-w-[700px] flex flex-col" style={{ height: "92dvh", maxHeight: "92dvh" }}>
             {/* Header + stepper */}
             <div className="py-6 px-7 pb-5 border-b border-white/[0.07] sticky top-0 bg-dark z-10">
               <div className="flex justify-between items-center mb-5">
@@ -913,7 +913,7 @@ export default function DashVoitures() {
             </div>
 
             {/* Body */}
-            <div className="py-6 px-7 flex-1 min-h-[320px]">
+            <div className="py-6 px-7 flex-1 overflow-y-auto overscroll-contain">
               {/* Step 0: Identity */}
               {step === 0 && (
                 <div className="flex flex-col gap-[18px]">

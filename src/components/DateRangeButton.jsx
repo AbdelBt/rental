@@ -9,17 +9,43 @@ import { cn } from "@/lib/utils";
 export default function DateRangeButton({ pickupDate, returnDate, onChange, className }) {
   const [open, setOpen] = React.useState(false);
   const [range, setRange] = React.useState({ from: pickupDate ?? undefined, to: returnDate ?? undefined });
+  // Track whether the previous state was a complete range (both dates selected)
+  const wasComplete = React.useRef(!!(pickupDate && returnDate));
 
   React.useEffect(() => {
-    if (!pickupDate && !returnDate) setRange({ from: undefined, to: undefined });
+    if (!pickupDate && !returnDate) {
+      setRange({ from: undefined, to: undefined });
+      wasComplete.current = false;
+    }
   }, [pickupDate, returnDate]);
 
   function handleSelect(selection) {
-    if (!selection) { setRange({ from: undefined, to: undefined }); return; }
+    if (!selection) {
+      setRange({ from: undefined, to: undefined });
+      wasComplete.current = false;
+      return;
+    }
+
+    // If a complete range was already selected and user clicks a new date,
+    // v9 creates a new valid range immediately — intercept and force fresh start
+    if (wasComplete.current && selection.from && selection.to && selection.from.getTime() !== selection.to.getTime()) {
+      // Keep only the newly clicked "from", discard "to" so user picks end date
+      const freshFrom = range.from && selection.from.getTime() !== range.from.getTime()
+        ? selection.from
+        : selection.to;
+      setRange({ from: freshFrom, to: undefined });
+      wasComplete.current = false;
+      return;
+    }
+
     setRange(selection);
+
     if (selection.from && selection.to && selection.from.getTime() !== selection.to.getTime()) {
+      wasComplete.current = true;
       onChange({ start: selection.from, end: selection.to });
       setOpen(false);
+    } else {
+      wasComplete.current = false;
     }
   }
 
