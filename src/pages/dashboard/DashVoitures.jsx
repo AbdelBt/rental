@@ -45,6 +45,7 @@ const EMPTY = {
   deposit_amount: 0,
   babyseat: false,
   gps: false,
+  equipments: [],
   min_age: 21,
   min_days: 1,
   second_driver: "",
@@ -97,25 +98,6 @@ function Sel({ k, form, set, options }) {
         </option>
       ))}
     </select>
-  );
-}
-function Check({ k, form, set, label }) {
-  return (
-    <label
-      className={`flex items-center gap-2 cursor-pointer py-2.5 px-3 bg-white/[0.03] rounded-lg border ${form[k] ? "border-gold/30" : "border-white/[0.07]"}`}
-    >
-      <input
-        type="checkbox"
-        checked={!!form[k]}
-        onChange={(e) => set(k, e.target.checked)}
-        className="accent-gold w-[15px] h-[15px] shrink-0"
-      />
-      <span
-        className={`text-[13px] font-semibold ${form[k] ? "text-gold" : "text-cream/65"}`}
-      >
-        {label}
-      </span>
-    </label>
   );
 }
 
@@ -382,6 +364,7 @@ export default function DashVoitures() {
       ...car,
       imgs: car.imgs || [],
       damage_rules: car.damage_rules || [],
+      equipments: car.equipments || [],
     });
     setStep(0);
     setModal(car);
@@ -444,6 +427,7 @@ export default function DashVoitures() {
       damage_rules: clean.damage_rules,
       babyseat: clean.babyseat,
       gps: clean.gps,
+      equipments: clean.equipments || [],
     };
 
     try {
@@ -1121,20 +1105,53 @@ export default function DashVoitures() {
                   </div>
                   <div>
                     <label className={LC}>Options &amp; équipements</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Check
-                        k="babyseat"
-                        form={form}
-                        set={set}
-                        label="🪑 Siège bébé disponible"
-                      />
-                      <Check
-                        k="gps"
-                        form={form}
-                        set={set}
-                        label="🗺️ GPS inclus"
-                      />
-                    </div>
+                    {(() => {
+                      const EQUIP = [
+                        { k: "gps",            label: "🗺️ GPS intégré" },
+                        { k: "babyseat",       label: "🪑 Siège bébé" },
+                        { k: "ac",             label: "❄️ Climatisation" },
+                        { k: "bluetooth",      label: "🎵 Bluetooth / CarPlay" },
+                        { k: "rear_camera",    label: "📷 Caméra de recul" },
+                        { k: "cruise_control", label: "🚀 Régulateur de vitesse" },
+                        { k: "sunroof",        label: "🌤️ Toit ouvrant" },
+                        { k: "usb_charger",    label: "🔌 Chargeur USB / Type-C" },
+                        { k: "android_auto",   label: "📱 Android Auto / CarPlay" },
+                        { k: "wifi",           label: "📶 Wi-Fi embarqué" },
+                        { k: "roof_rack",      label: "🧳 Galerie / Porte-bagages" },
+                        { k: "spare_tire",     label: "🔧 Roue de secours" },
+                      ];
+                      const boolKeys = ["gps", "babyseat"];
+                      const toggle = (k) => {
+                        if (boolKeys.includes(k)) {
+                          set(k, !form[k]);
+                        } else {
+                          const cur = form.equipments || [];
+                          set("equipments", cur.includes(k) ? cur.filter(e => e !== k) : [...cur, k]);
+                        }
+                      };
+                      const isOn = (k) => boolKeys.includes(k) ? !!form[k] : (form.equipments || []).includes(k);
+                      return (
+                        <div className="grid grid-cols-2 gap-2">
+                          {EQUIP.map(({ k, label }) => (
+                            <button
+                              key={k}
+                              type="button"
+                              onClick={() => toggle(k)}
+                              className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-[12px] font-semibold text-left transition-all cursor-pointer border ${
+                                isOn(k)
+                                  ? "bg-gold/10 border-gold/40 text-gold"
+                                  : "bg-white/[0.03] border-white/10 text-cream/50 hover:border-white/20"
+                              }`}
+                            >
+                              <span className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 text-[10px] ${isOn(k) ? "bg-gold border-gold text-dark-bg" : "border-white/20"}`}>
+                                {isOn(k) ? "✓" : ""}
+                              </span>
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               )}

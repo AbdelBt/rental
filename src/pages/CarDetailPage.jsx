@@ -56,10 +56,27 @@ export default function CarDetailPage() {
               rating: 4.8,
               reviews: 0,
               description: data.description ?? "",
-              features: [
-                data.gps && "GPS",
-                data.babyseat && "Siège bébé",
-              ].filter(Boolean),
+              features: (() => {
+                const EQUIP_LABELS = {
+                  ac:             "❄️ Climatisation",
+                  bluetooth:      "🎵 Bluetooth / CarPlay",
+                  rear_camera:    "📷 Caméra de recul",
+                  cruise_control: "🚀 Régulateur de vitesse",
+                  sunroof:        "🌤️ Toit ouvrant",
+                  usb_charger:    "🔌 Chargeur USB / Type-C",
+                  android_auto:   "📱 Android Auto / CarPlay",
+                  wifi:           "📶 Wi-Fi embarqué",
+                  roof_rack:      "🧳 Galerie / Porte-bagages",
+                  spare_tire:     "🔧 Roue de secours",
+                };
+                return [
+                  data.gps      && "🗺️ GPS intégré",
+                  data.babyseat && "🪑 Siège bébé",
+                  ...(Array.isArray(data.equipments)
+                    ? data.equipments.map(k => EQUIP_LABELS[k]).filter(Boolean)
+                    : []),
+                ].filter(Boolean);
+              })(),
               available: true,
               agency: data.agencies ?? null,
               damageRules: Array.isArray(data.damage_rules) ? data.damage_rules : [],

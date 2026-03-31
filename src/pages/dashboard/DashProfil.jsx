@@ -94,8 +94,6 @@ export default function DashProfil() {
           address: form.address,
           cities: form.cities,
           iban: form.iban,
-          delivery: form.delivery ?? false,
-          delivery_zones: form.delivery_zones ?? "",
         })
         .eq("id", agency.id);
 
@@ -273,46 +271,6 @@ export default function DashProfil() {
                     📍 {city}
                   </span>
                 ))}
-              </div>
-            )}
-          </div>
-
-          {/* Livraison */}
-          <div className="bg-dark border border-white/[0.07] rounded-2xl p-6">
-            <div className="font-bold text-[15px] mb-4">🚗 Livraison</div>
-            {editing ? (
-              <div className="flex flex-col gap-4">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <div
-                    onClick={() => setForm((f) => ({ ...f, delivery: !f.delivery }))}
-                    className={`w-11 h-6 rounded-full transition-all relative cursor-pointer ${form.delivery ? "bg-gold" : "bg-white/10"}`}
-                  >
-                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${form.delivery ? "left-6" : "left-1"}`} />
-                  </div>
-                  <span className="text-sm text-cream/80">Livraison disponible</span>
-                </label>
-                {form.delivery && (
-                  <div>
-                    <label className={labelClasses}>Zones de livraison</label>
-                    <input
-                      value={form.delivery_zones || ""}
-                      onChange={(e) => setForm((f) => ({ ...f, delivery_zones: e.target.value }))}
-                      className={inputClasses}
-                      placeholder="Ex: Aéroport Mohammed V, Hôtels Casablanca, Centre-ville..."
-                    />
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-col gap-2">
-                <div className={`text-sm font-semibold ${A.delivery ? "text-green-400" : "text-cream/40"}`}>
-                  {A.delivery ? "✅ Livraison activée" : "❌ Livraison désactivée"}
-                </div>
-                {A.delivery && A.delivery_zones && (
-                  <div className="text-[13px] text-cream/55 bg-white/[0.03] rounded-lg py-2 px-3">
-                    📍 {A.delivery_zones}
-                  </div>
-                )}
               </div>
             )}
           </div>
