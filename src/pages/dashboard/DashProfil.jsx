@@ -1,14 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabaseClient";
-
-const CITIES_OPTIONS = [
-  "Casablanca",
-  "Marrakech",
-  "Agadir",
-  "Tanger",
-  "Rabat",
-  "Fès",
-];
+import { CitiesMultiSelect } from "../../components/CityAutocomplete";
 
 export default function DashProfil() {
   const [agency, setAgency] = useState(null);
@@ -124,14 +116,6 @@ export default function DashProfil() {
     setEditing(false);
   };
 
-  const toggleCity = (city) => {
-    setForm((f) => ({
-      ...f,
-      cities: f.cities.includes(city)
-        ? f.cities.filter((c) => c !== city)
-        : [...f.cities, city],
-    }));
-  };
 
   if (loading) {
     return (
@@ -275,21 +259,10 @@ export default function DashProfil() {
               📍 Villes d'opération
             </div>
             {editing ? (
-              <div className="grid grid-cols-2 gap-2">
-                {CITIES_OPTIONS.map((city) => (
-                  <button
-                    key={city}
-                    onClick={() => toggleCity(city)}
-                    className={`py-2 px-3 rounded-lg font-sora text-[13px] font-semibold cursor-pointer transition-all ${
-                      form.cities?.includes(city)
-                        ? "border border-gold bg-gold/10 text-gold"
-                        : "border border-white/10 text-cream/50"
-                    }`}
-                  >
-                    {city} {form.cities?.includes(city) ? "✓" : ""}
-                  </button>
-                ))}
-              </div>
+              <CitiesMultiSelect
+                cities={form.cities || []}
+                onChange={(cities) => setForm((f) => ({ ...f, cities }))}
+              />
             ) : (
               <div className="flex gap-2 flex-wrap">
                 {A.cities?.map((city) => (

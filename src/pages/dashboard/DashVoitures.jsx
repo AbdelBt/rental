@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../../lib/supabaseClient";
+import { CityAutocomplete } from "../../components/CityAutocomplete";
 
 const STEPS = ["Identité", "Tarifs & Options", "Équipements", "Photos"];
 const CATS = [
@@ -12,7 +13,6 @@ const CATS = [
   "Électrique",
   "Utilitaire",
 ];
-const CITIES = ["Casablanca", "Marrakech", "Agadir", "Tanger", "Rabat", "Fès"];
 const FUELS = ["Essence", "Diesel", "Électrique", "Hybride", "GPL"];
 const STATUS = {
   active: { label: "Disponible", color: "#22c55e", bg: "rgba(34,197,94,0.15)" },
@@ -944,7 +944,10 @@ export default function DashVoitures() {
                       <Sel k="category" form={form} set={set} options={CATS} />
                     </Field>
                     <Field label="Ville">
-                      <Sel k="city" form={form} set={set} options={CITIES} />
+                      <CityAutocomplete
+                        value={form.city}
+                        onChange={(city) => set("city", city)}
+                      />
                     </Field>
                     <Field label="Statut initial">
                       <select

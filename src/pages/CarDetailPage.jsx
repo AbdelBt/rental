@@ -62,6 +62,7 @@ export default function CarDetailPage() {
               ].filter(Boolean),
               available: true,
               agency: data.agencies ?? null,
+              damageRules: Array.isArray(data.damage_rules) ? data.damage_rules : [],
             });
           }
           setCarsLoading(false);
@@ -507,6 +508,26 @@ export default function CarDetailPage() {
                   </div>
                 )}
               </div>
+
+              {/* Franchises & dommages */}
+              {car.damageRules && car.damageRules.length > 0 && (
+                <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4 mb-5">
+                  <div className="text-[11px] font-bold text-gold tracking-widest uppercase mb-3">
+                    🛡️ En cas de dommage
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {car.damageRules.map((rule, i) => (
+                      <div key={i} className="flex items-center justify-between gap-2">
+                        <span className="text-[12px] text-cream/65">{rule.item}</span>
+                        <span className="text-[12px] font-semibold text-cream/90 shrink-0">{rule.price} €</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-cream/35 mt-3">
+                    Ces frais s'appliquent si un dommage est constaté au retour du véhicule.
+                  </p>
+                </div>
+              )}
 
               {/* CTA */}
               <button
