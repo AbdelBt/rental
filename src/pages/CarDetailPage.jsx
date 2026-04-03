@@ -27,7 +27,7 @@ export default function CarDetailPage() {
         const { data, error } = await supabase
           .from("cars")
           .select(
-            "*, agencies!agency_id(name, address, city, phone, airport_pickup, airport_dropoff)",
+            "*, agencies!agency_id(*)",
           )
           .eq("id", numId)
           .maybeSingle();
