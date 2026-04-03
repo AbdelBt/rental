@@ -15,7 +15,7 @@ function useBreakpoint() {
 export default function FleetSection() {
   const [activeCategory, setActiveCategory] = useState("Toutes");
   const [searchQuery, setSearchQuery] = useState("");
-  const { isMobile, isTablet } = useBreakpoint();
+  const { isMobile, isTablet, isDesktop } = useBreakpoint();
 
   const days = Math.max(1, Math.round((addDays(new Date(), 5) - addDays(new Date(), 2)) / 86400000));
 
@@ -66,7 +66,7 @@ export default function FleetSection() {
           <div className="grid gap-4 md:gap-5 items-start" style={{ gridTemplateColumns: gridCols }}>
             {filtered.map((car, i) => (
               <div key={car.id} className="relative">
-                <CarCard car={car} days={days} index={i} isMobile={isMobile} />
+                <CarCard car={car} days={days} index={i} />
               </div>
             ))}
           </div>

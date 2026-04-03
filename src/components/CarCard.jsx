@@ -1,9 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
-export default function CarCard({ car, days = 3, index = 0, isMobile = false }) {
+export default function CarCard({
+  car,
+  days = 3,
+  index = 0,
+
+}) {
   const [hovered, setHovered] = useState(false);
-  const horizontal = isMobile;
+  const horizontal = false;
   const unavailable = !!car.unavailable;
 
   return (
@@ -70,23 +75,32 @@ export default function CarCard({ car, days = 3, index = 0, isMobile = false }) 
             <div className="flex items-center gap-2 mb-1">
               <div
                 className={`font-bold ${horizontal ? "text-[15px]" : "text-[17px]"} ${
-                  horizontal ? "whitespace-nowrap overflow-hidden text-ellipsis" : ""
+                  horizontal
+                    ? "whitespace-nowrap overflow-hidden text-ellipsis"
+                    : ""
                 }`}
               >
                 {car.name}
               </div>
               {horizontal && car.badge && !unavailable && (
-                <span className="badge text-[10px] py-0.5 px-2 shrink-0">{car.badge}</span>
+                <span className="badge !text-[6px] py-0.5 px-2 shrink-0">
+                  {car.badge}
+                </span>
               )}
             </div>
 
-            <div className={`flex flex-wrap ${horizontal ? "gap-2.5 mb-2.5" : "gap-3.5 mb-4"}`}>
+            <div
+              className={`flex flex-wrap ${horizontal ? "gap-2.5 mb-2.5" : "gap-3.5 mb-4"}`}
+            >
               {[
                 { icon: "👤", val: `${car.seats}p` },
                 { icon: "⚙️", val: car.transmission },
                 { icon: "⛽", val: car.fuel },
               ].map((s) => (
-                <span key={s.val} className="text-[11px] text-cream/45 flex items-center gap-0.5">
+                <span
+                  key={s.val}
+                  className="text-[11px] text-cream/45 flex items-center gap-0.5"
+                >
                   {s.icon} {s.val}
                 </span>
               ))}
@@ -94,22 +108,31 @@ export default function CarCard({ car, days = 3, index = 0, isMobile = false }) 
 
             {hovered && !horizontal && !unavailable && (
               <div className="absolute inset-0 flex items-center justify-center bg-dark/95 rounded-t text-gold text-[10px] font-medium">
-                Total estimé : <strong>{car.price * days} € / {days} jour{days > 1 ? "s" : ""}</strong>
+                Total estimé :{" "}
+                <strong>
+                  {car.price * days} € / {days} jour{days > 1 ? "s" : ""}
+                </strong>
               </div>
             )}
           </div>
 
           <div className="flex justify-between items-center">
             <div>
-              <span className={`font-extrabold text-gold ${horizontal ? "text-xl" : "text-2xl"}`}>
+              <span
+                className={`font-extrabold text-gold ${horizontal ? "text-xl" : "text-2xl"}`}
+              >
                 {car.price} €
               </span>
               <span className="text-[11px] text-cream/40 ml-0.5">/ jour</span>
             </div>
             {unavailable ? (
-              <span className="text-[11px] text-cream/35 font-semibold">Déjà réservé</span>
+              <span className="text-[11px] text-cream/35 font-semibold">
+                Déjà réservé
+              </span>
             ) : (
-              <button className={`btn-primary shrink-0 ${horizontal ? "!py-2 !px-2.5 !text-[12px]" : "!py-2 !px-3 !text-[12px]"}`}>
+              <button
+                className={`btn-primary shrink-0 ${horizontal ? "!py-2 !px-2.5 !text-[12px]" : "!py-2 !px-3 !text-[12px]"}`}
+              >
                 Réserver
               </button>
             )}
