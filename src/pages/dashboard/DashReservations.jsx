@@ -89,6 +89,73 @@ function ConfirmCashModal({ reservation, onConfirm, onClose }) {
   );
 }
 
+const DOC_LABELS = {
+  license:  "Permis de conduire",
+  id_front: "CIN — face avant",
+  id_back:  "CIN — face arrière",
+};
+
+function ClientDocs({ customerId }) {
+  const [docs, setDocs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!customerId) { setLoading(false); return; }
+    const load = async () => {
+      const { data: customer } = await supabase
+        .from("customers")
+        .select("auth_user_id, license_verified, id_front_verified, id_back_verified")
+        .eq("id", customerId)
+        .maybeSingle();
+
+      if (!customer?.auth_user_id) { setLoading(false); return; }
+
+      const results = [];
+      await Promise.all(
+        Object.entries(DOC_LABELS).map(async ([key, label]) => {
+          if (!customer[`${key}_verified`]) return;
+          const { data } = await supabase.storage
+            .from("customer-documents")
+            .createSignedUrl(`${customer.auth_user_id}/${key}`, 3600);
+          if (data?.signedUrl) results.push({ label, url: data.signedUrl });
+        })
+      );
+      setDocs(results);
+      setLoading(false);
+    };
+    load();
+  }, [customerId]);
+
+  if (!customerId) return null;
+
+  return (
+    <div className="bg-dark rounded-2xl p-6 mb-6 border border-white/[0.07]">
+      <div className="font-bold text-lg mb-4">📋 Documents client</div>
+      {loading ? (
+        <div className="text-cream/40 text-sm animate-pulse">Chargement...</div>
+      ) : docs.length === 0 ? (
+        <div className="text-cream/35 text-sm">Aucun document soumis par ce client</div>
+      ) : (
+        <div className="flex flex-col gap-2.5">
+          {docs.map(({ label, url }) => (
+            <a
+              key={label}
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 hover:border-gold/30 transition-colors no-underline"
+            >
+              <span className="text-xl">📄</span>
+              <span className="text-sm font-medium text-cream/80 flex-1">{label}</span>
+              <span className="text-xs text-gold font-semibold">Voir →</span>
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Details sidebar
 function ReservationSidebar({
   reservation,
@@ -149,6 +216,9 @@ function ReservationSidebar({
             </div>
           </div>
         </div>
+
+        {/* Client documents */}
+        <ClientDocs customerId={reservation.customer_id} />
 
         {/* Vehicle info */}
         <div className="bg-dark rounded-2xl p-6 mb-6 border border-white/[0.07]">

@@ -86,8 +86,12 @@ export default function ClientDashboard() {
     };
   }, [client?.id]);
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   const upcoming = reservations.filter((r) =>
-    ["confirmed", "pending"].includes(r.status),
+    ["confirmed", "pending"].includes(r.status) &&
+    new Date(r.date_to) >= today,
   );
   const next = upcoming[0] ?? null;
   const nextDays = next ? daysUntil(next.date_from) : null;
