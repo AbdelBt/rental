@@ -141,8 +141,9 @@ export default function ResultsPage() {
     if (transmission !== "Toutes")
       list = list.filter((c) => c.transmission === transmission);
     list = list.filter((c) => c.price <= maxPrice);
-    if (pickupDate && returnDate && reservedCarIds.size > 0)
-      list = list.filter((c) => !reservedCarIds.has(c.id));
+    if (pickupDate && returnDate)
+      list = list.map((c) => ({ ...c, unavailable: reservedCarIds.has(c.id) }));
+    list.sort((a, b) => (a.unavailable ? 1 : 0) - (b.unavailable ? 1 : 0));
 
     switch (sort) {
       case "price_asc":
@@ -159,7 +160,18 @@ export default function ResultsPage() {
         break;
     }
     return list;
-  }, [cars, category, brand, sort, fuel, transmission, maxPrice, pickupDate, returnDate, reservedCarIds]);
+  }, [
+    cars,
+    category,
+    brand,
+    sort,
+    fuel,
+    transmission,
+    maxPrice,
+    pickupDate,
+    returnDate,
+    reservedCarIds,
+  ]);
 
   const gridCols =
     view === "list" || isMobile

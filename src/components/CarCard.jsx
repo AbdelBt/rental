@@ -4,11 +4,16 @@ import { Link } from "react-router-dom";
 export default function CarCard({ car, days = 3, index = 0, isMobile = false }) {
   const [hovered, setHovered] = useState(false);
   const horizontal = isMobile;
+  const unavailable = !!car.unavailable;
 
   return (
-    <Link to={`/car/${car.id}`} className="no-underline text-inherit">
+    <Link
+      to={unavailable ? "#" : `/car/${car.id}`}
+      className="no-underline text-inherit"
+      onClick={unavailable ? (e) => e.preventDefault() : undefined}
+    >
       <div
-        className={`car-card ${horizontal ? "flex flex-row" : "block"}`}
+        className={`car-card ${horizontal ? "flex flex-row" : "block"} ${unavailable ? "opacity-60 cursor-not-allowed" : ""}`}
         style={{ animation: `fadeUp 0.4s ease ${index * 0.06}s both` }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -34,7 +39,16 @@ export default function CarCard({ car, days = 3, index = 0, isMobile = false }) 
             }}
           />
 
-          {car.badge && !horizontal && (
+          {/* Unavailable overlay */}
+          {unavailable && (
+            <div className="absolute inset-0 bg-dark-bg/60 flex items-center justify-center">
+              <span className="bg-dark-bg/90 border border-white/20 text-cream/70 text-[11px] font-bold tracking-widest uppercase px-3 py-1.5 rounded-full">
+                Indisponible
+              </span>
+            </div>
+          )}
+
+          {!unavailable && car.badge && !horizontal && (
             <div className="absolute top-3.5 left-3.5">
               <span className="badge">{car.badge}</span>
             </div>
@@ -61,7 +75,7 @@ export default function CarCard({ car, days = 3, index = 0, isMobile = false }) 
               >
                 {car.name}
               </div>
-              {horizontal && car.badge && (
+              {horizontal && car.badge && !unavailable && (
                 <span className="badge text-[10px] py-0.5 px-2 shrink-0">{car.badge}</span>
               )}
             </div>
@@ -78,9 +92,9 @@ export default function CarCard({ car, days = 3, index = 0, isMobile = false }) 
               ))}
             </div>
 
-            {hovered && !horizontal && (
+            {hovered && !horizontal && !unavailable && (
               <div className="absolute inset-0 flex items-center justify-center bg-dark/95 rounded-t text-gold text-[10px] font-medium">
-                Total estimé : <strong>{car.price * days} € / {days} jour{days > 1 ? "s" : ""}</strong> 
+                Total estimé : <strong>{car.price * days} € / {days} jour{days > 1 ? "s" : ""}</strong>
               </div>
             )}
           </div>
@@ -92,9 +106,13 @@ export default function CarCard({ car, days = 3, index = 0, isMobile = false }) 
               </span>
               <span className="text-[11px] text-cream/40 ml-0.5">/ jour</span>
             </div>
-            <button className={`btn-primary shrink-0 ${horizontal ? "!py-2 !px-2.5 !text-[12px]" : " !py-2 !px-3 !text-[12px]"}`}>
-              Réserver
-            </button>
+            {unavailable ? (
+              <span className="text-[11px] text-cream/35 font-semibold">Déjà réservé</span>
+            ) : (
+              <button className={`btn-primary shrink-0 ${horizontal ? "!py-2 !px-2.5 !text-[12px]" : "!py-2 !px-3 !text-[12px]"}`}>
+                Réserver
+              </button>
+            )}
           </div>
         </div>
       </div>

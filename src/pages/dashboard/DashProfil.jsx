@@ -94,6 +94,8 @@ export default function DashProfil() {
           address: form.address,
           cities: form.cities,
           iban: form.iban,
+          airport_pickup: form.airport_pickup ?? false,
+          airport_dropoff: form.airport_dropoff ?? false,
         })
         .eq("id", agency.id);
 
@@ -270,6 +272,48 @@ export default function DashProfil() {
                   >
                     📍 {city}
                   </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Services aéroport */}
+          <div className="bg-dark border border-white/[0.07] rounded-2xl p-6">
+            <div className="font-bold text-[15px] mb-4">✈️ Services aéroport</div>
+            {editing ? (
+              <div className="flex flex-col gap-3">
+                {[
+                  { k: "airport_pickup", label: "Remise à l'aéroport", sub: "Vous livrez la voiture au client directement à l'aéroport" },
+                  { k: "airport_dropoff", label: "Dépôt à l'aéroport", sub: "Le client peut vous remettre la voiture à l'aéroport" },
+                ].map(({ k, label, sub }) => (
+                  <div
+                    key={k}
+                    onClick={() => setForm((f) => ({ ...f, [k]: !f[k] }))}
+                    className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all select-none ${
+                      form[k] ? "bg-gold/10 border-gold/40" : "bg-white/[0.03] border-white/10 hover:border-white/20"
+                    }`}
+                  >
+                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all ${form[k] ? "bg-gold border-gold" : "border-white/25"}`}>
+                      {form[k] && <span className="text-dark-bg text-[11px] font-black">✓</span>}
+                    </div>
+                    <div>
+                      <div className={`text-[13px] font-semibold ${form[k] ? "text-gold" : "text-cream/80"}`}>{label}</div>
+                      <div className="text-[11px] text-cream/40 mt-0.5">{sub}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {[
+                  { k: "airport_pickup",  label: "Remise à l'aéroport" },
+                  { k: "airport_dropoff", label: "Dépôt à l'aéroport" },
+                ].map(({ k, label }) => (
+                  <div key={k} className="flex items-center gap-2">
+                    <span className={`text-[13px] font-semibold ${A[k] ? "text-green-400" : "text-cream/35"}`}>
+                      {A[k] ? "✅" : "❌"} {label}
+                    </span>
+                  </div>
                 ))}
               </div>
             )}

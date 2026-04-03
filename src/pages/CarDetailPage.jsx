@@ -27,7 +27,7 @@ export default function CarDetailPage() {
         const { data, error } = await supabase
           .from("cars")
           .select(
-            "*, agencies(name, address, city, phone, delivery, delivery_zones)",
+            "*, agencies!agency_id(name, address, city, phone, airport_pickup, airport_dropoff)",
           )
           .eq("id", numId)
           .maybeSingle();
@@ -52,7 +52,6 @@ export default function CarDetailPage() {
               seats: data.seats,
               transmission: data.transmission,
               mileage: data.mileage ?? "Illimité",
-              deposit: data.deposit_amount > 0,
               rating: 4.8,
               reviews: 0,
               description: data.description ?? "",
@@ -465,18 +464,21 @@ export default function CarDetailPage() {
                         )}
                       </div>
                     </div>
-                    {car.agency.delivery && (
+                    {car.agency.airport_pickup && (
                       <div className="flex gap-2.5">
-                        <span className="text-base">🚗</span>
+                        <span className="text-base shrink-0">✈️</span>
                         <div>
-                          <div className="text-[13px] font-semibold text-green-400">
-                            Livraison disponible
-                          </div>
-                          {car.agency.delivery_zones && (
-                            <div className="text-[12px] text-cream/45 mt-0.5">
-                              {car.agency.delivery_zones}
-                            </div>
-                          )}
+                          <div className="text-[13px] font-semibold text-cream/90">Remise à l'aéroport</div>
+                          <div className="text-[12px] text-cream/45 mt-0.5">La voiture vous est livrée directement à l'aéroport</div>
+                        </div>
+                      </div>
+                    )}
+                    {car.agency.airport_dropoff && (
+                      <div className="flex gap-2.5">
+                        <span className="text-base shrink-0">🛬</span>
+                        <div>
+                          <div className="text-[13px] font-semibold text-cream/90">Dépôt à l'aéroport</div>
+                          <div className="text-[12px] text-cream/45 mt-0.5">Restituez la voiture directement à l'aéroport</div>
                         </div>
                       </div>
                     )}
@@ -516,14 +518,6 @@ export default function CarDetailPage() {
                     (justificatif requis)
                   </span>
                 </div>
-                {!car.agency?.delivery && (
-                  <div className="flex gap-2.5">
-                    <span className="text-base shrink-0">📍</span>
-                    <span className="text-[12px] text-cream/60">
-                      Retrait en agence uniquement
-                    </span>
-                  </div>
-                )}
               </div>
 
               {/* Franchises & dommages */}
