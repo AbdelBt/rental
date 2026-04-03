@@ -24,8 +24,27 @@ function isBetween(d, start, end) {
   return d > s && d < e;
 }
 
-export default function DateRangePicker({ pickupDate, returnDate, onChange }) {
+export default function DateRangePicker({ pickupDate, returnDate, onChange, disabledRanges = [] }) {
   const today = startOfDay(new Date());
+
+  function isDisabled(day) {
+    const d = startOfDay(day);
+    return disabledRanges.some(({ from, to }) => {
+      const f = startOfDay(from);
+      const t = startOfDay(to);
+      return d >= f && d <= t;
+    });
+  }
+
+  function rangeOverlapsDisabled(start, end) {
+    const s = startOfDay(start);
+    const e = startOfDay(end);
+    return disabledRanges.some(({ from, to }) => {
+      const f = startOfDay(from);
+      const t = startOfDay(to);
+      return s <= t && e >= f;
+    });
+  }
 
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
@@ -56,14 +75,17 @@ export default function DateRangePicker({ pickupDate, returnDate, onChange }) {
   function handleClick(day) {
     if (!day) return;
     if (day < today) return;
+    if (isDisabled(day)) return;
 
     if (!selecting || selecting === "start") {
       onChange({ start: day, end: null });
       setSelecting("end");
     } else {
-      // selecting end
       if (day <= pickupDate) {
-        // clicked before start → restart
+        onChange({ start: day, end: null });
+        setSelecting("end");
+      } else if (rangeOverlapsDisabled(pickupDate, day)) {
+        // can't span over a reserved period → restart from this day
         onChange({ start: day, end: null });
         setSelecting("end");
       } else {
@@ -116,6 +138,7 @@ export default function DateRangePicker({ pickupDate, returnDate, onChange }) {
           if (!day) return <div key={`empty-${i}`} />;
 
           const isPast     = day < today;
+          const isReserved = !isPast && isDisabled(day);
           const isToday    = sameDay(day, today);
           const isStart    = pickupDate && sameDay(day, pickupDate);
           const isEnd      = returnDate && sameDay(day, returnDate);
@@ -124,9 +147,9 @@ export default function DateRangePicker({ pickupDate, returnDate, onChange }) {
           const isWeekend  = day.getDay() === 0 || day.getDay() === 6;
 
           let bg = "transparent";
-          let textColor = isPast ? "text-cream/20" : isWeekend ? "text-amber-400/70" : "text-cream/85";
+          let textColor = isPast || isReserved ? "text-cream/25" : isWeekend ? "text-amber-400/70" : "text-cream/85";
           let borderRadius = "rounded-lg";
-          let cursor = isPast ? "cursor-not-allowed" : "cursor-pointer";
+          let cursor = isPast || isReserved ? "cursor-not-allowed" : "cursor-pointer";
           let rangeHighlight = "";
 
           if (isStart || isEnd) {
@@ -149,12 +172,15 @@ export default function DateRangePicker({ pickupDate, returnDate, onChange }) {
             <div
               key={day.toISOString()}
               className={`relative h-9 flex items-center justify-center text-[13px] font-medium transition-all duration-100 ${rangeHighlight} ${borderRadius} ${textColor} ${cursor}`}
-              style={isStart || isEnd ? { background: bg } : undefined}
+              style={isStart || isEnd ? { background: bg } : isReserved ? { background: "rgba(239,68,68,0.08)" } : undefined}
               onClick={() => handleClick(day)}
-              onMouseEnter={() => selecting === "end" && !isPast && setHovered(day)}
+              onMouseEnter={() => selecting === "end" && !isPast && !isReserved && setHovered(day)}
               onMouseLeave={() => setHovered(null)}
             >
-              {isToday && !isStart && !isEnd && (
+              {isReserved && (
+                <span className="absolute inset-x-1 top-1/2 h-px bg-red-500/40 -translate-y-1/2" />
+              )}
+              {isToday && !isStart && !isEnd && !isReserved && (
                 <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-gold rounded-full" />
               )}
               {day.getDate()}

@@ -107,6 +107,27 @@ export default function CarDetailPage() {
   const [returnDate, setReturnDate] = useState(addDays(new Date(), 5));
   const [activeTab, setActiveTab] = useState("specs"); // "specs" | "features" | "reviews"
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [disabledRanges, setDisabledRanges] = useState([]);
+
+  useEffect(() => {
+    if (!id.startsWith("sb-")) return;
+    const numId = id.replace("sb-", "");
+    supabase
+      .from("reservations")
+      .select("date_from, date_to")
+      .eq("car_id", numId)
+      .in("status", ["confirmed", "pending"])
+      .then(({ data }) => {
+        if (data) {
+          setDisabledRanges(
+            data.map((r) => ({
+              from: new Date(r.date_from),
+              to: new Date(r.date_to),
+            }))
+          );
+        }
+      });
+  }, [id]);
 
   if (carsLoading) {
     return (
@@ -412,6 +433,7 @@ export default function CarDetailPage() {
                 <DateRangePicker
                   pickupDate={pickupDate}
                   returnDate={returnDate}
+                  disabledRanges={disabledRanges}
                   onChange={({ start, end }) => {
                     if (start !== undefined) setPickupDate(start);
                     if (end !== undefined)
