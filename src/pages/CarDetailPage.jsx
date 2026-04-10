@@ -21,14 +21,11 @@ export default function CarDetailPage() {
     let cancelled = false;
     async function load() {
       setCarsLoading(true);
-      // Supabase car: id starts with "sb-"
       if (id.startsWith("sb-")) {
         const numId = id.replace("sb-", "");
         const { data, error } = await supabase
           .from("cars")
-          .select(
-            "*, agencies!agency_id(*)",
-          )
+          .select("*, agencies!agency_id(*)")
           .eq("id", numId)
           .maybeSingle();
         if (!cancelled) {
@@ -57,28 +54,32 @@ export default function CarDetailPage() {
               description: data.description ?? "",
               features: (() => {
                 const EQUIP_LABELS = {
-                  ac:             "❄️ Climatisation",
-                  bluetooth:      "🎵 Bluetooth / CarPlay",
-                  rear_camera:    "📷 Caméra de recul",
+                  ac: "❄️ Climatisation",
+                  bluetooth: "🎵 Bluetooth / CarPlay",
+                  rear_camera: "📷 Caméra de recul",
                   cruise_control: "🚀 Régulateur de vitesse",
-                  sunroof:        "🌤️ Toit ouvrant",
-                  usb_charger:    "🔌 Chargeur USB / Type-C",
-                  android_auto:   "📱 Android Auto / CarPlay",
-                  wifi:           "📶 Wi-Fi embarqué",
-                  roof_rack:      "🧳 Galerie / Porte-bagages",
-                  spare_tire:     "🔧 Roue de secours",
+                  sunroof: "🌤️ Toit ouvrant",
+                  usb_charger: "🔌 Chargeur USB / Type-C",
+                  android_auto: "📱 Android Auto / CarPlay",
+                  wifi: "📶 Wi-Fi embarqué",
+                  roof_rack: "🧳 Galerie / Porte-bagages",
+                  spare_tire: "🔧 Roue de secours",
                 };
                 return [
-                  data.gps      && "🗺️ GPS intégré",
+                  data.gps && "🗺️ GPS intégré",
                   data.babyseat && "🪑 Siège bébé",
                   ...(Array.isArray(data.equipments)
-                    ? data.equipments.map(k => EQUIP_LABELS[k]).filter(Boolean)
+                    ? data.equipments
+                        .map((k) => EQUIP_LABELS[k])
+                        .filter(Boolean)
                     : []),
                 ].filter(Boolean);
               })(),
               available: true,
               agency: data.agencies ?? null,
-              damageRules: Array.isArray(data.damage_rules) ? data.damage_rules : [],
+              damageRules: Array.isArray(data.damage_rules)
+                ? data.damage_rules
+                : [],
             });
           }
           setCarsLoading(false);
@@ -108,10 +109,12 @@ export default function CarDetailPage() {
   const [activeTab, setActiveTab] = useState("specs"); // "specs" | "features" | "reviews"
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [disabledRanges, setDisabledRanges] = useState([]);
+  const [reviews, setReviews] = useState([]);
 
   useEffect(() => {
     if (!id.startsWith("sb-")) return;
     const numId = id.replace("sb-", "");
+
     supabase
       .from("reservations")
       .select("date_from, date_to")
@@ -123,9 +126,18 @@ export default function CarDetailPage() {
             data.map((r) => ({
               from: new Date(r.date_from),
               to: new Date(r.date_to),
-            }))
+            })),
           );
         }
+      });
+
+    supabase
+      .from("car_reviews")
+      .select("rating, comment, created_at, customers(first_name, last_name)")
+      .eq("car_id", numId)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        if (data) setReviews(data);
       });
   }, [id]);
 
@@ -163,15 +175,17 @@ export default function CarDetailPage() {
     const leftDays = days % 30;
     total = months * car.priceMonth + leftDays * car.price;
     rateLabel = `${car.priceMonth} €/mois`;
-    rateDetail = leftDays > 0
-      ? `${months} mois × ${car.priceMonth} € + ${leftDays} j × ${car.price} €`
-      : `${months} mois × ${car.priceMonth} €`;
+    rateDetail =
+      leftDays > 0
+        ? `${months} mois × ${car.priceMonth} € + ${leftDays} j × ${car.price} €`
+        : `${months} mois × ${car.priceMonth} €`;
   } else if (useWeekly) {
     total = weeks * car.priceWeek + remainingDays * car.price;
     rateLabel = `${car.priceWeek} €/semaine`;
-    rateDetail = remainingDays > 0
-      ? `${weeks} sem × ${car.priceWeek} € + ${remainingDays} j × ${car.price} €`
-      : `${weeks} sem × ${car.priceWeek} €`;
+    rateDetail =
+      remainingDays > 0
+        ? `${weeks} sem × ${car.priceWeek} € + ${remainingDays} j × ${car.price} €`
+        : `${weeks} sem × ${car.priceWeek} €`;
   } else {
     total = car.price * days;
     rateLabel = `${car.price} €/jour`;
@@ -291,17 +305,20 @@ export default function CarDetailPage() {
                     {car.name}
                   </h1>
                 </div>
-                <div className="text-right">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-gold text-lg">
-                      {"★".repeat(Math.round(car.rating))}
-                    </span>
-                    <span className="font-bold text-base">{car.rating}</span>
-                  </div>
-                  <div className="text-xs text-cream/40 mt-0.5">
-                    {car.reviews} avis
-                  </div>
-                </div>
+                {reviews.length > 0 && (() => {
+                  const avg = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1);
+                  return (
+                    <div className="text-right">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-gold text-lg">{"★".repeat(Math.round(avg))}</span>
+                        <span className="font-bold text-base">{avg}</span>
+                      </div>
+                      <div className="text-xs text-cream/40 mt-0.5">
+                        {reviews.length} avis
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               <p className="text-cream/55 leading-[1.8] mt-4 text-[15px]">
@@ -371,44 +388,33 @@ export default function CarDetailPage() {
 
             {activeTab === "reviews" && (
               <div className="flex flex-col gap-4">
-                {[
-                  {
-                    name: "Marie L.",
-                    rating: 5,
-                    date: "Il y a 3 jours",
-                    text: "Voiture impeccable, livraison à l'heure, aucun souci. Je recommande vivement !",
-                  },
-                  {
-                    name: "Thomas B.",
-                    rating: 5,
-                    date: "Il y a 1 semaine",
-                    text: "Excellent rapport qualité-prix, véhicule en parfait état. Le service client est très réactif.",
-                  },
-                  {
-                    name: "Sophie M.",
-                    rating: 4,
-                    date: "Il y a 2 semaines",
-                    text: "Très bon véhicule, confortable pour les longs trajets. Petit bémol sur le temps de livraison.",
-                  },
-                ].map((r, i) => (
-                  <div
-                    key={i}
-                    className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-5"
-                  >
-                    <div className="flex justify-between mb-2.5">
-                      <div>
-                        <div className="font-bold text-sm">{r.name}</div>
-                        <div className="text-gold text-[13px] mt-0.5">
-                          {"★".repeat(r.rating)}
-                        </div>
-                      </div>
-                      <div className="text-xs text-cream/30">{r.date}</div>
-                    </div>
-                    <p className="text-cream/60 text-sm leading-[1.7]">
-                      {r.text}
-                    </p>
+                {reviews.length === 0 ? (
+                  <div className="text-center py-12 text-cream/30">
+                    <div className="text-4xl mb-3">★</div>
+                    <div className="text-sm">Aucun avis pour le moment</div>
                   </div>
-                ))}
+                ) : reviews.map((r, i) => {
+                  const name = r.customers
+                    ? `${r.customers.first_name ?? ""} ${r.customers.last_name?.[0] ?? ""}.`.trim()
+                    : "Client";
+                  const date = new Date(r.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+                  return (
+                    <div key={i} className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-5">
+                      <div className="flex justify-between mb-2.5">
+                        <div>
+                          <div className="font-bold text-sm">{name}</div>
+                          <div className="text-gold text-[13px] mt-0.5">
+                            {"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}
+                          </div>
+                        </div>
+                        <div className="text-xs text-cream/30">{date}</div>
+                      </div>
+                      {r.comment && (
+                        <p className="text-cream/60 text-sm leading-[1.7]">{r.comment}</p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -423,8 +429,18 @@ export default function CarDetailPage() {
                 </span>
                 <span className="text-sm text-cream/40 mb-1.5">/jour</span>
                 <div className="ml-auto text-right flex flex-col gap-0.5">
-                  {car.priceWeek && <div className="text-[12px] text-cream/50">{car.priceWeek} €<span className="text-cream/35">/sem</span></div>}
-                  {car.priceMonth && <div className="text-[12px] text-cream/50">{car.priceMonth} €<span className="text-cream/35">/mois</span></div>}
+                  {car.priceWeek && (
+                    <div className="text-[12px] text-cream/50">
+                      {car.priceWeek} €
+                      <span className="text-cream/35">/sem</span>
+                    </div>
+                  )}
+                  {car.priceMonth && (
+                    <div className="text-[12px] text-cream/50">
+                      {car.priceMonth} €
+                      <span className="text-cream/35">/mois</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -447,20 +463,28 @@ export default function CarDetailPage() {
                 {(useWeekly || useMonthly) && (
                   <div className="flex items-center gap-1.5 mb-3 bg-gold/10 rounded-lg px-2.5 py-1.5">
                     <span className="text-[11px]">🏷️</span>
-                    <span className="text-[11px] font-semibold text-gold">Tarif {useMonthly ? "mensuel" : "hebdomadaire"} appliqué</span>
+                    <span className="text-[11px] font-semibold text-gold">
+                      Tarif {useMonthly ? "mensuel" : "hebdomadaire"} appliqué
+                    </span>
                   </div>
                 )}
                 <div className="flex justify-between mb-2">
-                  <span className="text-[13px] text-cream/55">{rateDetail}</span>
+                  <span className="text-[13px] text-cream/55">
+                    {rateDetail}
+                  </span>
                   <span className="text-[13px] font-semibold">{total} €</span>
                 </div>
                 <div className="flex justify-between mb-2">
-                  <span className="text-[13px] text-cream/55">Frais de service</span>
+                  <span className="text-[13px] text-cream/55">
+                    Frais de service
+                  </span>
                   <span className="text-[13px] font-semibold">0 €</span>
                 </div>
                 <div className="border-t border-white/10 pt-2.5 flex justify-between">
                   <span className="font-bold">Total</span>
-                  <span className="font-extrabold text-lg text-gold">{total} €</span>
+                  <span className="font-extrabold text-lg text-gold">
+                    {total} €
+                  </span>
                 </div>
               </div>
 
@@ -490,8 +514,12 @@ export default function CarDetailPage() {
                       <div className="flex gap-2.5">
                         <span className="text-base shrink-0">✈️</span>
                         <div>
-                          <div className="text-[13px] font-semibold text-cream/90">Remise à l'aéroport</div>
-                          <div className="text-[12px] text-cream/45 mt-0.5">La voiture vous est livrée directement à l'aéroport</div>
+                          <div className="text-[13px] font-semibold text-cream/90">
+                            Remise à l'aéroport
+                          </div>
+                          <div className="text-[12px] text-cream/45 mt-0.5">
+                            La voiture vous est livrée directement à l'aéroport
+                          </div>
                         </div>
                       </div>
                     )}
@@ -499,8 +527,12 @@ export default function CarDetailPage() {
                       <div className="flex gap-2.5">
                         <span className="text-base shrink-0">🛬</span>
                         <div>
-                          <div className="text-[13px] font-semibold text-cream/90">Dépôt à l'aéroport</div>
-                          <div className="text-[12px] text-cream/45 mt-0.5">Restituez la voiture directement à l'aéroport</div>
+                          <div className="text-[13px] font-semibold text-cream/90">
+                            Dépôt à l'aéroport
+                          </div>
+                          <div className="text-[12px] text-cream/45 mt-0.5">
+                            Restituez la voiture directement à l'aéroport
+                          </div>
                         </div>
                       </div>
                     )}
@@ -550,14 +582,22 @@ export default function CarDetailPage() {
                   </div>
                   <div className="flex flex-col gap-2">
                     {car.damageRules.map((rule, i) => (
-                      <div key={i} className="flex items-center justify-between gap-2">
-                        <span className="text-[12px] text-cream/65">{rule.item}</span>
-                        <span className="text-[12px] font-semibold text-cream/90 shrink-0">{rule.price} €</span>
+                      <div
+                        key={i}
+                        className="flex items-center justify-between gap-2"
+                      >
+                        <span className="text-[12px] text-cream/65">
+                          {rule.item}
+                        </span>
+                        <span className="text-[12px] font-semibold text-cream/90 shrink-0">
+                          {rule.price} €
+                        </span>
                       </div>
                     ))}
                   </div>
                   <p className="text-[11px] text-cream/35 mt-3">
-                    Ces frais s'appliquent si un dommage est constaté au retour du véhicule.
+                    Ces frais s'appliquent si un dommage est constaté au retour
+                    du véhicule.
                   </p>
                 </div>
               )}

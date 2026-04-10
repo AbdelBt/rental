@@ -97,6 +97,87 @@ function CancelModal({ reservation, onClose, onConfirmed }) {
   );
 }
 
+function ReviewModal({ reservation, onClose, onSubmitted }) {
+  const [rating, setRating] = useState(0);
+  const [hovered, setHovered] = useState(0);
+  const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const carName = reservation.cars
+    ? `${reservation.cars.brand ? reservation.cars.brand + " " : ""}${reservation.cars.name}`
+    : "ce véhicule";
+
+  const handleSubmit = async () => {
+    if (!rating) return;
+    setSubmitting(true);
+    const { error } = await supabase.from("car_reviews").insert([{
+      car_id: reservation.car_id,
+      customer_id: reservation.customer_id,
+      reservation_id: reservation.id,
+      rating,
+      comment: comment.trim() || null,
+    }]);
+    setSubmitting(false);
+    if (!error) onSubmitted(reservation.id);
+    else alert("Erreur lors de l'envoi. Veuillez réessayer.");
+  };
+
+  return (
+    <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-[#0f0e1a] border border-white/[0.1] rounded-2xl p-6 max-w-md w-full shadow-2xl">
+        <button onClick={onClose} className="absolute top-4 right-4 text-cream/40 hover:text-cream bg-transparent border-none cursor-pointer text-xl">✕</button>
+        <div className="mb-5">
+          <h3 className="font-playfair text-lg font-bold text-cream mb-0.5">Laisser un avis</h3>
+          <p className="text-[12px] text-cream/45">{carName}</p>
+        </div>
+
+        {/* Stars */}
+        <div className="flex gap-2 mb-5 justify-center">
+          {[1, 2, 3, 4, 5].map((s) => (
+            <button
+              key={s}
+              onClick={() => setRating(s)}
+              onMouseEnter={() => setHovered(s)}
+              onMouseLeave={() => setHovered(0)}
+              className="text-3xl bg-transparent border-none cursor-pointer transition-transform duration-100 hover:scale-110"
+            >
+              <span className={(hovered || rating) >= s ? "text-gold" : "text-cream/20"}>★</span>
+            </button>
+          ))}
+        </div>
+        {rating > 0 && (
+          <div className="text-center text-[12px] text-gold font-semibold mb-4">
+            {["", "Mauvais", "Passable", "Bien", "Très bien", "Excellent !"][rating]}
+          </div>
+        )}
+
+        {/* Comment */}
+        <textarea
+          className="w-full bg-white/[0.04] border border-white/[0.1] rounded-xl p-3 text-sm text-cream placeholder-cream/25 resize-none outline-none focus:border-gold/40 transition-colors mb-5"
+          rows={3}
+          placeholder="Partagez votre expérience (optionnel)..."
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+        />
+
+        <div className="flex gap-3">
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-white/[0.1] text-[13px] text-cream/60 hover:text-cream transition-colors bg-transparent cursor-pointer">
+            Annuler
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={!rating || submitting}
+            className="flex-1 py-2.5 rounded-xl bg-gold text-[#0a0a0f] text-[13px] font-bold border-none cursor-pointer disabled:opacity-40 transition-opacity"
+          >
+            {submitting ? "Envoi…" : "Publier l'avis"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function daysUntil(dateStr) {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
@@ -156,6 +237,8 @@ export default function ClientReservations() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [cancelTarget, setCancelTarget] = useState(null);
+  const [reviewTarget, setReviewTarget] = useState(null);
+  const [reviewedIds, setReviewedIds] = useState(new Set());
 
   useEffect(() => {
     if (!client?.id) return;
@@ -169,6 +252,15 @@ export default function ClientReservations() {
       .then(({ data }) => {
         setReservations(data ?? []);
         setLoading(false);
+      });
+
+    // Fetch already-reviewed reservation IDs
+    supabase
+      .from("car_reviews")
+      .select("reservation_id")
+      .eq("customer_id", client.id)
+      .then(({ data }) => {
+        if (data) setReviewedIds(new Set(data.map((r) => r.reservation_id)));
       });
   }, [client?.id]);
 
@@ -203,6 +295,16 @@ export default function ClientReservations() {
           reservation={cancelTarget}
           onClose={() => setCancelTarget(null)}
           onConfirmed={handleCancelled}
+        />
+      )}
+      {reviewTarget && (
+        <ReviewModal
+          reservation={reviewTarget}
+          onClose={() => setReviewTarget(null)}
+          onSubmitted={(resId) => {
+            setReviewedIds((prev) => new Set([...prev, resId]));
+            setReviewTarget(null);
+          }}
         />
       )}
       <div>
@@ -487,6 +589,19 @@ export default function ClientReservations() {
                       <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-red-600 text-white border border-red-500 shrink-0">
                         ✕ Annulée
                       </span>
+                    ) : r.status === "completed" ? (
+                      reviewedIds.has(r.id) ? (
+                        <span className="text-[11px] font-semibold px-3 py-1 rounded-full bg-gold/10 border border-gold/25 text-gold shrink-0">
+                          ★ Avis donné
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => setReviewTarget(r)}
+                          className="text-[11px] font-semibold px-3 py-1 rounded-full bg-transparent border border-gold/40 text-gold hover:bg-gold/10 transition-colors cursor-pointer shrink-0"
+                        >
+                          ★ Laisser un avis
+                        </button>
+                      )
                     ) : ["confirmed", "pending"].includes(r.status) ? (
                       <button
                         onClick={() => setCancelTarget(r)}
