@@ -40,6 +40,7 @@ export default function ResultsPage() {
   );
   const [reservedCarIds, setReservedCarIds] = useState(new Set());
   const [brand, setBrand] = useState("Toutes");
+  const [city, setCity] = useState(searchParams.get("city") ? searchParams.get("city") : "Toutes");
 
   useEffect(() => {
     let cancelled = false;
@@ -78,6 +79,7 @@ export default function ResultsPage() {
               Boolean,
             ),
             available: true,
+            city: c.city ?? null,
           }));
           const supabaseNames = new Set(
             normalized.map((c) => c.name.toLowerCase()),
@@ -132,11 +134,17 @@ export default function ResultsPage() {
     return ["Toutes", ...Array.from(set).sort()];
   }, [cars]);
 
+  const cities = useMemo(() => {
+    const set = new Set(cars.map((c) => c.city).filter(Boolean));
+    return ["Toutes", ...Array.from(set).sort()];
+  }, [cars]);
+
   const filtered = useMemo(() => {
     let list = [...cars];
     if (category !== "Toutes")
       list = list.filter((c) => c.category === category);
     if (brand !== "Toutes") list = list.filter((c) => c.brand === brand);
+    if (city !== "Toutes") list = list.filter((c) => c.city === city);
     if (fuel !== "Tous") list = list.filter((c) => c.fuel === fuel);
     if (transmission !== "Toutes")
       list = list.filter((c) => c.transmission === transmission);
@@ -171,6 +179,7 @@ export default function ResultsPage() {
     pickupDate,
     returnDate,
     reservedCarIds,
+    city,
   ]);
 
   const gridCols =
@@ -358,6 +367,28 @@ export default function ResultsPage() {
               </div>
             </FilterBlock>
 
+            {cities.length > 2 && (
+              <FilterBlock title="Ville">
+                <div className="flex flex-col gap-2">
+                  {cities.map((c) => (
+                    <label
+                      key={c}
+                      className={`flex items-center gap-2.5 cursor-pointer text-sm ${city === c ? "text-gold" : "text-cream/65"}`}
+                    >
+                      <input
+                        type="radio"
+                        name="city"
+                        checked={city === c}
+                        onChange={() => setCity(c)}
+                        className="accent-gold"
+                      />
+                      {c}
+                    </label>
+                  ))}
+                </div>
+              </FilterBlock>
+            )}
+
             <FilterBlock title="Transmission" last>
               <div className="flex flex-col gap-2">
                 {TRANSMISSIONS.map((t) => (
@@ -390,6 +421,7 @@ export default function ResultsPage() {
                 setMaxPrice(1000);
                 setPickupDate(null);
                 setReturnDate(null);
+                setCity("Toutes");
               }}
               className="mt-2 bg-transparent border border-white/10 text-cream/40 py-2 px-4 rounded-lg font-sora text-xs cursor-pointer w-full transition-all hover:border-gold hover:text-gold"
             >
