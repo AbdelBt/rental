@@ -72,10 +72,16 @@ export default function BookingSuccess() {
                     <span className="text-cream/50">Durée</span>
                     <span className="font-semibold">{data.days} jour{Number(data.days) > 1 ? "s" : ""}</span>
                   </div>
-                  {data.city && (
+                  {data.deliveryCity && (
                     <div className="flex justify-between text-[13px]">
-                      <span className="text-cream/50">Ville</span>
-                      <span className="font-semibold">{data.city}</span>
+                      <span className="text-cream/50">Ville de livraison</span>
+                      <span className="font-semibold text-gold">{data.deliveryCity}</span>
+                    </div>
+                  )}
+                  {data.deliveryAddress && (
+                    <div className="flex justify-between text-[13px] gap-4">
+                      <span className="text-cream/50 shrink-0">Adresse de livraison</span>
+                      <span className="font-semibold text-gold text-right">{data.deliveryAddress}</span>
                     </div>
                   )}
                 </div>

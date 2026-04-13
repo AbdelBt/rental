@@ -8,6 +8,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ─── POST /api/stripe/create-checkout ───────────────────────────────────────
+// Creates a Stripe checkout session and returns the redirect URL
 router.post("/create-checkout", async (req, res) => {
   try {
     const {
@@ -15,16 +16,16 @@ router.post("/create-checkout", async (req, res) => {
       dateFrom, dateTo, days,
       total, deposit,
       customerEmail, customerFirstName, customerLastName, customerPhone,
-      city, timeFrom, timeTo,
+      city, timeFrom, timeTo, deliveryCity, deliveryAddress,
     } = req.body;
 
     if (!customerEmail || !dateFrom || !dateTo || !carName) {
-      return res.status(400).json({ error: "Données manquantes." });
+      return res.status(400).json({ error: "Missing required fields." });
     }
 
     const depositCents = Math.round(Number(deposit) * 100);
     if (depositCents < 50) {
-      return res.status(400).json({ error: "Montant trop faible pour Stripe (min 0.50 €)." });
+      return res.status(400).json({ error: "Amount too low for Stripe (min €0.50)." });
     }
 
     const session = await stripe.checkout.sessions.create({
@@ -60,6 +61,8 @@ router.post("/create-checkout", async (req, res) => {
         city,
         timeFrom,
         timeTo,
+        deliveryCity: deliveryCity ?? "",
+        deliveryAddress: deliveryAddress ?? "",
       },
       success_url: `${process.env.CLIENT_URL}/booking/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.CLIENT_URL}/booking/cancel`,
@@ -74,7 +77,7 @@ router.post("/create-checkout", async (req, res) => {
 });
 
 // ─── POST /api/stripe/webhook ────────────────────────────────────────────────
-// IMPORTANT: raw body — doit être monté avant express.json() dans server.js
+// IMPORTANT: raw body — must be mounted before express.json() in server.js
 router.post("/webhook", express.raw({ type: "application/json" }), async (req, res) => {
   const sig = req.headers["stripe-signature"];
 
@@ -89,9 +92,10 @@ router.post("/webhook", express.raw({ type: "application/json" }), async (req, r
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
     const meta = session.metadata;
+    console.log("[webhook] metadata:", JSON.stringify({ deliveryCity: meta.deliveryCity, deliveryAddress: meta.deliveryAddress, city: meta.city }));
 
     try {
-      // 1. Trouver ou créer le customer dans Supabase
+      // 1. Find or create customer in Supabase
       let customerId = null;
       const { data: existingCustomer } = await supabaseAdmin
         .from("customers")
@@ -115,10 +119,10 @@ router.post("/webhook", express.raw({ type: "application/json" }), async (req, r
         customerId = newCustomer?.id ?? null;
       }
 
-      // 2. Trouver le car_id et agency_id dans Supabase
+      // 2. Resolve car_id and agency_id from Supabase
       let carId = null;
       let agencyId = null;
-      // meta.carId peut être "sb-2" ou "2" ou un nombre
+      // meta.carId can be "sb-2", "2", or a plain number
       const rawCarId = String(meta.carId ?? "").replace("sb-", "");
       if (rawCarId && !isNaN(rawCarId)) {
         const { data: carRow } = await supabaseAdmin
@@ -139,9 +143,9 @@ router.post("/webhook", express.raw({ type: "application/json" }), async (req, r
         agencyId = carRow?.agency_id ?? null;
       }
 
-      if (!agencyId) throw new Error("agency_id introuvable pour ce véhicule");
+      if (!agencyId) throw new Error("agency_id not found for this vehicle");
 
-      // 3. Insérer la réservation
+      // 3. Insert the reservation
       const { data: reservation, error: resError } = await supabaseAdmin
         .from("reservations")
         .insert({
@@ -161,20 +165,39 @@ router.post("/webhook", express.raw({ type: "application/json" }), async (req, r
           deposit_paid: true,
           status: "confirmed",
           city: meta.city ?? null,
+          delivery_city: meta.deliveryCity || null,
+          delivery_address: meta.deliveryAddress || null,
         })
         .select()
         .single();
 
       if (resError) throw resError;
 
-      // 4. Email de confirmation via Resend
+      // 4. Send confirmation email to client
       const emailResult = await resend.emails.send({
         from: "Drivo <onboarding@resend.dev>",
         to: process.env.RESEND_TEST_EMAIL || meta.customerEmail,
         subject: `✅ Réservation confirmée — ${meta.carName}`,
         html: buildEmailHtml({ meta, reservationId: reservation?.id }),
       });
-      console.log("[stripe] email result:", JSON.stringify(emailResult));
+      console.log("[stripe] email client result:", JSON.stringify(emailResult));
+
+      // 5. Send new booking notification to agency
+      const { data: agencyRow } = await supabaseAdmin
+        .from("agencies")
+        .select("email, name")
+        .eq("id", agencyId)
+        .maybeSingle();
+
+      if (agencyRow?.email) {
+        await resend.emails.send({
+          from: "Drivo <onboarding@resend.dev>",
+          to: process.env.RESEND_TEST_EMAIL || agencyRow.email,
+          subject: `🔔 Nouvelle réservation — ${meta.carName}`,
+          html: buildAgencyNotifEmailHtml({ meta, reservationId: reservation?.id, agencyName: agencyRow.name }),
+        });
+        console.log("[stripe] agency notification sent to", agencyRow.email);
+      }
 
       console.log("[stripe] ✅ Réservation créée:", reservation?.id);
     } catch (err) {
@@ -186,10 +209,10 @@ router.post("/webhook", express.raw({ type: "application/json" }), async (req, r
 });
 
 // ─── POST /api/stripe/cancel ─────────────────────────────────────────────────
-// Dashboard agence appelle cette route pour annuler une réservation + envoyer mail
+// Called by the agency dashboard to cancel a reservation and send a cancellation email
 router.post("/cancel", async (req, res) => {
   const { reservationId } = req.body;
-  if (!reservationId) return res.status(400).json({ error: "reservationId requis" });
+  if (!reservationId) return res.status(400).json({ error: "reservationId is required" });
 
   try {
     const { data: r, error } = await supabaseAdmin
@@ -198,7 +221,7 @@ router.post("/cancel", async (req, res) => {
       .eq("id", reservationId)
       .single();
 
-    if (error || !r) throw new Error("Réservation introuvable");
+    if (error || !r) throw new Error("Reservation not found");
 
     await resend.emails.send({
       from: "Drivo <onboarding@resend.dev>",
@@ -210,6 +233,35 @@ router.post("/cancel", async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error("[cancel] error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── POST /api/stripe/notify-confirmed ───────────────────────────────────────
+// Sends a confirmation email to the client when the agency manually confirms a reservation
+router.post("/notify-confirmed", async (req, res) => {
+  const { reservationId } = req.body;
+  if (!reservationId) return res.status(400).json({ error: "reservationId is required" });
+
+  try {
+    const { data: r, error } = await supabaseAdmin
+      .from("reservations")
+      .select("id, client_name, client_email, date_from, date_to, time_from, total, deposit, city, cars(name, img)")
+      .eq("id", reservationId)
+      .single();
+
+    if (error || !r) throw new Error("Reservation not found");
+
+    await resend.emails.send({
+      from: "Drivo <onboarding@resend.dev>",
+      to: process.env.RESEND_TEST_EMAIL || r.client_email,
+      subject: `✅ Votre réservation est confirmée — ${r.cars?.name}`,
+      html: buildConfirmedEmailHtml(r),
+    });
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[notify-confirmed] error:", err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -231,6 +283,8 @@ router.get("/session/:id", async (req, res) => {
       total: session.metadata?.total,
       deposit: session.metadata?.deposit,
       city: session.metadata?.city,
+      deliveryCity: session.metadata?.deliveryCity,
+      deliveryAddress: session.metadata?.deliveryAddress,
       amountPaid: (session.amount_total / 100).toFixed(2),
     });
   } catch (err) {
@@ -304,7 +358,16 @@ function buildEmailHtml({ meta, reservationId }) {
         <td style="padding:12px 0;font-size:13px;color:#ffffff55">⏱ Durée</td>
         <td style="padding:12px 0;font-size:13px;font-weight:700;text-align:right;color:#f5efe0">${days} jour${days > 1 ? "s" : ""}</td>
       </tr>
-      ${meta.city ? `<tr><td style="padding:12px 0;font-size:13px;color:#ffffff55">📍 Ville</td><td style="padding:12px 0;font-size:13px;font-weight:700;text-align:right;color:#f5efe0">${meta.city}</td></tr>` : ""}
+      ${meta.deliveryCity ? `
+      <tr style="border-bottom:1px solid #ffffff08">
+        <td style="padding:12px 0;font-size:13px;color:#ffffff55">📍 Ville de livraison</td>
+        <td style="padding:12px 0;font-size:13px;font-weight:700;text-align:right;color:#c9a84c">${meta.deliveryCity}</td>
+      </tr>` : ""}
+      ${meta.deliveryAddress ? `
+      <tr style="border-bottom:1px solid #ffffff08">
+        <td style="padding:12px 0;font-size:13px;color:#ffffff55">🏠 Adresse de livraison</td>
+        <td style="padding:12px 0;font-size:13px;font-weight:700;text-align:right;color:#c9a84c">${meta.deliveryAddress}</td>
+      </tr>` : ""}
     </table>
   </div>
 
@@ -429,6 +492,153 @@ function buildCancellationEmailHtml(r) {
     <p style="margin:8px 0 0;font-size:11px;color:#ffffff25;line-height:1.8">contact@drivo.ma · Maroc<br>Cet email est généré automatiquement — merci de ne pas y répondre directement.</p>
   </div>
 
+</div>
+</body>
+</html>`;
+}
+
+function buildAgencyNotifEmailHtml({ meta, reservationId, agencyName }) {
+  const fmtDate = (d) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  const refId = reservationId ? String(reservationId).padStart(6, "0") : "—";
+  const clientName = `${meta.customerFirstName ?? ""} ${meta.customerLastName ?? ""}`.trim();
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#07070c;font-family:'Helvetica Neue',Arial,sans-serif;color:#f5efe0">
+<div style="max-width:600px;margin:0 auto;padding:48px 24px">
+  <div style="text-align:center;margin-bottom:40px">
+    <h1 style="margin:0;font-size:36px;color:#c9a84c;letter-spacing:6px;font-weight:900;text-transform:uppercase">DRIVO</h1>
+    <div style="width:60px;height:2px;background:linear-gradient(90deg,transparent,#c9a84c,transparent);margin:16px auto 0"></div>
+  </div>
+
+  <div style="background:linear-gradient(135deg,#1a1500,#120f00);border:1px solid #c9a84c40;border-radius:16px;padding:20px 24px;margin-bottom:28px">
+    <div style="font-size:28px;margin-bottom:8px">🔔</div>
+    <p style="margin:0;font-size:18px;font-weight:800;color:#c9a84c">Nouvelle réservation reçue</p>
+    <p style="margin:6px 0 0;font-size:13px;color:#ffffff60">Bonjour <strong style="color:#f5efe0">${agencyName ?? "Agence"}</strong>, un client vient de réserver l'un de vos véhicules.</p>
+  </div>
+
+  <div style="text-align:center;background:#ffffff06;border:1px dashed #c9a84c50;border-radius:12px;padding:16px;margin-bottom:28px">
+    <p style="margin:0;font-size:11px;color:#ffffff40;letter-spacing:3px;text-transform:uppercase">Réservation</p>
+    <p style="margin:6px 0 0;font-size:26px;font-weight:900;color:#c9a84c;letter-spacing:4px">#${refId}</p>
+  </div>
+
+  ${meta.carImg ? `<img src="${meta.carImg}" alt="${meta.carName}" style="width:100%;height:200px;object-fit:cover;border-radius:16px;margin-bottom:28px;display:block">` : ""}
+
+  <div style="background:#1a1830;border:1px solid #c9a84c30;border-radius:20px;padding:28px;margin-bottom:24px">
+    <h2 style="margin:0 0 20px;font-size:13px;color:#c9a84c;letter-spacing:3px;text-transform:uppercase;font-weight:700">Détails</h2>
+    <table style="width:100%;border-collapse:collapse">
+      <tr style="border-bottom:1px solid #ffffff08">
+        <td style="padding:12px 0;font-size:13px;color:#ffffff55">🚗 Véhicule</td>
+        <td style="padding:12px 0;font-size:14px;font-weight:800;text-align:right">${meta.carName}</td>
+      </tr>
+      <tr style="border-bottom:1px solid #ffffff08">
+        <td style="padding:12px 0;font-size:13px;color:#ffffff55">👤 Client</td>
+        <td style="padding:12px 0;font-size:13px;font-weight:700;text-align:right">${clientName}</td>
+      </tr>
+      <tr style="border-bottom:1px solid #ffffff08">
+        <td style="padding:12px 0;font-size:13px;color:#ffffff55">📞 Téléphone</td>
+        <td style="padding:12px 0;font-size:13px;font-weight:700;text-align:right">${meta.customerPhone ?? "—"}</td>
+      </tr>
+      <tr style="border-bottom:1px solid #ffffff08">
+        <td style="padding:12px 0;font-size:13px;color:#ffffff55">📍 Ville de livraison</td>
+        <td style="padding:12px 0;font-size:13px;font-weight:700;text-align:right;color:#c9a84c">${meta.deliveryCity || "—"}</td>
+      </tr>
+      <tr style="border-bottom:1px solid #ffffff08">
+        <td style="padding:12px 0;font-size:13px;color:#ffffff55">🏠 Adresse exacte</td>
+        <td style="padding:12px 0;font-size:13px;font-weight:700;text-align:right;color:#c9a84c">${meta.deliveryAddress || "—"}</td>
+      </tr>
+      <tr style="border-bottom:1px solid #ffffff08">
+        <td style="padding:12px 0;font-size:13px;color:#ffffff55">📅 Départ</td>
+        <td style="padding:12px 0;font-size:13px;font-weight:700;text-align:right;color:#c9a84c">${fmtDate(meta.dateFrom)} à ${meta.timeFrom || "10:00"}</td>
+      </tr>
+      <tr style="border-bottom:1px solid #ffffff08">
+        <td style="padding:12px 0;font-size:13px;color:#ffffff55">🏁 Retour</td>
+        <td style="padding:12px 0;font-size:13px;font-weight:700;text-align:right">${fmtDate(meta.dateTo)} à ${meta.timeTo || "10:00"}</td>
+      </tr>
+      <tr style="border-bottom:1px solid #ffffff08">
+        <td style="padding:12px 0;font-size:13px;color:#ffffff55">💰 Total location</td>
+        <td style="padding:12px 0;font-size:15px;font-weight:900;text-align:right">${Number(meta.total).toLocaleString("fr-FR")} €</td>
+      </tr>
+      <tr style="border-bottom:1px solid #ffffff08">
+        <td style="padding:12px 0;font-size:13px;color:#ffffff55">✅ Déjà payé en ligne</td>
+        <td style="padding:12px 0;font-size:14px;font-weight:800;text-align:right;color:#22c55e">− ${Number(meta.deposit).toLocaleString("fr-FR")} €</td>
+      </tr>
+      <tr>
+        <td style="padding:14px 0 0;font-size:14px;font-weight:700;color:#f59e0b">⏳ À encaisser en cash</td>
+        <td style="padding:14px 0 0;font-size:18px;font-weight:900;text-align:right;color:#f59e0b">${(Number(meta.total) - Number(meta.deposit)).toLocaleString("fr-FR")} €</td>
+      </tr>
+    </table>
+  </div>
+
+  <div style="background:linear-gradient(135deg,#0a2010,#051008);border:1px solid #22c55e40;border-radius:12px;padding:16px 20px;margin-bottom:28px">
+    <p style="margin:0;font-size:12px;color:#4ade80;line-height:1.7">
+      ✅ L'acompte de <strong>${Number(meta.deposit).toLocaleString("fr-FR")} €</strong> a déjà été encaissé par Drivo via paiement en ligne. Le montant restant de <strong>${(Number(meta.total) - Number(meta.deposit)).toLocaleString("fr-FR")} €</strong> est à percevoir directement auprès du client lors de la remise des clés.
+    </p>
+  </div>
+
+  <div style="border-top:1px solid #ffffff0a;padding-top:24px;text-align:center">
+    <p style="margin:0;font-size:12px;font-weight:900;color:#c9a84c;letter-spacing:4px">DRIVO</p>
+    <p style="margin:8px 0 0;font-size:11px;color:#ffffff25;line-height:1.8">contact@drivo.ma · Maroc</p>
+  </div>
+</div>
+</body>
+</html>`;
+}
+
+function buildConfirmedEmailHtml(r) {
+  const fmtDate = (d) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  const refId = String(r.id).padStart(6, "0");
+  const firstName = r.client_name?.split(" ")[0] || "Client";
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#07070c;font-family:'Helvetica Neue',Arial,sans-serif;color:#f5efe0">
+<div style="max-width:600px;margin:0 auto;padding:48px 24px">
+  <div style="text-align:center;margin-bottom:40px">
+    <h1 style="margin:0;font-size:36px;color:#c9a84c;letter-spacing:6px;font-weight:900;text-transform:uppercase">DRIVO</h1>
+    <div style="width:60px;height:2px;background:linear-gradient(90deg,transparent,#c9a84c,transparent);margin:16px auto 0"></div>
+  </div>
+
+  <div style="background:linear-gradient(135deg,#0a2010,#051008);border:1px solid #22c55e40;border-radius:16px;padding:20px 24px;margin-bottom:28px">
+    <div style="font-size:28px;margin-bottom:8px">✅</div>
+    <p style="margin:0;font-size:18px;font-weight:800;color:#22c55e">Votre réservation est confirmée !</p>
+    <p style="margin:6px 0 0;font-size:13px;color:#ffffff60">Bonjour <strong style="color:#f5efe0">${firstName}</strong>, l'agence a confirmé votre réservation.</p>
+  </div>
+
+  <div style="text-align:center;background:#ffffff06;border:1px dashed #c9a84c50;border-radius:12px;padding:16px;margin-bottom:28px">
+    <p style="margin:0;font-size:11px;color:#ffffff40;letter-spacing:3px;text-transform:uppercase">Numéro de réservation</p>
+    <p style="margin:6px 0 0;font-size:26px;font-weight:900;color:#c9a84c;letter-spacing:4px">#${refId}</p>
+  </div>
+
+  ${r.cars?.img ? `<img src="${r.cars.img}" alt="${r.cars.name}" style="width:100%;height:200px;object-fit:cover;border-radius:16px;margin-bottom:28px;display:block">` : ""}
+
+  <div style="background:#1a1830;border:1px solid #c9a84c30;border-radius:20px;padding:28px;margin-bottom:24px">
+    <table style="width:100%;border-collapse:collapse">
+      <tr style="border-bottom:1px solid #ffffff08">
+        <td style="padding:12px 0;font-size:13px;color:#ffffff55">🚗 Véhicule</td>
+        <td style="padding:12px 0;font-size:14px;font-weight:800;text-align:right">${r.cars?.name ?? "—"}</td>
+      </tr>
+      <tr style="border-bottom:1px solid #ffffff08">
+        <td style="padding:12px 0;font-size:13px;color:#ffffff55">📅 Départ</td>
+        <td style="padding:12px 0;font-size:13px;font-weight:700;text-align:right;color:#c9a84c">${fmtDate(r.date_from)} à ${r.time_from || "10:00"}</td>
+      </tr>
+      <tr style="border-bottom:1px solid #ffffff08">
+        <td style="padding:12px 0;font-size:13px;color:#ffffff55">🏁 Retour</td>
+        <td style="padding:12px 0;font-size:13px;font-weight:700;text-align:right">${fmtDate(r.date_to)}</td>
+      </tr>
+      <tr>
+        <td style="padding:12px 0;font-size:13px;color:#ffffff55">💳 Solde à régler</td>
+        <td style="padding:12px 0;font-size:15px;font-weight:900;text-align:right;color:#f59e0b">${r.total - (r.deposit ?? 0)} € en cash</td>
+      </tr>
+    </table>
+  </div>
+
+  <div style="border-top:1px solid #ffffff0a;padding-top:24px;text-align:center">
+    <p style="margin:0;font-size:12px;font-weight:900;color:#c9a84c;letter-spacing:4px">DRIVO</p>
+    <p style="margin:8px 0 0;font-size:11px;color:#ffffff25;line-height:1.8">contact@drivo.ma · Maroc</p>
+  </div>
 </div>
 </body>
 </html>`;

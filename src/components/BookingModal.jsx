@@ -1,5 +1,77 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import DateRangeButton from "./DateRangeButton";
+
+function AddressAutocomplete({ value, onChange, cityFilter }) {
+  const [query, setQuery] = useState(value ?? "");
+  const [suggestions, setSuggestions] = useState([]);
+  const [open, setOpen] = useState(false);
+  const timeoutRef = useRef(null);
+  const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleChange = (e) => {
+    const val = e.target.value;
+    setQuery(val);
+    onChange(val);
+    clearTimeout(timeoutRef.current);
+    if (val.length < 3) { setSuggestions([]); setOpen(false); return; }
+    timeoutRef.current = setTimeout(async () => {
+      try {
+        const q = cityFilter ? `${val}, ${cityFilter}, Maroc` : `${val}, Maroc`;
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&countrycodes=ma&format=json&limit=6&addressdetails=1`,
+          { headers: { "Accept-Language": "fr" } }
+        );
+        const data = await res.json();
+        setSuggestions(data);
+        setOpen(data.length > 0);
+      } catch (_) {}
+    }, 400);
+  };
+
+  const handleSelect = (item) => {
+    const label = item.display_name.split(",").slice(0, 3).join(",").trim();
+    setQuery(label);
+    onChange(label);
+    setSuggestions([]);
+    setOpen(false);
+  };
+
+  return (
+    <div ref={wrapperRef} className="relative">
+      <input
+        className="input-field"
+        placeholder="Ex : Hôtel Atlas, Aéroport Mohammed V, 12 Rue…"
+        value={query}
+        onChange={handleChange}
+        onFocus={() => suggestions.length > 0 && setOpen(true)}
+        autoComplete="off"
+        required
+      />
+      {open && (
+        <ul className="absolute z-[700] top-full left-0 right-0 mt-1 bg-[#15131f] border border-white/[0.1] rounded-xl overflow-hidden shadow-2xl max-h-52 overflow-y-auto">
+          {suggestions.map((item) => (
+            <li
+              key={item.place_id}
+              onMouseDown={() => handleSelect(item)}
+              className="px-3 py-2.5 text-[12px] text-cream/80 hover:bg-white/[0.06] cursor-pointer border-b border-white/[0.05] last:border-none leading-tight"
+            >
+              <span className="text-gold mr-1.5">📍</span>
+              {item.display_name.split(",").slice(0, 4).join(",")}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 function getCustomerDefaults() {
   try {
@@ -10,10 +82,11 @@ function getCustomerDefaults() {
         lastName: cached.last_name ?? "",
         email: cached.email ?? "",
         phone: cached.phone ?? "",
-        city: cached.city ?? "",
+        deliveryCity: cached.deliveryCity ?? "",
+        deliveryAddress: cached.deliveryAddress ?? "",
       };
   } catch (_) {}
-  return { firstName: "", lastName: "", email: "", phone: "", city: "" };
+  return { firstName: "", lastName: "", email: "", phone: "", deliveryCity: "", deliveryAddress: "" };
 }
 
 const TIME_SLOTS = Array.from({ length: 48 }, (_, i) => {
@@ -37,6 +110,16 @@ export default function BookingModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Auto-set deliveryCity when there's only one available city
+  useEffect(() => {
+    const availableCities = Array.isArray(car.agency?.cities) && car.agency.cities.length > 0
+      ? car.agency.cities
+      : [car.city ?? car.agency?.city].filter(Boolean);
+    if (availableCities.length === 1) {
+      setForm((f) => ({ ...f, deliveryCity: availableCities[0] }));
+    }
+  }, [car]);
+
   const days = Math.max(1, Math.round((returnDate - pickupDate) / 86400000));
   const total = car.price * days;
   const deposit = Math.round(total * 0.4);
@@ -51,8 +134,14 @@ export default function BookingModal({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.firstName || !form.lastName || !form.email) {
-      setError("Prénom, nom et email sont requis.");
+    const missing = [];
+    if (!form.firstName) missing.push("prénom");
+    if (!form.lastName) missing.push("nom");
+    if (!form.email) missing.push("email");
+    if (!form.deliveryCity) missing.push("ville de livraison");
+    if (!form.deliveryAddress) missing.push("adresse de livraison");
+    if (missing.length > 0) {
+      setError(`Champ(s) requis : ${missing.join(", ")}.`);
       return;
     }
     setError("");
@@ -77,7 +166,9 @@ export default function BookingModal({
           customerFirstName: form.firstName,
           customerLastName: form.lastName,
           customerPhone: form.phone,
-          city: form.city,
+          deliveryCity: form.deliveryCity,
+          deliveryAddress: form.deliveryAddress,
+          city: car.city ?? car.agency?.city ?? null,
         }),
       });
 
@@ -214,15 +305,46 @@ export default function BookingModal({
             </div>
             <div>
               <label className="block text-[11px] font-semibold text-cream/50 tracking-widest uppercase mb-1.5">
-                Ville
+                Ville de livraison *
               </label>
-              <input
-                className="input-field"
-                placeholder="Marrakech"
-                value={form.city}
-                onChange={update("city")}
-              />
+              {(() => {
+                const availableCities = Array.isArray(car.agency?.cities) && car.agency.cities.length > 0
+                  ? car.agency.cities
+                  : [car.city ?? car.agency?.city].filter(Boolean);
+                return availableCities.length > 1 ? (
+                  <select
+                    className="input-field cursor-pointer"
+                    value={form.deliveryCity}
+                    onChange={update("deliveryCity")}
+                    required
+                    style={{ background: "#0f0e1a", color: "#f5efe0" }}
+                  >
+                    <option value="" style={{ background: "#0f0e1a" }}>Choisir…</option>
+                    {availableCities.map((c) => (
+                      <option key={c} value={c} style={{ background: "#0f0e1a" }}>{c}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    className="input-field"
+                    value={availableCities[0] ?? ""}
+                    readOnly
+                    style={{ opacity: 0.6, cursor: "not-allowed" }}
+                  />
+                );
+              })()}
             </div>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-semibold text-cream/50 tracking-widest uppercase mb-1.5">
+              Adresse exacte de livraison *
+            </label>
+            <AddressAutocomplete
+              value={form.deliveryAddress}
+              onChange={(val) => setForm((f) => ({ ...f, deliveryAddress: val }))}
+              cityFilter={form.deliveryCity}
+            />
           </div>
 
           {/* Politique d'annulation */}

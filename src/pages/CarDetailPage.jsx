@@ -25,11 +25,22 @@ export default function CarDetailPage() {
         const numId = id.replace("sb-", "");
         const { data, error } = await supabase
           .from("cars")
-          .select("*, agencies!agency_id(*)")
+          .select("*")
           .eq("id", numId)
           .maybeSingle();
         if (!cancelled) {
           if (!error && data) {
+            // Fetch agency separately — more reliable than join when FK constraint may be absent
+            let agencyData = null;
+            if (data.agency_id) {
+              const { data: ag } = await supabase
+                .from("agencies")
+                .select("*")
+                .eq("id", data.agency_id)
+                .maybeSingle();
+              agencyData = ag ?? null;
+            }
+
             setCar({
               id: `sb-${data.id}`,
               name: data.name,
@@ -76,7 +87,8 @@ export default function CarDetailPage() {
                 ].filter(Boolean);
               })(),
               available: true,
-              agency: data.agencies ?? null,
+              city: data.city ?? null,
+              agency: agencyData,
               damageRules: Array.isArray(data.damage_rules)
                 ? data.damage_rules
                 : [],
@@ -489,7 +501,7 @@ export default function CarDetailPage() {
               </div>
 
               {/* Pickup & Delivery */}
-              {car.agency && (
+              {(car.agency || car.city) && (
                 <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4 mb-5">
                   <div className="text-[11px] font-bold text-gold tracking-widest uppercase mb-3">
                     📍 Retrait & Livraison
@@ -499,44 +511,39 @@ export default function CarDetailPage() {
                       <span className="text-base">🏢</span>
                       <div>
                         <div className="text-[13px] font-semibold text-cream/90">
-                          {car.agency.name}
+                          {car.agency?.name ?? "Agence partenaire"}
                         </div>
-                        {(car.agency.address || car.agency.city) && (
+                        {(car.agency?.address || car.agency?.city || car.city) && (
                           <div className="text-[12px] text-cream/45 mt-0.5">
-                            {[car.agency.address, car.agency.city]
+                            {[car.agency?.address, car.agency?.city ?? car.city]
                               .filter(Boolean)
                               .join(", ")}
                           </div>
                         )}
                       </div>
                     </div>
-                    {car.agency.airport_pickup && (
+                    {(car.agency?.airport_pickup || car.agency?.airport_dropoff) && (
                       <div className="flex gap-2.5">
                         <span className="text-base shrink-0">✈️</span>
                         <div>
                           <div className="text-[13px] font-semibold text-cream/90">
-                            Remise à l'aéroport
+                            {car.agency.airport_pickup && car.agency.airport_dropoff
+                              ? "Remise & dépôt à l'aéroport"
+                              : car.agency.airport_pickup
+                              ? "Remise à l'aéroport"
+                              : "Dépôt à l'aéroport"}
                           </div>
                           <div className="text-[12px] text-cream/45 mt-0.5">
-                            La voiture vous est livrée directement à l'aéroport
+                            {car.agency.airport_pickup && car.agency.airport_dropoff
+                              ? "Prise en charge et restitution directement à l'aéroport"
+                              : car.agency.airport_pickup
+                              ? "La voiture vous est livrée directement à l'aéroport"
+                              : "Restituez la voiture directement à l'aéroport"}
                           </div>
                         </div>
                       </div>
                     )}
-                    {car.agency.airport_dropoff && (
-                      <div className="flex gap-2.5">
-                        <span className="text-base shrink-0">🛬</span>
-                        <div>
-                          <div className="text-[13px] font-semibold text-cream/90">
-                            Dépôt à l'aéroport
-                          </div>
-                          <div className="text-[12px] text-cream/45 mt-0.5">
-                            Restituez la voiture directement à l'aéroport
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    {car.agency.phone && (
+                    {car.agency?.phone && (
                       <div className="flex gap-2.5 items-center">
                         <span className="text-base">📞</span>
                         <span className="text-[13px] text-cream/60">
