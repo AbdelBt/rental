@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { footerColumns } from "../data";
 import Logo from "./Logo";
 
@@ -69,14 +70,25 @@ function FooterColumn({ title, links }) {
       <div className="font-bold text-[13px] tracking-[0.15em] uppercase text-gold mb-4">
         {title}
       </div>
-      {links.map((l) => (
-        <div
-          key={l}
-          className="text-cream/45 text-sm mb-2.5 cursor-pointer transition-colors hover:text-cream"
-        >
-          {l}
-        </div>
-      ))}
+      {links.map((l) =>
+        l.href?.startsWith("mailto:") || l.href?.startsWith("http") ? (
+          <a
+            key={l.label}
+            href={l.href}
+            className="block text-cream/45 text-sm mb-2.5 transition-colors hover:text-cream no-underline"
+          >
+            {l.label}
+          </a>
+        ) : (
+          <Link
+            key={l.label}
+            to={l.href}
+            className="block text-cream/45 text-sm mb-2.5 transition-colors hover:text-cream no-underline"
+          >
+            {l.label}
+          </Link>
+        )
+      )}
     </div>
   );
 }

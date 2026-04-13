@@ -270,9 +270,22 @@ export const features = [
 
 // ─── Footer columns ──────────────────────────────────────────────────────────
 export const footerColumns = [
-  { title: "Véhicules", links: ["Économiques", "Standards", "SUV", "Luxe", "Électriques"] },
-  { title: "Service", links: ["Comment ça marche", "Livraison à domicile", "Assurances", "FAQ"] },
-  { title: "Légal", links: ["CGU", "Confidentialité", "Cookies", "Contact"] },
+  { title: "Véhicules", links: [
+    { label: "Économiques", href: "/cars?category=Économique" },
+    { label: "Standards",   href: "/cars?category=Standard" },
+    { label: "SUV",         href: "/cars?category=SUV" },
+    { label: "Luxe",        href: "/cars?category=Luxe" },
+    { label: "Électriques", href: "/cars?category=Électrique" },
+  ]},
+  { title: "Service", links: [
+    { label: "Comment ça marche", href: "/#how" },
+    { label: "FAQ",               href: "/#faq" },
+    { label: "Contact",           href: "mailto:support@drivo.ma" },
+  ]},
+  { title: "Légal", links: [
+    { label: "CGU",            href: "/cgu" },
+    { label: "Confidentialité", href: "/confidentialite" },
+  ]},
 ];
 
 export const cities = [
