@@ -3,27 +3,38 @@ import { supabase } from "../lib/supabaseClient";
 
 const LS_KEY = "drivo_customer";
 
+/* ------------------ CACHE ------------------ */
 function saveToCache(data) {
-  try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch (_) {}
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(data));
+  } catch (_) {}
 }
 
 function loadFromCache() {
-  try { return JSON.parse(localStorage.getItem(LS_KEY)); } catch (_) { return null; }
+  try {
+    return JSON.parse(localStorage.getItem(LS_KEY));
+  } catch (_) {
+    return null;
+  }
 }
 
 function clearCache() {
-  try { localStorage.removeItem(LS_KEY); } catch (_) {}
+  try {
+    localStorage.removeItem(LS_KEY);
+  } catch (_) {}
 }
 
+/* ------------------ HOOK ------------------ */
 export function useClientAuth() {
-  // Initialise depuis le cache localStorage pour éviter le flash de chargement
-  const [user, setUser]         = useState(null);
-  const [session, setSession]   = useState(null);
+  const [user, setUser] = useState(null);
+  const [session, setSession] = useState(null);
   const [customer, setCustomer] = useState(() => loadFromCache());
-  const [loading, setLoading]   = useState(true);
+  const [loading, setLoading] = useState(true);
 
   const userRef = useRef(null);
+  const initRef = useRef(false);
 
+  /* ------------------ CUSTOMER ------------------ */
   const saveCustomer = (data) => {
     setCustomer(data);
     if (data) saveToCache(data);
@@ -31,7 +42,7 @@ export function useClientAuth() {
   };
 
   const fetchCustomer = async (authUser) => {
-    if (!authUser) { saveCustomer(null); return; }
+    if (!authUser?.id) return;
 
     try {
       const { data } = await supabase
@@ -45,48 +56,53 @@ export function useClientAuth() {
         return;
       }
 
-      // Row missing — create it from user_metadata
+      // create if not exists
       const m = authUser.user_metadata ?? {};
+
       const { data: created } = await supabase
         .from("customers")
-        .insert([{
-          auth_user_id: authUser.id,
-          email:        authUser.email,
-          first_name:   m.first_name ?? "",
-          last_name:    m.last_name  ?? "",
-          phone:        m.phone      ?? "",
-        }])
+        .insert([
+          {
+            auth_user_id: authUser.id,
+            email: authUser.email,
+            first_name: m.first_name ?? "",
+            last_name: m.last_name ?? "",
+            phone: m.phone ?? "",
+          },
+        ])
         .select()
         .single();
 
-      saveCustomer(created ?? {
-        id:           null,
-        auth_user_id: authUser.id,
-        email:        authUser.email,
-        first_name:   m.first_name ?? "",
-        last_name:    m.last_name  ?? "",
-        phone:        m.phone      ?? "",
-      });
-    } catch (_) {
-      // Network error — garde le cache existant si dispo, sinon user_metadata
+      saveCustomer(
+        created ?? {
+          id: null,
+          auth_user_id: authUser.id,
+          email: authUser.email,
+          first_name: m.first_name ?? "",
+          last_name: m.last_name ?? "",
+          phone: m.phone ?? "",
+        }
+      );
+    } catch (err) {
+      console.error("fetchCustomer error:", err);
+
       const cached = loadFromCache();
-      if (cached && cached.auth_user_id === authUser.id) return; // cache valide, on ne touche pas
+      if (cached?.auth_user_id === authUser.id) return;
+
       const m = authUser.user_metadata ?? {};
+
       saveCustomer({
-        id:           null,
+        id: null,
         auth_user_id: authUser.id,
-        email:        authUser.email,
-        first_name:   m.first_name ?? "",
-        last_name:    m.last_name  ?? "",
-        phone:        m.phone      ?? "",
+        email: authUser.email,
+        first_name: m.first_name ?? "",
+        last_name: m.last_name ?? "",
+        phone: m.phone ?? "",
       });
     }
   };
 
-  // Refresh customer row on demand (full re-fetch)
-  const refresh = () => fetchCustomer(userRef.current);
-
-  // Optimistic patch — met à jour l'état local ET le cache instantanément
+  /* ------------------ PATCH ------------------ */
   const patchCustomer = (fields) => {
     setCustomer((prev) => {
       if (!prev) return prev;
@@ -96,56 +112,99 @@ export function useClientAuth() {
     });
   };
 
+  /* ------------------ INIT (SAFE) ------------------ */
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    if (initRef.current) return;
+    initRef.current = true;
+
+    let mounted = true;
+
+    const initAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!mounted) return;
+
       setSession(session);
       setUser(session?.user ?? null);
       userRef.current = session?.user ?? null;
+
       if (session?.user) {
         const cached = loadFromCache();
-        if (cached && cached.auth_user_id === session.user.id) {
-          setLoading(false);
-          fetchCustomer(session.user).catch(() => {});
-          return;
+
+        if (cached?.auth_user_id === session.user.id) {
+          setCustomer(cached);
+        } else {
+          await fetchCustomer(session.user);
         }
       }
-      try { await fetchCustomer(session?.user ?? null); } catch (_) {}
-      setLoading(false);
-    });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setLoading(false);
+    };
+
+    initAuth();
+
+    /* ------------------ LISTENER ------------------ */
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+
       setSession(session);
       setUser(session?.user ?? null);
       userRef.current = session?.user ?? null;
+
       if (event === "SIGNED_OUT") {
         clearCache();
         setCustomer(null);
-      } else if (event === "SIGNED_IN") {
-        try { await fetchCustomer(session?.user ?? null); } catch (_) {}
       }
+
+      if (event === "SIGNED_IN" && session?.user) {
+        await fetchCustomer(session.user);
+      }
+
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
-  // Memoized — stable reference prevents infinite re-render loops in consumers
-  const client = useMemo(() => customer
-    ? {
-        id:                customer.id,
-        auth_id:           customer.auth_user_id,
-        email:             customer.email,
-        first_name:        customer.first_name ?? "",
-        last_name:         customer.last_name  ?? "",
-        phone:             customer.phone      ?? "",
-        license_verified:  customer.license_verified,
-        id_front_verified: customer.id_front_verified,
-        id_back_verified:  customer.id_back_verified,
-      }
-    : null,
-  [customer]);
+  /* ------------------ CUSTOMER OBJECT ------------------ */
+  const client = useMemo(
+    () =>
+      customer
+        ? {
+            id: customer.id,
+            auth_id: customer.auth_user_id,
+            email: customer.email,
+            first_name: customer.first_name ?? "",
+            last_name: customer.last_name ?? "",
+            phone: customer.phone ?? "",
+            license_verified: customer.license_verified,
+            id_front_verified: customer.id_front_verified,
+            id_back_verified: customer.id_back_verified,
+          }
+        : null,
+    [customer]
+  );
 
+  /* ------------------ ACTIONS ------------------ */
   const logout = () => supabase.auth.signOut();
 
-  return { user, client, customer, session, loading, logout, refresh, patchCustomer, isLoggedIn: !!user };
+  const refresh = () => fetchCustomer(userRef.current);
+
+  /* ------------------ RETURN ------------------ */
+  return {
+    user,
+    client,
+    customer,
+    session,
+    loading,
+    logout,
+    refresh,
+    patchCustomer,
+    isLoggedIn: !!user,
+  };
 }

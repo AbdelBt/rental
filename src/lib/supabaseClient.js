@@ -3,15 +3,4 @@ import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("Variables d'environnement Supabase manquantes !");
-}
-
-// Singleton qui survit aux rechargements HMR de Vite
-// Sans ça, chaque save recrée le client → session perdue → requêtes sans token
-const globalKey = "__supabase_client__";
-if (!window[globalKey]) {
-  window[globalKey] = createClient(supabaseUrl, supabaseAnonKey);
-}
-
-export const supabase = window[globalKey];
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
