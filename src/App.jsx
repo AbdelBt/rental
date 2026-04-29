@@ -29,6 +29,7 @@ import ClientDashboard from "./pages/client/ClientDashboard";
 import ClientReservations from "./pages/client/ClientReservations";
 import ClientProfile from "./pages/client/ClientProfile";
 import ClientProtectedRoute from "./components/ClientProtectedRoute";
+import { ClientAuthProvider } from "./hooks/ClientAuthContext";
 
 export default function App() {
   return (
@@ -69,7 +70,9 @@ export default function App() {
             path="/client"
             element={
               <ClientProtectedRoute>
-                <ClientLayout />
+                <ClientAuthProvider>
+                  <ClientLayout />
+                </ClientAuthProvider>
               </ClientProtectedRoute>
             }
           >

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
-import { useClientAuthContext as useClientAuth } from "../../hooks/ClientAuthContext";
+import { useClientAuth } from "../../hooks/ClientAuthContext";
 
 function CancelModal({ reservation, onClose, onConfirmed }) {
   const [cancelling, setCancelling] = useState(false);
@@ -22,19 +22,31 @@ function CancelModal({ reservation, onClose, onConfirmed }) {
 
   return (
     <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        onClick={onClose}
+      />
       <div className="relative bg-[#0f0e1a] border border-white/[0.1] rounded-2xl p-6 max-w-md w-full shadow-2xl">
         {/* Header */}
         <div className="flex items-start gap-3 mb-5">
           <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#f87171"
+              strokeWidth="2"
+            >
               <circle cx="12" cy="12" r="10" />
               <line x1="12" y1="8" x2="12" y2="12" />
               <line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
           </div>
           <div>
-            <h3 className="font-playfair text-lg font-bold text-cream">Annuler la réservation</h3>
+            <h3 className="font-playfair text-lg font-bold text-cream">
+              Annuler la réservation
+            </h3>
             <p className="text-[12px] text-cream/45 mt-0.5">{carName}</p>
           </div>
         </div>
@@ -43,20 +55,35 @@ function CancelModal({ reservation, onClose, onConfirmed }) {
         <div className="bg-amber-500/[0.07] border border-amber-500/20 rounded-xl p-4 mb-5">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-amber-400 text-sm">⚠️</span>
-            <span className="text-[12px] font-bold text-amber-400 uppercase tracking-wider">Politique d'annulation</span>
+            <span className="text-[12px] font-bold text-amber-400 uppercase tracking-wider">
+              Politique d'annulation
+            </span>
           </div>
           <ul className="space-y-2">
             <li className="flex items-start gap-2 text-[12px] text-amber-300/80">
               <span className="shrink-0 mt-0.5">•</span>
-              <span>L'acompte versé <strong className="text-amber-300">n'est pas remboursable</strong> en cas d'annulation.</span>
+              <span>
+                L'acompte versé{" "}
+                <strong className="text-amber-300">
+                  n'est pas remboursable
+                </strong>{" "}
+                en cas d'annulation.
+              </span>
             </li>
             <li className="flex items-start gap-2 text-[12px] text-amber-300/80">
               <span className="shrink-0 mt-0.5">•</span>
-              <span>En cas de force majeure documentée, un <strong className="text-amber-300">avoir</strong> peut être accordé.</span>
+              <span>
+                En cas de force majeure documentée, un{" "}
+                <strong className="text-amber-300">avoir</strong> peut être
+                accordé.
+              </span>
             </li>
             <li className="flex items-start gap-2 text-[12px] text-amber-300/80">
               <span className="shrink-0 mt-0.5">•</span>
-              <span>Les modifications de dates sont possibles <strong className="text-amber-300">sous conditions</strong>.</span>
+              <span>
+                Les modifications de dates sont possibles{" "}
+                <strong className="text-amber-300">sous conditions</strong>.
+              </span>
             </li>
           </ul>
           <Link
@@ -69,7 +96,8 @@ function CancelModal({ reservation, onClose, onConfirmed }) {
         </div>
 
         <p className="text-[13px] text-cream/60 mb-6">
-          Êtes-vous sûr de vouloir annuler cette réservation ? Cette action est irréversible.
+          Êtes-vous sûr de vouloir annuler cette réservation ? Cette action est
+          irréversible.
         </p>
 
         <div className="flex gap-3">
@@ -89,7 +117,9 @@ function CancelModal({ reservation, onClose, onConfirmed }) {
                 <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 Annulation…
               </span>
-            ) : "Confirmer l'annulation"}
+            ) : (
+              "Confirmer l'annulation"
+            )}
           </button>
         </div>
       </div>
@@ -110,13 +140,15 @@ function ReviewModal({ reservation, onClose, onSubmitted }) {
   const handleSubmit = async () => {
     if (!rating) return;
     setSubmitting(true);
-    const { error } = await supabase.from("car_reviews").insert([{
-      car_id: reservation.car_id,
-      customer_id: reservation.customer_id,
-      reservation_id: reservation.id,
-      rating,
-      comment: comment.trim() || null,
-    }]);
+    const { error } = await supabase.from("car_reviews").insert([
+      {
+        car_id: reservation.car_id,
+        customer_id: reservation.customer_id,
+        reservation_id: reservation.id,
+        rating,
+        comment: comment.trim() || null,
+      },
+    ]);
     setSubmitting(false);
     if (!error) onSubmitted(reservation.id);
     else alert("Erreur lors de l'envoi. Veuillez réessayer.");
@@ -124,11 +156,21 @@ function ReviewModal({ reservation, onClose, onSubmitted }) {
 
   return (
     <div className="fixed inset-0 z-[500] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        onClick={onClose}
+      />
       <div className="relative bg-[#0f0e1a] border border-white/[0.1] rounded-2xl p-6 max-w-md w-full shadow-2xl">
-        <button onClick={onClose} className="absolute top-4 right-4 text-cream/40 hover:text-cream bg-transparent border-none cursor-pointer text-xl">✕</button>
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-cream/40 hover:text-cream bg-transparent border-none cursor-pointer text-xl"
+        >
+          ✕
+        </button>
         <div className="mb-5">
-          <h3 className="font-playfair text-lg font-bold text-cream mb-0.5">Laisser un avis</h3>
+          <h3 className="font-playfair text-lg font-bold text-cream mb-0.5">
+            Laisser un avis
+          </h3>
           <p className="text-[12px] text-cream/45">{carName}</p>
         </div>
 
@@ -142,13 +184,23 @@ function ReviewModal({ reservation, onClose, onSubmitted }) {
               onMouseLeave={() => setHovered(0)}
               className="text-3xl bg-transparent border-none cursor-pointer transition-transform duration-100 hover:scale-110"
             >
-              <span className={(hovered || rating) >= s ? "text-gold" : "text-cream/20"}>★</span>
+              <span
+                className={
+                  (hovered || rating) >= s ? "text-gold" : "text-cream/20"
+                }
+              >
+                ★
+              </span>
             </button>
           ))}
         </div>
         {rating > 0 && (
           <div className="text-center text-[12px] text-gold font-semibold mb-4">
-            {["", "Mauvais", "Passable", "Bien", "Très bien", "Excellent !"][rating]}
+            {
+              ["", "Mauvais", "Passable", "Bien", "Très bien", "Excellent !"][
+                rating
+              ]
+            }
           </div>
         )}
 
@@ -162,7 +214,10 @@ function ReviewModal({ reservation, onClose, onSubmitted }) {
         />
 
         <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-white/[0.1] text-[13px] text-cream/60 hover:text-cream transition-colors bg-transparent cursor-pointer">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2.5 rounded-xl border border-white/[0.1] text-[13px] text-cream/60 hover:text-cream transition-colors bg-transparent cursor-pointer"
+          >
             Annuler
           </button>
           <button

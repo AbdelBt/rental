@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabaseClient";
-import { useClientAuthContext as useClientAuth } from "../../hooks/ClientAuthContext";
+import { useClientAuth } from "../../hooks/ClientAuthContext";
 
 function Field({ label, value, type = "text", onChange, editable }) {
   return (
@@ -211,7 +211,11 @@ export default function ClientProfile() {
       setMessage({ text: error.message, ok: false });
     } else {
       // Patch local state instantly — no round-trip needed
-      patchCustomer({ first_name: form.first_name, last_name: form.last_name, phone: form.phone });
+      patchCustomer({
+        first_name: form.first_name,
+        last_name: form.last_name,
+        phone: form.phone,
+      });
       setMessage({ text: "Profil mis à jour.", ok: true });
       setEditing(false);
     }

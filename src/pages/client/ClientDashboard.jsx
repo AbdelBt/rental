@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
-import { useClientAuthContext as useClientAuth } from "../../hooks/ClientAuthContext";
+import { useClientAuth } from "../../hooks/ClientAuthContext";
 
 function daysUntil(dateStr) {
   const now = new Date();
@@ -89,9 +89,10 @@ export default function ClientDashboard() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const upcoming = reservations.filter((r) =>
-    ["confirmed", "pending"].includes(r.status) &&
-    new Date(r.date_to) >= today,
+  const upcoming = reservations.filter(
+    (r) =>
+      ["confirmed", "pending"].includes(r.status) &&
+      new Date(r.date_to) >= today,
   );
   const next = upcoming[0] ?? null;
   const nextDays = next ? daysUntil(next.date_from) : null;

@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Logo from "./Logo";
-import { useClientAuth } from "../hooks/useClientAuth";
-
+import { supabase } from "../lib/supabaseClient";
 const NAV_LINKS = [
   { label: "Accueil", href: "/" },
   { label: "Véhicules", href: "/cars" },
@@ -12,7 +11,11 @@ const SUBMENU_LINKS = [
   { label: "FAQ", href: "/info/faq", icon: "❓" },
   { label: "Pourquoi nous ?", href: "/info/pourquoi-nous", icon: "⭐" },
   { label: "Conduire au Maroc", href: "/info/maroc-infos", icon: "🇲🇦" },
-  { label: "Solutions sur mesure", href: "/info/solutions-sur-mesure", icon: "💡" },
+  {
+    label: "Solutions sur mesure",
+    href: "/info/solutions-sur-mesure",
+    icon: "💡",
+  },
   { label: "Paiement sécurisé", href: "/info/paiement-securise", icon: "🔐" },
 ];
 
@@ -21,7 +24,8 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
-  const { isLoggedIn, client } = useClientAuth();
+  const [client, setClient] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -40,9 +44,45 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
+    const loadClient = async () => {
+      try {
+        const { data } = await supabase.auth.getUser();
+        const user = data.user;
+
+        if (!user) {
+          setClient(null);
+          return;
+        }
+
+        const { data: profile } = await supabase
+          .from("customers")
+          .select("*")
+          .eq("auth_user_id", user.id)
+          .maybeSingle();
+
+        setClient(profile);
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+
+    loadClient();
+
+    const { data } = supabase.auth.onAuthStateChange(() => {
+      loadClient();
+    });
+
+    return () => data.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [menuOpen]);
+
+  const isLoggedIn = !!client;
 
   return (
     <>
@@ -84,22 +124,30 @@ export default function Navbar() {
                 ))}
               </div>
             </div>
-            {isLoggedIn ? (
-              <Link
-                to="/client/dashboard"
-                className="flex items-center gap-2.5 group"
-              >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#5b8de8] to-[#2d5fc4] flex items-center justify-center text-[11px] font-bold text-white shrink-0">
-                  {`${client?.first_name?.[0] ?? ""}${client?.last_name?.[0] ?? ""}`.toUpperCase() || "?"}
-                </div>
-                <span className="text-[13px] text-cream/70 group-hover:text-cream transition-colors">
-                  {client?.first_name ?? "Mon espace"}
-                </span>
-              </Link>
-            ) : (
-              <Link to="/compte" className="btn-primary py-2.5 px-5 text-xs">
-                Se connecter
-              </Link>
+            {!authLoading && (
+              <>
+                {isLoggedIn ? (
+                  <Link
+                    to="/client/dashboard"
+                    className="flex items-center gap-2.5 group"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#5b8de8] to-[#2d5fc4] flex items-center justify-center text-[11px] font-bold text-white shrink-0">
+                      {`${client?.first_name?.[0] ?? ""}${client?.last_name?.[0] ?? ""}`.toUpperCase() ||
+                        "?"}
+                    </div>
+                    <span className="text-[13px] text-cream/70 group-hover:text-cream transition-colors">
+                      {client?.first_name ?? "Mon espace"}
+                    </span>
+                  </Link>
+                ) : (
+                  <Link
+                    to="/compte"
+                    className="btn-primary py-2.5 px-5 text-xs"
+                  >
+                    Se connecter
+                  </Link>
+                )}
+              </>
             )}
           </div>
         )}
@@ -112,15 +160,24 @@ export default function Navbar() {
           >
             <span
               className="block w-[22px] h-0.5 bg-cream rounded transition-all duration-300 origin-center"
-              style={{ transform: menuOpen ? "translateY(7px) rotate(45deg)" : "none" }}
+              style={{
+                transform: menuOpen ? "translateY(7px) rotate(45deg)" : "none",
+              }}
             />
             <span
               className="block w-[22px] h-0.5 bg-cream rounded transition-all duration-300"
-              style={{ opacity: menuOpen ? 0 : 1, transform: menuOpen ? "scaleX(0)" : "none" }}
+              style={{
+                opacity: menuOpen ? 0 : 1,
+                transform: menuOpen ? "scaleX(0)" : "none",
+              }}
             />
             <span
               className="block w-[22px] h-0.5 bg-cream rounded transition-all duration-300 origin-center"
-              style={{ transform: menuOpen ? "translateY(-7px) rotate(-45deg)" : "none" }}
+              style={{
+                transform: menuOpen
+                  ? "translateY(-7px) rotate(-45deg)"
+                  : "none",
+              }}
             />
           </button>
         )}
@@ -129,7 +186,9 @@ export default function Navbar() {
       {isMobile && (
         <div
           className={`fixed top-16 left-0 right-0 bottom-0 z-[190] bg-dark-bg/98 backdrop-blur-2xl p-8 md:p-10 flex flex-col transition-all duration-300 overflow-y-auto ${
-            menuOpen ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0 pointer-events-none"
+            menuOpen
+              ? "translate-y-0 opacity-100"
+              : "-translate-y-2 opacity-0 pointer-events-none"
           }`}
         >
           <nav className="flex-1">
@@ -151,26 +210,41 @@ export default function Navbar() {
           </nav>
 
           <div className="mt-8 flex flex-col gap-3">
-            {isLoggedIn ? (
-              <Link
-                to="/client/dashboard"
-                onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:border-white/[0.15] transition-colors"
-              >
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#5b8de8] to-[#2d5fc4] flex items-center justify-center text-[12px] font-bold text-white shrink-0">
-                  {`${client?.first_name?.[0] ?? ""}${client?.last_name?.[0] ?? ""}`.toUpperCase() || "?"}
-                </div>
-                <div>
-                  <div className="text-[13px] font-semibold text-cream">{client?.first_name} {client?.last_name}</div>
-                  <div className="text-[11px] text-cream/40">Mon espace →</div>
-                </div>
-              </Link>
-            ) : (
-              <Link to="/compte" className="btn-primary w-full py-4 text-sm text-center" onClick={() => setMenuOpen(false)}>
-                Se connecter
-              </Link>
+            {!authLoading && (
+              <>
+                {isLoggedIn ? (
+                  <Link
+                    to="/client/dashboard"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:border-white/[0.15] transition-colors"
+                  >
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#5b8de8] to-[#2d5fc4] flex items-center justify-center text-[12px] font-bold text-white shrink-0">
+                      {`${client?.first_name?.[0] ?? ""}${client?.last_name?.[0] ?? ""}`.toUpperCase() ||
+                        "?"}
+                    </div>
+                    <div>
+                      <div className="text-[13px] font-semibold text-cream">
+                        {client?.first_name} {client?.last_name}
+                      </div>
+                      <div className="text-[11px] text-cream/40">
+                        Mon espace →
+                      </div>
+                    </div>
+                  </Link>
+                ) : (
+                  <Link
+                    to="/compte"
+                    className="btn-primary w-full py-4 text-sm text-center"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Se connecter
+                  </Link>
+                )}
+              </>
             )}
-            <button className="btn-ghost w-full py-4 text-sm">Contactez-nous</button>
+            <button className="btn-ghost w-full py-4 text-sm">
+              Contactez-nous
+            </button>
           </div>
 
           <div className="mt-7 flex justify-center gap-5 flex-wrap">
