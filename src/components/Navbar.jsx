@@ -19,13 +19,35 @@ const SUBMENU_LINKS = [
   { label: "Paiement sécurisé", href: "/info/paiement-securise", icon: "🔐" },
 ];
 
+const CLIENT_CACHE_KEY = "drivo_client_profile";
+
+function getCachedClient() {
+  try {
+    return JSON.parse(localStorage.getItem(CLIENT_CACHE_KEY) ?? "null");
+  } catch {
+    return null;
+  }
+}
+
+function setCachedClient(profile) {
+  try {
+    if (profile) {
+      localStorage.setItem(CLIENT_CACHE_KEY, JSON.stringify(profile));
+    } else {
+      localStorage.removeItem(CLIENT_CACHE_KEY);
+    }
+  } catch {
+    // ignore
+  }
+}
+
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
-  const [client, setClient] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [client, setClient] = useState(() => getCachedClient());
+  const [authLoading, setAuthLoading] = useState(() => !getCachedClient());
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -46,21 +68,42 @@ export default function Navbar() {
   useEffect(() => {
     const loadClient = async () => {
       try {
-        const { data } = await supabase.auth.getUser();
-        const user = data.user;
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
 
+        if (sessionError) {
+          console.error("Supabase session error:", sessionError);
+        }
+
+        const user = session?.user ?? null;
         if (!user) {
           setClient(null);
+          setCachedClient(null);
           return;
         }
 
-        const { data: profile } = await supabase
+        const fallbackClient = {
+          first_name: user.user_metadata?.first_name ?? "",
+          last_name: user.user_metadata?.last_name ?? "",
+          email: user.email ?? "",
+        };
+
+        setClient((current) => current ?? fallbackClient);
+
+        const { data: profile, error: profileError } = await supabase
           .from("customers")
           .select("*")
           .eq("auth_user_id", user.id)
           .maybeSingle();
 
-        setClient(profile);
+        if (profile) {
+          setClient(profile);
+          setCachedClient(profile);
+        } else if (profileError) {
+          console.error("Error loading customer profile:", profileError);
+        }
       } finally {
         setAuthLoading(false);
       }
@@ -68,8 +111,14 @@ export default function Navbar() {
 
     loadClient();
 
-    const { data } = supabase.auth.onAuthStateChange(() => {
-      loadClient();
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      const authUser = session?.user ?? null;
+      if (!authUser) {
+        setClient(null);
+        setCachedClient(null);
+      } else {
+        loadClient();
+      }
     });
 
     return () => data.subscription.unsubscribe();
