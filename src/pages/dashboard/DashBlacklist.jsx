@@ -199,14 +199,14 @@ export default function DashBlacklist() {
           value={form[key]}
           onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
           placeholder={opts.placeholder}
-          className="w-full bg-white/[0.04] border border-white/10 text-cream py-2 px-3 rounded-lg font-sora text-[13px] outline-none box-border resize-y min-h-[80px] font-sans"
+          className="w-full input-field resize-y min-h-[80px] font-sans leading-normal"
         />
       ) : (
         <input
           value={form[key]}
           onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
           placeholder={opts.placeholder}
-          className="w-full bg-white/[0.04] border border-white/10 text-cream py-2 px-3 rounded-lg font-sora text-[13px] outline-none box-border"
+          className="w-full input-field"
         />
       )}
     </div>
@@ -317,7 +317,7 @@ export default function DashBlacklist() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="🔍  Rechercher par nom, téléphone, email…"
-        className="w-full bg-white/[0.04] border border-white/10 text-cream py-3 px-4 rounded-lg font-sora text-[13px] outline-none box-border"
+        className="w-full input-field"
       />
 
       {/* Table */}

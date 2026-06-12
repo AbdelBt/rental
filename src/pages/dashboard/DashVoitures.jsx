@@ -59,8 +59,7 @@ const EMPTY = {
   agency_id: null,
 };
 
-const IC =
-  "w-full bg-white/[0.04] border border-white/10 text-cream py-2.5 px-3.5 rounded-[10px] font-sora text-[13px] outline-none box-border";
+const IC = "w-full input-field";
 const LC =
   "text-[11px] font-bold text-gold tracking-[0.12em] uppercase block mb-1.5";
 
@@ -93,7 +92,7 @@ function Sel({ k, form, set, options }) {
       className={IC}
     >
       {options.map((o) => (
-        <option key={o} value={o} className="bg-dark">
+        <option key={o} value={o} className="bg-card text-foreground">
           {o}
         </option>
       ))}
@@ -841,7 +840,10 @@ export default function DashVoitures() {
       {modal !== null && (
         <div className="fixed inset-0 z-[600] flex items-end sm:items-center justify-center sm:p-4">
           <div className="absolute inset-0 bg-black/90" onClick={closeModal} />
-          <div className="relative bg-dark border border-white/10 rounded-t-3xl sm:rounded-3xl w-full max-w-[700px] flex flex-col" style={{ height: "92dvh", maxHeight: "92dvh" }}>
+          <div
+            className="relative bg-dark border border-white/10 rounded-t-3xl sm:rounded-3xl w-full max-w-[700px] flex flex-col"
+            style={{ height: "92dvh", maxHeight: "92dvh" }}
+          >
             {/* Header + stepper */}
             <div className="py-6 px-7 pb-5 border-b border-white/[0.07] sticky top-0 bg-dark z-10">
               <div className="flex justify-between items-center mb-5">
@@ -922,7 +924,12 @@ export default function DashVoitures() {
                       <Inp k="year" form={form} set={set} type="number" />
                     </Field>
                     <Field label="Plaque d'immatriculation">
-                      <Inp k="plate" form={form} set={set} placeholder="ex: 12345-A-1" />
+                      <Inp
+                        k="plate"
+                        form={form}
+                        set={set}
+                        placeholder="ex: 12345-A-1"
+                      />
                     </Field>
                     <Field label="Catégorie">
                       <Sel k="category" form={form} set={set} options={CATS} />
@@ -940,7 +947,11 @@ export default function DashVoitures() {
                         className={IC}
                       >
                         {Object.entries(STATUS).map(([k, v]) => (
-                          <option key={k} value={k} className="bg-dark">
+                          <option
+                            key={k}
+                            value={k}
+                            className="bg-card text-foreground"
+                          >
                             {v.label}
                           </option>
                         ))}
@@ -1107,18 +1118,24 @@ export default function DashVoitures() {
                     <label className={LC}>Options &amp; équipements</label>
                     {(() => {
                       const EQUIP = [
-                        { k: "gps",            label: "🗺️ GPS intégré" },
-                        { k: "babyseat",       label: "🪑 Siège bébé" },
-                        { k: "ac",             label: "❄️ Climatisation" },
-                        { k: "bluetooth",      label: "🎵 Bluetooth / CarPlay" },
-                        { k: "rear_camera",    label: "📷 Caméra de recul" },
-                        { k: "cruise_control", label: "🚀 Régulateur de vitesse" },
-                        { k: "sunroof",        label: "🌤️ Toit ouvrant" },
-                        { k: "usb_charger",    label: "🔌 Chargeur USB / Type-C" },
-                        { k: "android_auto",   label: "📱 Android Auto / CarPlay" },
-                        { k: "wifi",           label: "📶 Wi-Fi embarqué" },
-                        { k: "roof_rack",      label: "🧳 Galerie / Porte-bagages" },
-                        { k: "spare_tire",     label: "🔧 Roue de secours" },
+                        { k: "gps", label: "🗺️ GPS intégré" },
+                        { k: "babyseat", label: "🪑 Siège bébé" },
+                        { k: "ac", label: "❄️ Climatisation" },
+                        { k: "bluetooth", label: "🎵 Bluetooth / CarPlay" },
+                        { k: "rear_camera", label: "📷 Caméra de recul" },
+                        {
+                          k: "cruise_control",
+                          label: "🚀 Régulateur de vitesse",
+                        },
+                        { k: "sunroof", label: "🌤️ Toit ouvrant" },
+                        { k: "usb_charger", label: "🔌 Chargeur USB / Type-C" },
+                        {
+                          k: "android_auto",
+                          label: "📱 Android Auto / CarPlay",
+                        },
+                        { k: "wifi", label: "📶 Wi-Fi embarqué" },
+                        { k: "roof_rack", label: "🧳 Galerie / Porte-bagages" },
+                        { k: "spare_tire", label: "🔧 Roue de secours" },
                       ];
                       const boolKeys = ["gps", "babyseat"];
                       const toggle = (k) => {
@@ -1126,10 +1143,18 @@ export default function DashVoitures() {
                           set(k, !form[k]);
                         } else {
                           const cur = form.equipments || [];
-                          set("equipments", cur.includes(k) ? cur.filter(e => e !== k) : [...cur, k]);
+                          set(
+                            "equipments",
+                            cur.includes(k)
+                              ? cur.filter((e) => e !== k)
+                              : [...cur, k],
+                          );
                         }
                       };
-                      const isOn = (k) => boolKeys.includes(k) ? !!form[k] : (form.equipments || []).includes(k);
+                      const isOn = (k) =>
+                        boolKeys.includes(k)
+                          ? !!form[k]
+                          : (form.equipments || []).includes(k);
                       return (
                         <div className="grid grid-cols-2 gap-2">
                           {EQUIP.map(({ k, label }) => (
@@ -1143,7 +1168,9 @@ export default function DashVoitures() {
                                   : "bg-white/[0.03] border-white/10 text-cream/50 hover:border-white/20"
                               }`}
                             >
-                              <span className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 text-[10px] ${isOn(k) ? "bg-gold border-gold text-dark-bg" : "border-white/20"}`}>
+                              <span
+                                className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 text-[10px] ${isOn(k) ? "bg-gold border-gold text-dark-bg" : "border-white/20"}`}
+                              >
                                 {isOn(k) ? "✓" : ""}
                               </span>
                               {label}

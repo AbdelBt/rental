@@ -116,7 +116,6 @@ export default function DashProfil() {
     setEditing(false);
   };
 
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -144,9 +143,9 @@ export default function DashProfil() {
   const A = editing ? form : agency;
 
   const inputClasses =
-    "w-full bg-white/[0.04] border border-white/10 text-cream py-2.5 px-3.5 rounded-lg font-sora text-[13px] outline-none box-border";
+    "w-full input-field rounded-[14px] font-sora text-[13px]";
   const labelClasses =
-    "text-[11px] font-bold text-gold tracking-[0.12em] uppercase block mb-1.5";
+    "block text-[10.5px] font-semibold text-cream/50 tracking-[0.17em] uppercase mb-1.5";
 
   return (
     <div className="flex flex-col gap-6">
@@ -244,7 +243,7 @@ export default function DashProfil() {
                   className={inputClasses}
                 />
               ) : (
-                <div className="text-sm text-cream/80 py-2.5 px-3.5 bg-white/[0.03] rounded-lg">
+                <div className="input-field cursor-default text-sm text-foreground">
                   {A[key] || "—"}
                 </div>
               )}
@@ -279,26 +278,50 @@ export default function DashProfil() {
 
           {/* Services aéroport */}
           <div className="bg-dark border border-white/[0.07] rounded-2xl p-6">
-            <div className="font-bold text-[15px] mb-4">✈️ Services aéroport</div>
+            <div className="font-bold text-[15px] mb-4">
+              ✈️ Services aéroport
+            </div>
             {editing ? (
               <div className="flex flex-col gap-3">
                 {[
-                  { k: "airport_pickup", label: "Remise à l'aéroport", sub: "Vous livrez la voiture au client directement à l'aéroport" },
-                  { k: "airport_dropoff", label: "Dépôt à l'aéroport", sub: "Le client peut vous remettre la voiture à l'aéroport" },
+                  {
+                    k: "airport_pickup",
+                    label: "Remise à l'aéroport",
+                    sub: "Vous livrez la voiture au client directement à l'aéroport",
+                  },
+                  {
+                    k: "airport_dropoff",
+                    label: "Dépôt à l'aéroport",
+                    sub: "Le client peut vous remettre la voiture à l'aéroport",
+                  },
                 ].map(({ k, label, sub }) => (
                   <div
                     key={k}
                     onClick={() => setForm((f) => ({ ...f, [k]: !f[k] }))}
                     className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all select-none ${
-                      form[k] ? "bg-gold/10 border-gold/40" : "bg-white/[0.03] border-white/10 hover:border-white/20"
+                      form[k]
+                        ? "bg-gold/10 border-gold/40"
+                        : "bg-card/90 border-border/20 hover:border-border/30"
                     }`}
                   >
-                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all ${form[k] ? "bg-gold border-gold" : "border-white/25"}`}>
-                      {form[k] && <span className="text-dark-bg text-[11px] font-black">✓</span>}
+                    <div
+                      className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all ${form[k] ? "bg-gold border-gold" : "border-white/25"}`}
+                    >
+                      {form[k] && (
+                        <span className="text-dark-bg text-[11px] font-black">
+                          ✓
+                        </span>
+                      )}
                     </div>
                     <div>
-                      <div className={`text-[13px] font-semibold ${form[k] ? "text-gold" : "text-cream/80"}`}>{label}</div>
-                      <div className="text-[11px] text-cream/40 mt-0.5">{sub}</div>
+                      <div
+                        className={`text-[13px] font-semibold ${form[k] ? "text-gold" : "text-cream/80"}`}
+                      >
+                        {label}
+                      </div>
+                      <div className="text-[11px] text-cream/40 mt-0.5">
+                        {sub}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -306,11 +329,13 @@ export default function DashProfil() {
             ) : (
               <div className="flex flex-col gap-2">
                 {[
-                  { k: "airport_pickup",  label: "Remise à l'aéroport" },
+                  { k: "airport_pickup", label: "Remise à l'aéroport" },
                   { k: "airport_dropoff", label: "Dépôt à l'aéroport" },
                 ].map(({ k, label }) => (
                   <div key={k} className="flex items-center gap-2">
-                    <span className={`text-[13px] font-semibold ${A[k] ? "text-green-400" : "text-cream/35"}`}>
+                    <span
+                      className={`text-[13px] font-semibold ${A[k] ? "text-green-400" : "text-cream/35"}`}
+                    >
                       {A[k] ? "✅" : "❌"} {label}
                     </span>
                   </div>
@@ -347,7 +372,7 @@ export default function DashProfil() {
                 )}
               </div>
             ) : (
-              <div className="font-mono text-sm text-gold py-2.5 px-3.5 bg-gold/5 border border-gold/15 rounded-lg tracking-wide">
+              <div className="input-field cursor-default font-mono tracking-wide text-sm">
                 {A.iban || "—"}
               </div>
             )}

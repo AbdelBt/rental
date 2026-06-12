@@ -238,10 +238,14 @@ export default function ResultsPage() {
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value)}
-              className="bg-white/[0.05] border border-white/10 text-cream py-2 px-3.5 rounded-lg font-sora text-[13px] cursor-pointer outline-none"
+              className="input-field cursor-pointer py-2 px-3.5"
             >
               {SORT_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value} className="bg-dark">
+                <option
+                  key={o.value}
+                  value={o.value}
+                  className="bg-card text-foreground"
+                >
                   {o.label}
                 </option>
               ))}

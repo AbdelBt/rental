@@ -4,7 +4,7 @@ import { addDays } from "../data";
 import DateRangeButton from "./DateRangeButton";
 import { supabase } from "../lib/supabaseClient";
 
-export default function SearchWidget() {
+export default function SearchWidget({ isMobile }) {
   const [pickupDate, setPickupDate] = useState(addDays(new Date(), 2));
   const [returnDate, setReturnDate] = useState(addDays(new Date(), 5));
   const [city, setCity] = useState("");
@@ -43,21 +43,17 @@ export default function SearchWidget() {
         <div>
           <label className={labelClasses}>Lieu de prise en charge</label>
           <select
-            className={`input-field cursor-pointer bg-background text-foreground shadow-sm relative z-10 appearance-auto ${
+            className={`input-field cursor-pointer shadow-sm relative z-10 appearance-auto ${
               city ? "border border-gold/50" : "border border-border/30"
             }`}
             value={city}
             onChange={(e) => setCity(e.target.value)}
           >
-            <option value="" className="bg-background text-foreground">
+            <option value="" className="bg-card text-foreground">
               Toutes les villes
             </option>
             {cities.map((c) => (
-              <option
-                key={c}
-                value={c}
-                className="bg-background text-foreground"
-              >
+              <option key={c} value={c} className="bg-card text-foreground">
                 {c}
               </option>
             ))}

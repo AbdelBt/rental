@@ -206,7 +206,7 @@ function ReviewModal({ reservation, onClose, onSubmitted }) {
 
         {/* Comment */}
         <textarea
-          className="w-full bg-card/90 border border-border/20 rounded-xl p-3 text-sm text-cream placeholder-cream/25 resize-none outline-none focus:border-gold/40 transition-colors mb-5"
+          className="w-full input-field resize-none mb-5"
           rows={3}
           placeholder="Partagez votre expérience (optionnel)..."
           value={comment}

@@ -1330,7 +1330,7 @@ export default function DashReservations() {
                       carId,
                     );
                   }}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-cream"
+                  className="w-full input-field"
                   required
                 >
                   <option value="">Sélectionner un véhicule</option>
@@ -1357,7 +1357,7 @@ export default function DashReservations() {
                         client_name: e.target.value,
                       }))
                     }
-                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-cream"
+                    className="w-full input-field"
                     required
                   />
                 </div>
@@ -1374,7 +1374,7 @@ export default function DashReservations() {
                         client_phone: e.target.value,
                       }))
                     }
-                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-cream"
+                    className="w-full input-field"
                   />
                 </div>
                 <div className="col-span-2">
@@ -1390,7 +1390,7 @@ export default function DashReservations() {
                         client_email: e.target.value,
                       }))
                     }
-                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-cream"
+                    className="w-full input-field"
                   />
                 </div>
               </div>
@@ -1416,7 +1416,7 @@ export default function DashReservations() {
                         newReservation.car_id,
                       );
                     }}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-cream"
+                    className="w-full input-field"
                     required
                   />
                 </div>
@@ -1436,7 +1436,7 @@ export default function DashReservations() {
                         newReservation.car_id,
                       );
                     }}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-cream"
+                    className="w-full input-field"
                     required
                   />
                 </div>
@@ -1457,7 +1457,7 @@ export default function DashReservations() {
                         time_from: e.target.value,
                       }))
                     }
-                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-cream"
+                    className="w-full input-field"
                   />
                 </div>
                 <div>
@@ -1473,7 +1473,7 @@ export default function DashReservations() {
                         time_to: e.target.value,
                       }))
                     }
-                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-cream"
+                    className="w-full input-field"
                   />
                 </div>
               </div>
@@ -1501,7 +1501,7 @@ export default function DashReservations() {
                         deposit: Number(e.target.value),
                       }))
                     }
-                    className="w-24 bg-white/5 border border-white/10 rounded p-1 text-right"
+                    className="w-24 input-field text-right px-2 py-2"
                     min="0"
                     step="100"
                   />
@@ -1522,7 +1522,7 @@ export default function DashReservations() {
                       city: e.target.value,
                     }))
                   }
-                  className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-cream"
+                  className="w-full input-field"
                   placeholder="Casablanca"
                 />
               </div>
@@ -1538,7 +1538,7 @@ export default function DashReservations() {
                       note: e.target.value,
                     }))
                   }
-                  className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-cream"
+                  className="w-full input-field"
                   rows="2"
                   placeholder="Informations complémentaires..."
                 />

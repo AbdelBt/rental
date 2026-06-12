@@ -330,16 +330,20 @@ export default function BookingModal({
                     : [car.city ?? car.agency?.city].filter(Boolean);
                 return availableCities.length > 1 ? (
                   <select
-                    className="input-field cursor-pointer bg-dark-bg text-foreground"
+                    className="input-field cursor-pointer"
                     value={form.deliveryCity}
                     onChange={update("deliveryCity")}
                     required
                   >
-                    <option value="" className="bg-dark-bg">
+                    <option value="" className="bg-card text-foreground">
                       Choisir…
                     </option>
                     {availableCities.map((c) => (
-                      <option key={c} value={c} className="bg-dark-bg">
+                      <option
+                        key={c}
+                        value={c}
+                        className="bg-card text-foreground"
+                      >
                         {c}
                       </option>
                     ))}
@@ -409,7 +413,11 @@ export default function BookingModal({
                   className="input-field cursor-pointer"
                 >
                   {TIME_SLOTS.map((t) => (
-                    <option key={t} value={t} className="bg-dark-bg">
+                    <option
+                      key={t}
+                      value={t}
+                      className="bg-card text-foreground"
+                    >
                       {t}
                     </option>
                   ))}
@@ -422,10 +430,14 @@ export default function BookingModal({
                 <select
                   value={returnTime}
                   onChange={(e) => setReturnTime(e.target.value)}
-                  className="input-field cursor-pointer bg-dark-bg text-foreground"
+                  className="input-field cursor-pointer"
                 >
                   {TIME_SLOTS.map((t) => (
-                    <option key={t} value={t} className="bg-dark-bg">
+                    <option
+                      key={t}
+                      value={t}
+                      className="bg-card text-foreground"
+                    >
                       {t}
                     </option>
                   ))}
