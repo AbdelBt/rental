@@ -38,7 +38,7 @@ function StatusBadge({ status }) {
     },
     completed: {
       label: "Terminée",
-      cls: "bg-white/[0.06] text-cream/40 border-white/[0.08]",
+      cls: "bg-border/20 text-muted-foreground border-border",
     },
     cancelled: {
       label: "Annulée",
@@ -125,7 +125,7 @@ export default function ClientDashboard() {
 
       {/* Next reservation */}
       {loading ? (
-        <div className="h-32 bg-white/[0.03] rounded-2xl animate-pulse" />
+        <div className="h-32 bg-card/90 rounded-2xl animate-pulse" />
       ) : next ? (
         <div className="overflow-hidden rounded-2xl border border-gold/20">
           {next.cars?.img && (
@@ -138,9 +138,9 @@ export default function ClientDashboard() {
                   e.target.style.display = "none";
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0f0e1a] via-[#0f0e1a]/50 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/25 to-transparent" />
               <div className="absolute top-3 left-3">
-                <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-black/40 border border-white/[0.15] text-cream/70 backdrop-blur-sm">
+                <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-dark-bg/40 border border-border/20 text-cream/70 backdrop-blur-sm">
                   {next.cars?.category ?? "Véhicule"}
                 </span>
               </div>
@@ -160,7 +160,7 @@ export default function ClientDashboard() {
             </div>
           )}
 
-          <div className="bg-gradient-to-br from-[#1a1830] to-[#0f0e1a] p-5 md:p-6">
+          <div className="bg-card p-5 md:p-6">
             {!next.cars?.img && (
               <div className="mb-4">
                 <div className="text-[11px] font-semibold tracking-[0.15em] uppercase text-gold/80 mb-1">
@@ -236,7 +236,7 @@ export default function ClientDashboard() {
                   <span>Aujourd'hui</span>
                   <span>J-{nextDays}</span>
                 </div>
-                <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                <div className="h-1.5 bg-border/20 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-gold to-[#f5c518] rounded-full transition-all"
                     style={{
@@ -249,7 +249,7 @@ export default function ClientDashboard() {
           </div>
         </div>
       ) : (
-        <div className="bg-white/[0.03] border border-white/[0.07] rounded-2xl p-6 text-center">
+        <div className="bg-card/90 border border-border rounded-2xl p-6 text-center">
           <div className="text-3xl mb-3">🚗</div>
           <p className="text-cream/50 text-sm mb-4">
             Aucune réservation à venir.
@@ -268,7 +268,7 @@ export default function ClientDashboard() {
         {stats.map((s) => (
           <div
             key={s.label}
-            className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4"
+            className="bg-card/90 border border-border rounded-xl p-4"
           >
             <div className="font-playfair text-2xl font-bold text-gold">
               {s.value}
@@ -299,10 +299,10 @@ export default function ClientDashboard() {
               return (
                 <div
                   key={r.id ?? i}
-                  className="bg-white/[0.03] border border-white/[0.06] rounded-xl px-4 py-3 flex items-center justify-between gap-3 flex-wrap"
+                  className="bg-card/90 border border-border rounded-xl px-4 py-3 flex items-center justify-between gap-3 flex-wrap"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-lg bg-white/[0.05] flex items-center justify-center text-sm shrink-0">
+                    <div className="w-9 h-9 rounded-lg bg-card/80 flex items-center justify-center text-sm shrink-0">
                       🚗
                     </div>
                     <div className="min-w-0">

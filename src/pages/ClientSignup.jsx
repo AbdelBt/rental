@@ -210,7 +210,9 @@ function LoginForm({ onSuccess }) {
       const role = data.user?.user_metadata?.role;
       if (role === "agency") {
         await supabase.auth.signOut();
-        setError("Cet espace est réservé aux clients. Connectez-vous sur l'espace agence.");
+        setError(
+          "Cet espace est réservé aux clients. Connectez-vous sur l'espace agence.",
+        );
       } else {
         onSuccess();
       }
@@ -296,7 +298,7 @@ function LoginForm({ onSuccess }) {
       >
         {loading ? (
           <>
-            <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <span className="inline-block w-4 h-4 border-2 border-border/30 border-t-gold rounded-full animate-spin" />
             Connexion en cours...
           </>
         ) : (
@@ -310,7 +312,7 @@ function LoginForm({ onSuccess }) {
 /* ── Signup form ────────────────────────────────────────────── */
 function FileUploadField({ label, onChange, file }) {
   return (
-    <label className="flex items-center gap-3 p-3 rounded-xl border border-white/[0.07] bg-white/[0.02] cursor-pointer hover:border-gold/30 hover:bg-gold/[0.03] transition-all group">
+    <label className="flex items-center gap-3 p-3 rounded-xl border border-border/20 bg-card/90 cursor-pointer hover:border-gold/30 hover:bg-gold/10 transition-all group">
       <span className="text-cream/30 group-hover:text-gold/60 transition-colors shrink-0">
         <IconUpload />
       </span>
@@ -644,7 +646,7 @@ function SignupForm() {
       >
         {loading ? (
           <>
-            <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />{" "}
+            <span className="inline-block w-4 h-4 border-2 border-border/30 border-t-gold rounded-full animate-spin" />{" "}
             Création...
           </>
         ) : (
@@ -682,13 +684,7 @@ export default function ClientAuth() {
   const redirect = searchParams.get("redirect") || "/client/dashboard";
 
   return (
-    <div
-      className="min-h-screen text-cream flex flex-col relative overflow-hidden"
-      style={{
-        background:
-          "radial-gradient(ellipse 80% 60% at 50% -10%, #1e1a30 0%, #07070e 55%, #020106 100%)",
-      }}
-    >
+    <div className="min-h-screen bg-background text-foreground flex flex-col relative overflow-hidden">
       {/* Ambient glow top */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div
@@ -780,7 +776,7 @@ export default function ClientAuth() {
             </div>
 
             {/* Social proof */}
-            <div className="flex items-center gap-5 pt-2 border-t border-white/[0.05] mt-2">
+            <div className="flex items-center gap-5 pt-2 border-t border-border/10 mt-2">
               {[
                 ["1 200+", "véhicules"],
                 ["24/7", "support"],
@@ -806,9 +802,9 @@ export default function ClientAuth() {
                   "linear-gradient(145deg, rgba(201,168,76,.55) 0%, rgba(255,255,255,.12) 45%, rgba(91,141,232,.25) 100%)",
               }}
             >
-              <div className="bg-[#0a0a12] rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-[0_32px_80px_rgba(0,0,0,0.8)]">
+              <div className="bg-card/90 rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-lg">
                 {/* Tabs */}
-                <div className="flex bg-white/[0.04] rounded-xl p-1 mb-6 gap-1">
+                <div className="flex bg-border/10 rounded-xl p-1 mb-6 gap-1">
                   {[
                     { key: "login", label: "Se connecter" },
                     { key: "signup", label: "Créer un compte" },
@@ -848,7 +844,7 @@ export default function ClientAuth() {
                 )}
 
                 {/* Footer link */}
-                <div className="mt-5 pt-4 border-t border-white/[0.05] text-center">
+                <div className="mt-5 pt-4 border-t border-border/10 text-center">
                   <span className="text-[11.5px] text-cream/35">
                     {tab === "login"
                       ? "Pas encore de compte ? "

@@ -35,7 +35,9 @@ export default function AgencyLogin() {
     const role = data.user?.user_metadata?.role;
     if (role !== "agency") {
       await supabase.auth.signOut();
-      setErrorMsg("Cet espace est réservé aux agences. Connectez-vous sur l'espace client.");
+      setErrorMsg(
+        "Cet espace est réservé aux agences. Connectez-vous sur l'espace client.",
+      );
       setLoading(false);
       return;
     }
@@ -44,7 +46,7 @@ export default function AgencyLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#1c1a28_0%,#050509_55%,#020106_100%)] text-cream flex flex-col">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       <main className="flex-1 flex items-center justify-center px-5 md:px-10 pb-10">
         <div className="w-full max-w-[1040px] grid gap-10 md:gap-14 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] items-center">
           {/* Left: pitch */}
@@ -72,7 +74,7 @@ export default function AgencyLogin() {
 
           {/* Right: login card */}
           <section className="w-full">
-            <div className="bg-[#0b0b13]/95 border border-white/[0.08] rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-[0_24px_60px_rgba(0,0,0,0.7)] max-w-[440px] mx-auto">
+            <div className="bg-card/90 border border-border rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-lg max-w-[440px] mx-auto">
               <div className="mb-6">
                 <div className="text-[11px] tracking-[0.16em] uppercase text-gold font-semibold mb-2">
                   Connexion agence
@@ -150,7 +152,7 @@ export default function AgencyLogin() {
                 >
                   {loading ? (
                     <>
-                      <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span className="inline-block w-4 h-4 border-2 border-border/30 border-t-gold rounded-full animate-spin" />
                       Connexion en cours...
                     </>
                   ) : (
@@ -159,7 +161,7 @@ export default function AgencyLogin() {
                 </button>
               </form>
 
-              <div className="mt-5 pt-4 border-t border-white/[0.06] text-[11px] text-cream/35">
+              <div className="mt-5 pt-4 border-t border-border/10 text-[11px] text-cream/35">
                 En vous connectant, vous acceptez les{" "}
                 <span className="text-gold">CGU partenaires</span> de Drivo.
               </div>

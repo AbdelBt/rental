@@ -4,7 +4,9 @@ import { footerColumns } from "../data";
 import Logo from "./Logo";
 
 function useBreakpoint() {
-  const [width, setWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1200);
+  const [width, setWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1200,
+  );
   useEffect(() => {
     const fn = () => setWidth(window.innerWidth);
     window.addEventListener("resize", fn);
@@ -19,10 +21,14 @@ function useBreakpoint() {
 export default function Footer() {
   const { isMobile, isTablet } = useBreakpoint();
 
-  const gridCols = isMobile ? "1fr" : isTablet ? "1fr 1fr 1fr" : "2fr 1fr 1fr 1fr";
+  const gridCols = isMobile
+    ? "1fr"
+    : isTablet
+      ? "1fr 1fr 1fr"
+      : "2fr 1fr 1fr 1fr";
 
   return (
-    <footer className="bg-[#060608] border-t border-white/[0.06] py-9 md:py-12 px-5 md:px-10">
+    <footer className="bg-dark-bg border-t border-border py-9 md:py-12 px-5 md:px-10">
       <div className="max-w-[1200px] mx-auto">
         {(isMobile || isTablet) && (
           <div className="mb-9 pb-8 border-b border-white/[0.06]">
@@ -30,7 +36,8 @@ export default function Footer() {
               <Logo size={28} />
             </div>
             <p className="text-cream/40 text-sm leading-relaxed max-w-[320px]">
-              La location de voiture réinventée. Simple, transparente, et disponible partout.
+              La location de voiture réinventée. Simple, transparente, et
+              disponible partout.
             </p>
           </div>
         )}
@@ -45,7 +52,8 @@ export default function Footer() {
                 <Logo size={28} />
               </div>
               <p className="text-cream/40 text-sm leading-relaxed max-w-[280px]">
-                La location de voiture réinventée. Simple, transparente, et disponible partout.
+                La location de voiture réinventée. Simple, transparente, et
+                disponible partout.
               </p>
             </div>
           )}
@@ -56,8 +64,12 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-white/[0.05] pt-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
-          <span className="text-cream/30 text-[13px]">© Drivo SAS, 2026. Tous droits réservés.</span>
-          <span className="text-cream/30 text-[13px]">Assistance : support@drivo.fr</span>
+          <span className="text-cream/30 text-[13px]">
+            © Drivo SAS, 2026. Tous droits réservés.
+          </span>
+          <span className="text-cream/30 text-[13px]">
+            Assistance : support@drivo.fr
+          </span>
         </div>
       </div>
     </footer>
@@ -87,7 +99,7 @@ function FooterColumn({ title, links }) {
           >
             {l.label}
           </Link>
-        )
+        ),
       )}
     </div>
   );

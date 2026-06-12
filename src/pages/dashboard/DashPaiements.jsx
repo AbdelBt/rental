@@ -139,7 +139,7 @@ export default function DashPaiements() {
             icon: "💰",
             label: "Revenu total brut",
             value: `${totalRevenue.toLocaleString()} €`,
-            color: "#f0eeea",
+            color: "#111111",
             bg: "rgba(240,238,234,0.1)",
           },
           {

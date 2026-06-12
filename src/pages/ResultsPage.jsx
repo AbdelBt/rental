@@ -40,7 +40,9 @@ export default function ResultsPage() {
   );
   const [reservedCarIds, setReservedCarIds] = useState(new Set());
   const [brand, setBrand] = useState("Toutes");
-  const [city, setCity] = useState(searchParams.get("city") ? searchParams.get("city") : "Toutes");
+  const [city, setCity] = useState(
+    searchParams.get("city") ? searchParams.get("city") : "Toutes",
+  );
 
   useEffect(() => {
     let cancelled = false;

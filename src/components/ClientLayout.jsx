@@ -13,6 +13,19 @@ export default function ClientLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, client: profile } = useClientAuth();
+  const [theme, setTheme] = useState(() => {
+    const saved = window.localStorage.getItem("drivo_theme");
+    return saved === "light" || saved === "dark" ? saved : "light";
+  });
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem("drivo_theme", theme);
+  }, [theme]);
 
   const [isMobile, setIsMobile] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -46,15 +59,15 @@ export default function ClientLayout() {
 
   // ---------------- RENDER ----------------
   return (
-    <div className="font-sora bg-[#07070c] text-cream h-screen flex overflow-hidden">
+    <div className="font-sora bg-dark-bg text-cream h-screen flex overflow-hidden">
       {/* SIDEBAR DESKTOP */}
       {!isMobile && (
         <aside
-          className="bg-dark-bg border-r border-white/[0.06] flex flex-col h-screen"
+          className="bg-dark-bg border-r border-border/20 flex flex-col h-screen"
           style={{ width: collapsed ? "64px" : "220px" }}
         >
           {/* HEADER */}
-          <div className="py-5 px-4 border-b border-white/[0.06] flex justify-between items-center">
+          <div className="py-5 px-4 border-b border-border/20 flex justify-between items-center">
             {!collapsed && (
               <div>
                 <div className="font-bold text-gold">DRIVO</div>
@@ -72,7 +85,7 @@ export default function ClientLayout() {
 
           {/* USER */}
           {!collapsed && profile && (
-            <div className="p-4 border-b border-white/[0.06] flex gap-2 items-center">
+            <div className="p-4 border-b border-border/20 flex gap-2 items-center">
               <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white">
                 {initials}
               </div>
@@ -109,7 +122,7 @@ export default function ClientLayout() {
           </nav>
 
           {/* FOOTER */}
-          <div className="mt-auto p-3 border-t border-white/[0.06] flex flex-col gap-2">
+          <div className="mt-auto p-3 border-t border-border/20 flex flex-col gap-2">
             <Link
               to="/"
               className="flex items-center gap-2 py-2 px-3 rounded-lg text-cream/55 hover:text-cream transition-colors"
@@ -117,7 +130,10 @@ export default function ClientLayout() {
               <span>🌐</span>
               {!collapsed && <span>Site public</span>}
             </Link>
-            <button onClick={handleLogout} className="text-red-400 text-sm text-left">
+            <button
+              onClick={handleLogout}
+              className="text-red-400 text-sm text-left"
+            >
               Déconnexion
             </button>
           </div>
@@ -127,7 +143,7 @@ export default function ClientLayout() {
       {/* MAIN */}
       <div className="flex-1 flex flex-col">
         {/* TOP BAR */}
-        <header className="h-14 border-b border-white/[0.06] flex items-center justify-between px-4">
+        <header className="h-14 border-b border-border/20 flex items-center justify-between px-4">
           <div className="flex items-center gap-3">
             {isMobile && (
               <button
@@ -145,16 +161,24 @@ export default function ClientLayout() {
             </div>
           </div>
 
-          {isLoggedIn && (
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs">
-                {initials}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="rounded-full border border-border/20 px-3 py-2 text-xs text-cream/80 hover:text-cream hover:border-gold transition-colors"
+            >
+              {theme === "dark" ? "☀️ Clair" : "🌙 Sombre"}
+            </button>
+            {isLoggedIn && (
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs">
+                  {initials}
+                </div>
+                <span className="text-xs text-cream/60">
+                  {profile?.first_name}
+                </span>
               </div>
-              <span className="text-xs text-cream/60">
-                {profile?.first_name}
-              </span>
-            </div>
-          )}
+            )}
+          </div>
         </header>
 
         {isMobile && (
@@ -170,7 +194,7 @@ export default function ClientLayout() {
               onClick={() => setDrawerOpen(false)}
             />
             <aside
-              className={`relative w-[260px] h-full bg-dark-bg border-r border-white/[0.08] p-4 flex flex-col transition-transform duration-300 ${
+              className={`relative w-[260px] h-full bg-dark-bg border-r border-border/20 p-4 flex flex-col transition-transform duration-300 ${
                 drawerOpen ? "translate-x-0" : "-translate-x-full"
               }`}
             >
@@ -215,7 +239,7 @@ export default function ClientLayout() {
                       className={`flex items-center gap-2 px-3 py-3 rounded-lg text-base transition-colors ${
                         active
                           ? "bg-gold/10 text-gold"
-                          : "text-cream/70 hover:text-cream hover:bg-white/[0.05]"
+                          : "text-cream/70 hover:text-cream hover:bg-border/10"
                       }`}
                     >
                       <span>{item.icon}</span>
@@ -229,7 +253,7 @@ export default function ClientLayout() {
                 <Link
                   to="/"
                   onClick={() => setDrawerOpen(false)}
-                  className="flex items-center gap-2 px-3 py-3 rounded-lg text-cream/70 hover:text-cream hover:bg-white/[0.05]"
+                  className="flex items-center gap-2 px-3 py-3 rounded-lg text-cream/70 hover:text-cream hover:bg-border/10"
                 >
                   <span>🌐</span>
                   <span>Site public</span>

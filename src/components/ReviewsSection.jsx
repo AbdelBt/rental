@@ -10,7 +10,7 @@ export default function ReviewsSection() {
   const visible = reviews.slice(active * perPage, active * perPage + perPage);
 
   return (
-    <section className="py-12 md:py-20 px-5 md:px-10 bg-[#0f0f17]">
+    <section className="py-12 md:py-20 px-5 md:px-10 bg-dark-bg">
       <div className="max-w-[1200px] mx-auto">
         <div className="text-center mb-12">
           <div className="w-12 h-0.5 bg-gold rounded mx-auto mb-5" />
@@ -20,11 +20,16 @@ export default function ReviewsSection() {
           <div className="flex justify-center items-center gap-2">
             <span className="text-gold text-xl">★★★★★</span>
             <span className="font-bold text-base">4.8/5</span>
-            <span className="text-cream/40 text-sm">· 1,200+ avis vérifiés</span>
+            <span className="text-cream/40 text-sm">
+              · 1,200+ avis vérifiés
+            </span>
           </div>
         </div>
 
-        <div className="grid gap-5 mb-8" style={{ gridTemplateColumns: `repeat(${perPage}, 1fr)` }}>
+        <div
+          className="grid gap-5 mb-8"
+          style={{ gridTemplateColumns: `repeat(${perPage}, 1fr)` }}
+        >
           {visible.map((r, i) => (
             <ReviewCard key={i} review={r} />
           ))}
@@ -70,7 +75,9 @@ function ReviewCard({ review }) {
         </div>
         <div>
           <div className="font-bold text-sm">{review.name}</div>
-          <div className="text-xs text-cream/40">📍 {review.city} · {review.date}</div>
+          <div className="text-xs text-cream/40">
+            📍 {review.city} · {review.date}
+          </div>
         </div>
       </div>
     </div>

@@ -317,20 +317,25 @@ export default function CarDetailPage() {
                     {car.name}
                   </h1>
                 </div>
-                {reviews.length > 0 && (() => {
-                  const avg = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1);
-                  return (
-                    <div className="text-right">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-gold text-lg">{"★".repeat(Math.round(avg))}</span>
-                        <span className="font-bold text-base">{avg}</span>
+                {reviews.length > 0 &&
+                  (() => {
+                    const avg = (
+                      reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+                    ).toFixed(1);
+                    return (
+                      <div className="text-right">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-gold text-lg">
+                            {"★".repeat(Math.round(avg))}
+                          </span>
+                          <span className="font-bold text-base">{avg}</span>
+                        </div>
+                        <div className="text-xs text-cream/40 mt-0.5">
+                          {reviews.length} avis
+                        </div>
                       </div>
-                      <div className="text-xs text-cream/40 mt-0.5">
-                        {reviews.length} avis
-                      </div>
-                    </div>
-                  );
-                })()}
+                    );
+                  })()}
               </div>
 
               <p className="text-cream/55 leading-[1.8] mt-4 text-[15px]">
@@ -405,28 +410,39 @@ export default function CarDetailPage() {
                     <div className="text-4xl mb-3">★</div>
                     <div className="text-sm">Aucun avis pour le moment</div>
                   </div>
-                ) : reviews.map((r, i) => {
-                  const name = r.customers
-                    ? `${r.customers.first_name ?? ""} ${r.customers.last_name?.[0] ?? ""}.`.trim()
-                    : "Client";
-                  const date = new Date(r.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
-                  return (
-                    <div key={i} className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-5">
-                      <div className="flex justify-between mb-2.5">
-                        <div>
-                          <div className="font-bold text-sm">{name}</div>
-                          <div className="text-gold text-[13px] mt-0.5">
-                            {"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}
+                ) : (
+                  reviews.map((r, i) => {
+                    const name = r.customers
+                      ? `${r.customers.first_name ?? ""} ${r.customers.last_name?.[0] ?? ""}.`.trim()
+                      : "Client";
+                    const date = new Date(r.created_at).toLocaleDateString(
+                      "fr-FR",
+                      { day: "numeric", month: "long", year: "numeric" },
+                    );
+                    return (
+                      <div
+                        key={i}
+                        className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-5"
+                      >
+                        <div className="flex justify-between mb-2.5">
+                          <div>
+                            <div className="font-bold text-sm">{name}</div>
+                            <div className="text-gold text-[13px] mt-0.5">
+                              {"★".repeat(r.rating)}
+                              {"☆".repeat(5 - r.rating)}
+                            </div>
                           </div>
+                          <div className="text-xs text-cream/30">{date}</div>
                         </div>
-                        <div className="text-xs text-cream/30">{date}</div>
+                        {r.comment && (
+                          <p className="text-cream/60 text-sm leading-[1.7]">
+                            {r.comment}
+                          </p>
+                        )}
                       </div>
-                      {r.comment && (
-                        <p className="text-cream/60 text-sm leading-[1.7]">{r.comment}</p>
-                      )}
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             )}
           </div>
@@ -513,7 +529,9 @@ export default function CarDetailPage() {
                         <div className="text-[13px] font-semibold text-cream/90">
                           {car.agency?.name ?? "Agence partenaire"}
                         </div>
-                        {(car.agency?.address || car.agency?.city || car.city) && (
+                        {(car.agency?.address ||
+                          car.agency?.city ||
+                          car.city) && (
                           <div className="text-[12px] text-cream/45 mt-0.5">
                             {[car.agency?.address, car.agency?.city ?? car.city]
                               .filter(Boolean)
@@ -522,23 +540,26 @@ export default function CarDetailPage() {
                         )}
                       </div>
                     </div>
-                    {(car.agency?.airport_pickup || car.agency?.airport_dropoff) && (
+                    {(car.agency?.airport_pickup ||
+                      car.agency?.airport_dropoff) && (
                       <div className="flex gap-2.5">
                         <span className="text-base shrink-0">✈️</span>
                         <div>
                           <div className="text-[13px] font-semibold text-cream/90">
-                            {car.agency.airport_pickup && car.agency.airport_dropoff
+                            {car.agency.airport_pickup &&
+                            car.agency.airport_dropoff
                               ? "Remise & dépôt à l'aéroport"
                               : car.agency.airport_pickup
-                              ? "Remise à l'aéroport"
-                              : "Dépôt à l'aéroport"}
+                                ? "Remise à l'aéroport"
+                                : "Dépôt à l'aéroport"}
                           </div>
                           <div className="text-[12px] text-cream/45 mt-0.5">
-                            {car.agency.airport_pickup && car.agency.airport_dropoff
+                            {car.agency.airport_pickup &&
+                            car.agency.airport_dropoff
                               ? "Prise en charge et restitution directement à l'aéroport"
                               : car.agency.airport_pickup
-                              ? "La voiture vous est livrée directement à l'aéroport"
-                              : "Restituez la voiture directement à l'aéroport"}
+                                ? "La voiture vous est livrée directement à l'aéroport"
+                                : "Restituez la voiture directement à l'aéroport"}
                           </div>
                         </div>
                       </div>

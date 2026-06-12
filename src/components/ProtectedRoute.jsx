@@ -3,7 +3,7 @@ import { Navigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 
 export default function ProtectedRoute({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(undefined);
 
   useEffect(() => {
     const init = async () => {
@@ -22,6 +22,7 @@ export default function ProtectedRoute({ children }) {
     return () => listener.subscription.unsubscribe();
   }, []);
 
+  if (user === undefined) return null;
   if (!user) return <Navigate to="/agence" replace />;
 
   if (user.user_metadata?.role !== "agency") {

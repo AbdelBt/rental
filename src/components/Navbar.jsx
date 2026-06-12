@@ -48,6 +48,19 @@ export default function Navbar() {
   const [infoOpen, setInfoOpen] = useState(false);
   const [client, setClient] = useState(() => getCachedClient());
   const [authLoading, setAuthLoading] = useState(() => !getCachedClient());
+  const [theme, setTheme] = useState(() => {
+    const saved = window.localStorage.getItem("drivo_theme");
+    return saved === "light" || saved === "dark" ? saved : "light";
+  });
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem("drivo_theme", theme);
+  }, [theme]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -151,6 +164,13 @@ export default function Navbar() {
                 {l.label}
               </Link>
             ))}
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="rounded-full border border-white/[0.12] px-3 py-2 text-[13px] text-cream/80 hover:text-cream hover:border-gold transition-colors"
+              aria-label={`Activer le mode ${theme === "dark" ? "clair" : "sombre"}`}
+            >
+              {theme === "dark" ? "☀️ Clair" : "🌙 Sombre"}
+            </button>
             <div
               className="relative"
               onMouseEnter={() => setInfoOpen(true)}
@@ -158,7 +178,7 @@ export default function Navbar() {
             >
               <div className="nav-link cursor-pointer">Infos ▾</div>
               <div
-                className={`absolute top-full left-0 bg-[#0f0f14]/98 backdrop-blur-xl border border-white/[0.08] rounded-xl py-3 min-w-[220px] flex flex-col gap-1 ${
+                className={`absolute top-full left-0 bg-dark-bg/98 backdrop-blur-xl border border-white/[0.08] rounded-xl py-3 min-w-[220px] flex flex-col gap-1 ${
                   infoOpen ? "flex" : "hidden"
                 }`}
               >
@@ -259,13 +279,19 @@ export default function Navbar() {
           </nav>
 
           <div className="mt-8 flex flex-col gap-3">
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="btn-ghost w-full py-4 text-sm"
+            >
+              {theme === "dark" ? "☀️ Mode clair" : "🌙 Mode sombre"}
+            </button>
             {!authLoading && (
               <>
                 {isLoggedIn ? (
                   <Link
                     to="/client/dashboard"
                     onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:border-white/[0.15] transition-colors"
+                    className="flex items-center gap-3 p-3 rounded-xl bg-dark-bg/70 border border-white/[0.08] hover:border-white/[0.15] transition-colors"
                   >
                     <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#5b8de8] to-[#2d5fc4] flex items-center justify-center text-[12px] font-bold text-white shrink-0">
                       {`${client?.first_name?.[0] ?? ""}${client?.last_name?.[0] ?? ""}`.toUpperCase() ||

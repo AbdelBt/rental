@@ -1,4 +1,10 @@
-import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useLayoutEffect,
+  useCallback,
+} from "react";
 import { createPortal } from "react-dom";
 
 async function fetchCities(query) {
@@ -8,7 +14,9 @@ async function fetchCities(query) {
   const data = await res.json();
   const seen = new Set();
   return data
-    .map((p) => p.address?.city || p.address?.town || p.address?.village || p.name)
+    .map(
+      (p) => p.address?.city || p.address?.town || p.address?.village || p.name,
+    )
     .filter((name) => name && !seen.has(name) && seen.add(name));
 }
 
@@ -16,7 +24,12 @@ async function fetchCities(query) {
  * Single city autocomplete — Nominatim API, Morocco only
  * Dropdown rendered via portal → escapes any overflow/z-index parent
  */
-export function CityAutocomplete({ value, onChange, placeholder = "Rechercher une ville…", className = "" }) {
+export function CityAutocomplete({
+  value,
+  onChange,
+  placeholder = "Rechercher une ville…",
+  className = "",
+}) {
   const [input, setInput] = useState(value || "");
   const [suggestions, setSuggestions] = useState([]);
   const [open, setOpen] = useState(false);
@@ -25,7 +38,9 @@ export function CityAutocomplete({ value, onChange, placeholder = "Rechercher un
   const dropRef = useRef(null);
   const debounceRef = useRef(null);
 
-  useEffect(() => { setInput(value || ""); }, [value]);
+  useEffect(() => {
+    setInput(value || "");
+  }, [value]);
 
   // Keep dropdown aligned to input on every frame while open
   useLayoutEffect(() => {
@@ -44,7 +59,11 @@ export function CityAutocomplete({ value, onChange, placeholder = "Rechercher un
 
   const search = useCallback((text) => {
     clearTimeout(debounceRef.current);
-    if (!text) { setSuggestions([]); setOpen(false); return; }
+    if (!text) {
+      setSuggestions([]);
+      setOpen(false);
+      return;
+    }
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       const results = await fetchCities(text);
@@ -55,16 +74,26 @@ export function CityAutocomplete({ value, onChange, placeholder = "Rechercher un
   }, []);
 
   const handleFocus = () => search(input);
-  const handleInput = (e) => { setInput(e.target.value); search(e.target.value); };
-  const handleSelect = (city) => { setInput(city); setOpen(false); onChange(city); };
+  const handleInput = (e) => {
+    setInput(e.target.value);
+    search(e.target.value);
+  };
+  const handleSelect = (city) => {
+    setInput(city);
+    setOpen(false);
+    onChange(city);
+  };
 
   // Close on outside click
   useEffect(() => {
     const handler = (e) => {
       if (
-        inputRef.current && !inputRef.current.contains(e.target) &&
-        dropRef.current && !dropRef.current.contains(e.target)
-      ) setOpen(false);
+        inputRef.current &&
+        !inputRef.current.contains(e.target) &&
+        dropRef.current &&
+        !dropRef.current.contains(e.target)
+      )
+        setOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -89,25 +118,27 @@ export function CityAutocomplete({ value, onChange, placeholder = "Rechercher un
         )}
       </div>
 
-      {open && suggestions.length > 0 && createPortal(
-        <ul
-          ref={dropRef}
-          style={{ position: "fixed", zIndex: 99999 }}
-          className="bg-[#151422] border border-white/10 rounded-xl overflow-hidden shadow-xl max-h-52 overflow-y-auto"
-        >
-          {suggestions.map((city) => (
-            <li
-              key={city}
-              onMouseDown={() => handleSelect(city)}
-              className="flex items-center gap-2.5 px-4 py-2.5 cursor-pointer hover:bg-white/[0.06] transition-colors text-[13px] text-cream/85"
-            >
-              <span className="text-sm shrink-0">📍</span>
-              {city}
-            </li>
-          ))}
-        </ul>,
-        document.body
-      )}
+      {open &&
+        suggestions.length > 0 &&
+        createPortal(
+          <ul
+            ref={dropRef}
+            style={{ position: "fixed", zIndex: 99999 }}
+            className="bg-dark-bg border border-border rounded-xl overflow-hidden shadow-xl max-h-52 overflow-y-auto"
+          >
+            {suggestions.map((city) => (
+              <li
+                key={city}
+                onMouseDown={() => handleSelect(city)}
+                className="flex items-center gap-2.5 px-4 py-2.5 cursor-pointer hover:bg-white/[0.06] transition-colors text-[13px] text-cream/85"
+              >
+                <span className="text-sm shrink-0">📍</span>
+                {city}
+              </li>
+            ))}
+          </ul>,
+          document.body,
+        )}
     </div>
   );
 }
@@ -123,17 +154,26 @@ export function CitiesMultiSelect({ cities = [], onChange }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <CityAutocomplete value="" onChange={addCity} placeholder="Ajouter une ville…" />
+      <CityAutocomplete
+        value=""
+        onChange={addCity}
+        placeholder="Ajouter une ville…"
+      />
       {cities.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {cities.map((city) => (
-            <span key={city} className="flex items-center gap-1.5 text-[13px] font-semibold text-gold bg-gold/10 border border-gold/25 py-1.5 px-3 rounded-full">
+            <span
+              key={city}
+              className="flex items-center gap-1.5 text-[13px] font-semibold text-gold bg-gold/10 border border-gold/25 py-1.5 px-3 rounded-full"
+            >
               📍 {city}
               <button
                 type="button"
                 onClick={() => removeCity(city)}
                 className="text-gold/50 hover:text-gold bg-transparent border-none cursor-pointer leading-none text-sm ml-0.5"
-              >✕</button>
+              >
+                ✕
+              </button>
             </span>
           ))}
         </div>

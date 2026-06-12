@@ -90,9 +90,9 @@ function ConfirmCashModal({ reservation, onConfirm, onClose }) {
 }
 
 const DOC_LABELS = {
-  license:  "Permis de conduire",
+  license: "Permis de conduire",
   id_front: "CIN — face avant",
-  id_back:  "CIN — face arrière",
+  id_back: "CIN — face arrière",
 };
 
 function ClientDocs({ customerId }) {
@@ -100,15 +100,23 @@ function ClientDocs({ customerId }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!customerId) { setLoading(false); return; }
+    if (!customerId) {
+      setLoading(false);
+      return;
+    }
     const load = async () => {
       const { data: customer } = await supabase
         .from("customers")
-        .select("auth_user_id, license_verified, id_front_verified, id_back_verified")
+        .select(
+          "auth_user_id, license_verified, id_front_verified, id_back_verified",
+        )
         .eq("id", customerId)
         .maybeSingle();
 
-      if (!customer?.auth_user_id) { setLoading(false); return; }
+      if (!customer?.auth_user_id) {
+        setLoading(false);
+        return;
+      }
 
       const results = [];
       await Promise.all(
@@ -118,7 +126,7 @@ function ClientDocs({ customerId }) {
             .from("customer-documents")
             .createSignedUrl(`${customer.auth_user_id}/${key}`, 3600);
           if (data?.signedUrl) results.push({ label, url: data.signedUrl });
-        })
+        }),
       );
       setDocs(results);
       setLoading(false);
@@ -134,7 +142,9 @@ function ClientDocs({ customerId }) {
       {loading ? (
         <div className="text-cream/40 text-sm animate-pulse">Chargement...</div>
       ) : docs.length === 0 ? (
-        <div className="text-cream/35 text-sm">Aucun document soumis par ce client</div>
+        <div className="text-cream/35 text-sm">
+          Aucun document soumis par ce client
+        </div>
       ) : (
         <div className="flex flex-col gap-2.5">
           {docs.map(({ label, url }) => (
@@ -146,7 +156,9 @@ function ClientDocs({ customerId }) {
               className="flex items-center gap-3 bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 hover:border-gold/30 transition-colors no-underline"
             >
               <span className="text-xl">📄</span>
-              <span className="text-sm font-medium text-cream/80 flex-1">{label}</span>
+              <span className="text-sm font-medium text-cream/80 flex-1">
+                {label}
+              </span>
               <span className="text-xs text-gold font-semibold">Voir →</span>
             </a>
           ))}
@@ -171,7 +183,7 @@ function ReservationSidebar({
 
   return (
     <>
-      <div className="h-full w-full bg-[#0f0f14] border-l border-gold/20 shadow-[-20px_0_40px_rgba(0,0,0,0.6)] overflow-y-auto p-6 md:p-8">
+      <div className="h-full w-full bg-dark-bg border-l border-gold/20 shadow-[-20px_0_40px_rgba(0,0,0,0.6)] overflow-y-auto p-6 md:p-8">
         <button
           onClick={onClose}
           className="absolute top-6 right-6 bg-white/5 border-none w-11 h-11 rounded-full text-xl text-cream cursor-pointer flex items-center justify-center transition-all duration-200 z-10 hover:bg-gold/20 hover:text-gold"
@@ -423,7 +435,6 @@ function ReservationSidebar({
             )}
         </div>
       </div>
-
     </>
   );
 }
@@ -719,16 +730,16 @@ export default function DashReservations() {
   };
 
   const openSidebar = (reservation) => {
-    setSelected(reservation);        // 1. monte le composant à translateX(100%)
+    setSelected(reservation); // 1. monte le composant à translateX(100%)
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        setSidebarOpen(true);        // 2. au frame suivant → déclenche la transition vers translateX(0)
+        setSidebarOpen(true); // 2. au frame suivant → déclenche la transition vers translateX(0)
       });
     });
   };
 
   const closeSidebar = () => {
-    setSidebarOpen(false);           // 1. transition vers translateX(100%)
+    setSidebarOpen(false); // 1. transition vers translateX(100%)
     setTimeout(() => setSelected(null), 420); // 2. démonte après l'animation
   };
 
@@ -736,7 +747,6 @@ export default function DashReservations() {
   const filtered = reservations.filter(
     (r) => filter === "all" || r.status === filter,
   );
-
 
   if (loading) {
     return (
@@ -959,174 +969,290 @@ export default function DashReservations() {
       )}
 
       {/* Big Calendar (week + month) */}
-      {(view === "week" || view === "calendar") && (() => {
-        // Pickup + return events, offset duplicates to avoid side-by-side layout
-        const rawEvents = filtered.flatMap(r => {
-          const [ph, pm] = (r.timeFrom || "09:00").split(":").map(Number);
-          const pickupStart = new Date(r.from + "T00:00:00");
-          pickupStart.setHours(ph, pm, 0, 0);
-          const pickupEnd = new Date(pickupStart);
-          pickupEnd.setHours(ph + 1, pm, 0, 0);
+      {(view === "week" || view === "calendar") &&
+        (() => {
+          // Pickup + return events, offset duplicates to avoid side-by-side layout
+          const rawEvents = filtered.flatMap((r) => {
+            const [ph, pm] = (r.timeFrom || "09:00").split(":").map(Number);
+            const pickupStart = new Date(r.from + "T00:00:00");
+            pickupStart.setHours(ph, pm, 0, 0);
+            const pickupEnd = new Date(pickupStart);
+            pickupEnd.setHours(ph + 1, pm, 0, 0);
 
-          const [rh, rm] = (r.timeTo || "10:00").split(":").map(Number);
-          const returnStart = new Date(r.to + "T00:00:00");
-          returnStart.setHours(rh, rm, 0, 0);
-          const returnEnd = new Date(returnStart);
-          returnEnd.setHours(rh + 1, rm, 0, 0);
+            const [rh, rm] = (r.timeTo || "10:00").split(":").map(Number);
+            const returnStart = new Date(r.to + "T00:00:00");
+            returnStart.setHours(rh, rm, 0, 0);
+            const returnEnd = new Date(returnStart);
+            returnEnd.setHours(rh + 1, rm, 0, 0);
 
-          const isOneDay = r.from === r.to;
-          const pickup = { id: `${r.id}-pickup`, title: `🚗 ${r.client} — ${r.carName}`, start: pickupStart, end: pickupEnd, resource: { ...r, eventType: "pickup" } };
-          const ret = { id: `${r.id}-return`, title: `🔑 Retour — ${r.client}`, start: returnStart, end: returnEnd, resource: { ...r, eventType: "return" } };
-          return isOneDay ? [pickup] : [pickup, ret];
-        });
+            const isOneDay = r.from === r.to;
+            const pickup = {
+              id: `${r.id}-pickup`,
+              title: `🚗 ${r.client} — ${r.carName}`,
+              start: pickupStart,
+              end: pickupEnd,
+              resource: { ...r, eventType: "pickup" },
+            };
+            const ret = {
+              id: `${r.id}-return`,
+              title: `🔑 Retour — ${r.client}`,
+              start: returnStart,
+              end: returnEnd,
+              resource: { ...r, eventType: "return" },
+            };
+            return isOneDay ? [pickup] : [pickup, ret];
+          });
 
-        // Group events at same day+hour into a single block with stacked labels
-        const groups = {};
-        rawEvents.forEach(ev => {
-          const key = `${ev.start.toDateString()}-${ev.start.getHours()}`;
-          if (!groups[key]) groups[key] = [];
-          groups[key].push(ev);
-        });
-        const events = Object.values(groups).flatMap(group => {
-          if (group.length === 1) return group;
-          return [{
-            id: `group-${group[0].start.toISOString()}`,
-            title: "",
-            start: group[0].start,
-            end: group[0].end,
-            resource: { grouped: true, items: group },
-          }];
-        });
-        const EventComponent = ({ event }) => {
-          if (event.resource?.grouped) {
+          // Group events at same day+hour into a single block with stacked labels
+          const groups = {};
+          rawEvents.forEach((ev) => {
+            const key = `${ev.start.toDateString()}-${ev.start.getHours()}`;
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(ev);
+          });
+          const events = Object.values(groups).flatMap((group) => {
+            if (group.length === 1) return group;
+            return [
+              {
+                id: `group-${group[0].start.toISOString()}`,
+                title: "",
+                start: group[0].start,
+                end: group[0].end,
+                resource: { grouped: true, items: group },
+              },
+            ];
+          });
+          const EventComponent = ({ event }) => {
+            if (event.resource?.grouped) {
+              return (
+                <div className="flex flex-col gap-0.5 h-full overflow-hidden p-0.5">
+                  {event.resource.items.map((e) => {
+                    const isRet = e.resource.eventType === "return";
+                    const color = isRet
+                      ? "#a78bfa"
+                      : S_COLOR[e.resource.status];
+                    return (
+                      <div
+                        key={e.id}
+                        style={{
+                          background: `${color}22`,
+                          border: `1px solid ${color}60`,
+                          borderRadius: 5,
+                          padding: "1px 5px",
+                          fontSize: 10,
+                          fontWeight: 700,
+                          color,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        {isRet ? "🔑" : "🚗"} {e.resource.client} —{" "}
+                        {e.resource.carName}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            }
+            const isReturn = event.resource.eventType === "return";
             return (
-              <div className="flex flex-col gap-0.5 h-full overflow-hidden p-0.5">
-                {event.resource.items.map((e) => {
-                  const isRet = e.resource.eventType === "return";
-                  const color = isRet ? "#a78bfa" : S_COLOR[e.resource.status];
-                  return (
-                    <div
-                      key={e.id}
-                      style={{
-                        background: `${color}22`,
-                        border: `1px solid ${color}60`,
-                        borderRadius: 5,
-                        padding: "1px 5px",
-                        fontSize: 10,
-                        fontWeight: 700,
-                        color,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      {isRet ? "🔑" : "🚗"} {e.resource.client} — {e.resource.carName}
-                    </div>
-                  );
-                })}
+              <div className="h-full flex flex-col justify-start gap-0.5 overflow-hidden">
+                <div
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {isReturn ? "🔑" : "🚗"} {event.resource.client}
+                </div>
+                <div
+                  style={{
+                    fontSize: 9,
+                    opacity: 0.75,
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {event.resource.carName}
+                </div>
+                <div
+                  style={{ fontSize: 9, opacity: 0.6, whiteSpace: "nowrap" }}
+                >
+                  {isReturn ? event.resource.timeTo : event.resource.timeFrom}
+                </div>
               </div>
             );
-          }
-          const isReturn = event.resource.eventType === "return";
-          return (
-            <div className="h-full flex flex-col justify-start gap-0.5 overflow-hidden">
-              <div style={{ fontSize: 10, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {isReturn ? "🔑" : "🚗"} {event.resource.client}
-              </div>
-              <div style={{ fontSize: 9, opacity: 0.75, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {event.resource.carName}
-              </div>
-              <div style={{ fontSize: 9, opacity: 0.6, whiteSpace: "nowrap" }}>
-                {isReturn ? event.resource.timeTo : event.resource.timeFrom}
+          };
+
+          const CustomToolbar = ({ label, onNavigate }) => (
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => onNavigate("PREV")}
+                  className="w-9 h-9 rounded-xl bg-white/[0.05] border border-white/[0.08] text-cream/70 hover:text-cream hover:bg-white/[0.08] transition-all cursor-pointer flex items-center justify-center"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
+                </button>
+                <span className="font-playfair text-lg font-bold min-w-[180px] text-center capitalize">
+                  {label}
+                </span>
+                <button
+                  onClick={() => onNavigate("NEXT")}
+                  className="w-9 h-9 rounded-xl bg-white/[0.05] border border-white/[0.08] text-cream/70 hover:text-cream hover:bg-white/[0.08] transition-all cursor-pointer flex items-center justify-center"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => onNavigate("TODAY")}
+                  className="px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/25 text-gold text-[11px] font-semibold hover:bg-gold/20 transition-all cursor-pointer"
+                >
+                  Aujourd'hui
+                </button>
               </div>
             </div>
           );
-        };
-
-        const CustomToolbar = ({ label, onNavigate }) => (
-          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-            <div className="flex items-center gap-2">
-              <button onClick={() => onNavigate("PREV")} className="w-9 h-9 rounded-xl bg-white/[0.05] border border-white/[0.08] text-cream/70 hover:text-cream hover:bg-white/[0.08] transition-all cursor-pointer flex items-center justify-center">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-              </button>
-              <span className="font-playfair text-lg font-bold min-w-[180px] text-center capitalize">{label}</span>
-              <button onClick={() => onNavigate("NEXT")} className="w-9 h-9 rounded-xl bg-white/[0.05] border border-white/[0.08] text-cream/70 hover:text-cream hover:bg-white/[0.08] transition-all cursor-pointer flex items-center justify-center">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-              </button>
-              <button onClick={() => onNavigate("TODAY")} className="px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/25 text-gold text-[11px] font-semibold hover:bg-gold/20 transition-all cursor-pointer">
-                Aujourd'hui
-              </button>
-            </div>
-          </div>
-        );
-        const Legend = () => (
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-4 px-1">
-            {/* Event types */}
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: "#22c55e" }} />
-              <span className="text-sm leading-none">🚗</span>
-              <span className="text-[11px] text-cream/60 font-medium">Livraison / Remise des clés</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: "#a78bfa" }} />
-              <span className="text-sm leading-none">🔑</span>
-              <span className="text-[11px] text-cream/60 font-medium">Restitution du véhicule</span>
-            </div>
-            {/* Divider */}
-            <div className="w-px h-4 bg-white/10 hidden sm:block" />
-            {/* Statuses */}
-            {Object.entries(S_COLOR).map(([status, color]) => (
-              <div key={status} className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: color }} />
-                <span className="text-[11px] text-cream/60 font-medium">{S_LABEL[status]}</span>
+          const Legend = () => (
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-4 px-1">
+              {/* Event types */}
+              <div className="flex items-center gap-1.5">
+                <span
+                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                  style={{ background: "#22c55e" }}
+                />
+                <span className="text-sm leading-none">🚗</span>
+                <span className="text-[11px] text-cream/60 font-medium">
+                  Livraison / Remise des clés
+                </span>
               </div>
-            ))}
-          </div>
-        );
+              <div className="flex items-center gap-1.5">
+                <span
+                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                  style={{ background: "#a78bfa" }}
+                />
+                <span className="text-sm leading-none">🔑</span>
+                <span className="text-[11px] text-cream/60 font-medium">
+                  Restitution du véhicule
+                </span>
+              </div>
+              {/* Divider */}
+              <div className="w-px h-4 bg-white/10 hidden sm:block" />
+              {/* Statuses */}
+              {Object.entries(S_COLOR).map(([status, color]) => (
+                <div key={status} className="flex items-center gap-1.5">
+                  <span
+                    className="w-2.5 h-2.5 rounded-full shrink-0"
+                    style={{ background: color }}
+                  />
+                  <span className="text-[11px] text-cream/60 font-medium">
+                    {S_LABEL[status]}
+                  </span>
+                </div>
+              ))}
+            </div>
+          );
 
-        return (
-          <div className="bg-dark border border-white/[0.07] rounded-3xl overflow-hidden p-5" style={{ height: 700 }}>
-            <Legend />
-            <Calendar
-              localizer={localizer}
-              events={events}
-              view={view === "week" ? Views.WEEK : Views.MONTH}
-              date={calDate}
-              onNavigate={setCalDate}
-              onView={() => {}}
-              culture="fr"
-              startAccessor="start"
-              endAccessor="end"
-              min={new Date(0, 0, 0, 7, 0)}
-              max={new Date(0, 0, 0, 22, 0)}
-              step={60}
-              timeslots={1}
-              onSelectEvent={(e) => { if (!e.resource?.grouped) openSidebar(e.resource); }}
-              components={{ toolbar: CustomToolbar, event: EventComponent }}
-              messages={{ noEventsInRange: "Aucune réservation" }}
-              eventPropGetter={(event) => {
-                if (event.resource?.grouped) {
-                  return { style: { backgroundColor: "transparent", border: "none", padding: 0 } };
-                }
-                const isReturn = event.resource.eventType === "return";
-                const bg = isReturn ? "rgba(167,139,250,0.18)" : `${S_COLOR[event.resource.status]}25`;
-                const border = isReturn ? "1px solid rgba(167,139,250,0.6)" : `1px solid ${S_COLOR[event.resource.status]}70`;
-                const color = isReturn ? "#a78bfa" : S_COLOR[event.resource.status];
-                return { style: { backgroundColor: bg, border, color, borderRadius: "8px", fontSize: "11px", fontWeight: 600 } };
-              }}
-              formats={{
-                dayHeaderFormat: (date) =>
-                  date.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" }),
-                monthHeaderFormat: (date) =>
-                  date.toLocaleDateString("fr-FR", { month: "long", year: "numeric" }),
-                timeGutterFormat: (date) =>
-                  date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
-              }}
-            />
-          </div>
-        );
-      })()}
+          return (
+            <div
+              className="bg-dark border border-white/[0.07] rounded-3xl overflow-hidden p-5"
+              style={{ height: 700 }}
+            >
+              <Legend />
+              <Calendar
+                localizer={localizer}
+                events={events}
+                view={view === "week" ? Views.WEEK : Views.MONTH}
+                date={calDate}
+                onNavigate={setCalDate}
+                onView={() => {}}
+                culture="fr"
+                startAccessor="start"
+                endAccessor="end"
+                min={new Date(0, 0, 0, 7, 0)}
+                max={new Date(0, 0, 0, 22, 0)}
+                step={60}
+                timeslots={1}
+                onSelectEvent={(e) => {
+                  if (!e.resource?.grouped) openSidebar(e.resource);
+                }}
+                components={{ toolbar: CustomToolbar, event: EventComponent }}
+                messages={{ noEventsInRange: "Aucune réservation" }}
+                eventPropGetter={(event) => {
+                  if (event.resource?.grouped) {
+                    return {
+                      style: {
+                        backgroundColor: "transparent",
+                        border: "none",
+                        padding: 0,
+                      },
+                    };
+                  }
+                  const isReturn = event.resource.eventType === "return";
+                  const bg = isReturn
+                    ? "rgba(167,139,250,0.18)"
+                    : `${S_COLOR[event.resource.status]}25`;
+                  const border = isReturn
+                    ? "1px solid rgba(167,139,250,0.6)"
+                    : `1px solid ${S_COLOR[event.resource.status]}70`;
+                  const color = isReturn
+                    ? "#a78bfa"
+                    : S_COLOR[event.resource.status];
+                  return {
+                    style: {
+                      backgroundColor: bg,
+                      border,
+                      color,
+                      borderRadius: "8px",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                    },
+                  };
+                }}
+                formats={{
+                  dayHeaderFormat: (date) =>
+                    date.toLocaleDateString("fr-FR", {
+                      weekday: "short",
+                      day: "numeric",
+                      month: "short",
+                    }),
+                  monthHeaderFormat: (date) =>
+                    date.toLocaleDateString("fr-FR", {
+                      month: "long",
+                      year: "numeric",
+                    }),
+                  timeGutterFormat: (date) =>
+                    date.toLocaleTimeString("fr-FR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }),
+                }}
+              />
+            </div>
+          );
+        })()}
 
       {/* Sidebar overlay */}
       {selected && (
@@ -1134,7 +1260,10 @@ export default function DashReservations() {
           <div
             onClick={closeSidebar}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999] transition-opacity duration-300"
-            style={{ opacity: sidebarOpen ? 1 : 0, pointerEvents: sidebarOpen ? "auto" : "none" }}
+            style={{
+              opacity: sidebarOpen ? 1 : 0,
+              pointerEvents: sidebarOpen ? "auto" : "none",
+            }}
           />
           <div
             className="fixed top-0 right-0 bottom-0 w-full max-w-[500px] z-[1000]"
@@ -1154,7 +1283,10 @@ export default function DashReservations() {
           {showCashModal && (
             <ConfirmCashModal
               reservation={selected}
-              onConfirm={() => { confirmCash(selected.id); setShowCashModal(false); }}
+              onConfirm={() => {
+                confirmCash(selected.id);
+                setShowCashModal(false);
+              }}
               onClose={() => setShowCashModal(false)}
             />
           )}

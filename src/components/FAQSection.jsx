@@ -7,7 +7,7 @@ export default function FAQSection() {
   const toggle = (i) => setOpen(open === i ? null : i);
 
   return (
-    <section id="faq" className="py-20 px-10 bg-[#0f0f17]">
+    <section id="faq" className="py-20 px-10 bg-dark-bg">
       <div className="max-w-[760px] mx-auto">
         <div className="text-center mb-12">
           <div className="gold-line mx-auto mb-5" />

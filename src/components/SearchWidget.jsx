@@ -18,7 +18,9 @@ export default function SearchWidget() {
       .not("city", "is", null)
       .then(({ data }) => {
         if (data) {
-          const unique = [...new Set(data.map((r) => r.city).filter(Boolean))].sort();
+          const unique = [
+            ...new Set(data.map((r) => r.city).filter(Boolean)),
+          ].sort();
           setCities(unique);
         }
       });
@@ -32,22 +34,32 @@ export default function SearchWidget() {
     navigate(`/cars?${params.toString()}`);
   };
 
-  const labelClasses = "text-[11px] font-semibold text-gold tracking-[0.15em] uppercase block mb-2";
+  const labelClasses =
+    "text-[11px] font-semibold text-gold tracking-[0.15em] uppercase block mb-2";
 
   return (
-    <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-4 md:p-6 backdrop-blur-md">
-      <div className="flex flex-col gap-3">
+    <div className="bg-card/95 border border-border/40 rounded-[28px] p-4 md:p-6 shadow-[0_24px_72px_rgba(0,0,0,0.1)]">
+      <div className="flex flex-col gap-4">
         <div>
           <label className={labelClasses}>Lieu de prise en charge</label>
           <select
-            className="input-field cursor-pointer"
+            className={`input-field cursor-pointer bg-background text-foreground shadow-sm relative z-10 appearance-auto ${
+              city ? "border border-gold/50" : "border border-border/30"
+            }`}
             value={city}
             onChange={(e) => setCity(e.target.value)}
-            style={{ background: "#0a0a0f", color: "#f5f0e8" }}
           >
-            <option value="" style={{ background: "#0a0a0f", color: "#f5f0e8" }}>Toutes les villes</option>
+            <option value="" className="bg-background text-foreground">
+              Toutes les villes
+            </option>
             {cities.map((c) => (
-              <option key={c} value={c} style={{ background: "#0a0a0f", color: "#f5f0e8" }}>{c}</option>
+              <option
+                key={c}
+                value={c}
+                className="bg-background text-foreground"
+              >
+                {c}
+              </option>
             ))}
           </select>
         </div>
@@ -62,7 +74,14 @@ export default function SearchWidget() {
             }}
           />
         </div>
-        <button className="btn-primary h-[46px] w-full" onClick={handleSearch}>
+        <button
+          type="button"
+          className="btn-primary h-[46px] w-full border border-border cursor-pointer relative z-10 hover:bg-gold/10 hover:text-black"
+          onClick={(e) => {
+            e.preventDefault();
+            handleSearch();
+          }}
+        >
           Rechercher
         </button>
       </div>

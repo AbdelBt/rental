@@ -26,7 +26,7 @@ function CancelModal({ reservation, onClose, onConfirmed }) {
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative bg-[#0f0e1a] border border-white/[0.1] rounded-2xl p-6 max-w-md w-full shadow-2xl">
+      <div className="relative bg-dark-bg border border-border rounded-2xl p-6 max-w-md w-full shadow-2xl">
         {/* Header */}
         <div className="flex items-start gap-3 mb-5">
           <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
@@ -103,7 +103,7 @@ function CancelModal({ reservation, onClose, onConfirmed }) {
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl border border-white/[0.1] text-[13px] text-cream/60 hover:text-cream transition-colors bg-transparent cursor-pointer"
+            className="flex-1 py-2.5 rounded-xl border border-border/20 text-[13px] text-cream/60 hover:text-cream transition-colors bg-transparent cursor-pointer"
           >
             Garder
           </button>
@@ -160,7 +160,7 @@ function ReviewModal({ reservation, onClose, onSubmitted }) {
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative bg-[#0f0e1a] border border-white/[0.1] rounded-2xl p-6 max-w-md w-full shadow-2xl">
+      <div className="relative bg-dark-bg border border-border rounded-2xl p-6 max-w-md w-full shadow-2xl">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-cream/40 hover:text-cream bg-transparent border-none cursor-pointer text-xl"
@@ -206,7 +206,7 @@ function ReviewModal({ reservation, onClose, onSubmitted }) {
 
         {/* Comment */}
         <textarea
-          className="w-full bg-white/[0.04] border border-white/[0.1] rounded-xl p-3 text-sm text-cream placeholder-cream/25 resize-none outline-none focus:border-gold/40 transition-colors mb-5"
+          className="w-full bg-card/90 border border-border/20 rounded-xl p-3 text-sm text-cream placeholder-cream/25 resize-none outline-none focus:border-gold/40 transition-colors mb-5"
           rows={3}
           placeholder="Partagez votre expérience (optionnel)..."
           value={comment}
@@ -216,7 +216,7 @@ function ReviewModal({ reservation, onClose, onSubmitted }) {
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl border border-white/[0.1] text-[13px] text-cream/60 hover:text-cream transition-colors bg-transparent cursor-pointer"
+            className="flex-1 py-2.5 rounded-xl border border-border/20 text-[13px] text-cream/60 hover:text-cream transition-colors bg-transparent cursor-pointer"
           >
             Annuler
           </button>
@@ -268,7 +268,7 @@ const STATUS_MAP = {
   },
   completed: {
     label: "Terminée",
-    cls: "bg-white/[0.06] text-cream/40 border-white/[0.08]",
+    cls: "bg-card/80 text-cream/40 border-border/20",
   },
   cancelled: {
     label: "Annulée",
@@ -380,7 +380,7 @@ export default function ClientReservations() {
             className={`px-4 py-1.5 rounded-full text-[12px] font-semibold border transition-all ${
               filter === key
                 ? "bg-gold text-[#0a0a0f] border-gold"
-                : "bg-transparent border-white/[0.1] text-cream/50 hover:border-white/[0.2] hover:text-cream/80"
+                : "bg-transparent border-border/20 text-cream/50 hover:border-border/40 hover:text-cream/80"
             }`}
           >
             {label}
@@ -396,12 +396,12 @@ export default function ClientReservations() {
           {[1, 2].map((i) => (
             <div
               key={i}
-              className="h-56 bg-white/[0.03] rounded-2xl animate-pulse"
+              className="h-56 bg-card/90 rounded-2xl animate-pulse"
             />
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white/[0.03] border border-white/[0.07] rounded-2xl p-12 text-center">
+        <div className="bg-card/90 border border-border/20 rounded-2xl p-12 text-center">
           <div className="text-5xl mb-4">🚗</div>
           <p className="text-cream/50 text-sm mb-5">
             Aucune réservation dans cette catégorie.
@@ -432,11 +432,11 @@ export default function ClientReservations() {
                 className={`overflow-hidden rounded-2xl border transition-colors ${
                   isUpcoming && days <= 3
                     ? "border-amber-500/25"
-                    : "border-white/[0.07]"
+                    : "border-border/20"
                 }`}
               >
                 {/* Car image banner */}
-                <div className="relative h-44 bg-white/[0.04]">
+                <div className="relative h-44 bg-card/80">
                   <img
                     src={carImg}
                     alt={carName}
@@ -462,7 +462,7 @@ export default function ClientReservations() {
                   {/* Category top-left */}
                   {r.cars?.category && (
                     <div className="absolute top-3 left-3">
-                      <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-black/40 border border-white/[0.15] text-cream/70 backdrop-blur-sm">
+                      <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-dark-bg/40 border border-border/20 text-cream/70 backdrop-blur-sm">
                         {r.cars.category}
                       </span>
                     </div>
@@ -482,7 +482,7 @@ export default function ClientReservations() {
                 </div>
 
                 {/* Details section */}
-                <div className="bg-[#0d0d16] px-4 py-4">
+                <div className="bg-card px-4 py-4">
                   {/* Dates row */}
                   <div className="flex items-center justify-between gap-4 flex-wrap mb-3">
                     <div className="flex items-center gap-3 text-[13px]">
@@ -585,7 +585,7 @@ export default function ClientReservations() {
                               {specs.map((s) => (
                                 <div
                                   key={s.label}
-                                  className="bg-white/[0.03] border border-white/[0.05] rounded-lg px-2.5 py-2 text-center"
+                                  className="bg-card/90 border border-border/20 rounded-lg px-2.5 py-2 text-center"
                                 >
                                   <div className="text-[11px] text-cream/35 mb-0.5">
                                     {s.icon}
@@ -625,7 +625,7 @@ export default function ClientReservations() {
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex items-center gap-2 flex-wrap">
                       {r.city && (
-                        <span className="text-[11px] text-cream/45 bg-white/[0.04] border border-white/[0.07] px-2.5 py-1 rounded-full">
+                        <span className="text-[11px] text-cream/45 bg-card/90 border border-border/20 px-2.5 py-1 rounded-full">
                           📍 {r.city}
                         </span>
                       )}
@@ -669,14 +669,14 @@ export default function ClientReservations() {
 
                   {/* Countdown bar */}
                   {isUpcoming && days >= 0 && days <= 14 && (
-                    <div className="mt-3 pt-3 border-t border-white/[0.05]">
+                    <div className="mt-3 pt-3 border-t border-border/10">
                       <div className="flex justify-between text-[10px] text-cream/30 mb-1.5">
                         <span>Aujourd'hui</span>
                         <span>
                           Départ dans {days} jour{days > 1 ? "s" : ""}
                         </span>
                       </div>
-                      <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                      <div className="h-1.5 bg-border/20 rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all ${
                             days <= 3

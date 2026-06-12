@@ -85,13 +85,13 @@ function DocRow({
   };
 
   return (
-    <div className="flex items-center justify-between py-3 border-b border-white/[0.05] last:border-0 gap-3 flex-wrap">
+    <div className="flex items-center justify-between py-3 border-b border-border/10 last:border-0 gap-3 flex-wrap">
       <div className="flex items-center gap-3 min-w-0">
         <div
           className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
             verified || uploaded
               ? "bg-green-500/10 text-green-400"
-              : "bg-white/[0.05] text-cream/30"
+              : "bg-card/90 text-cream/30"
           }`}
         >
           {verified || uploaded ? (
@@ -130,7 +130,7 @@ function DocRow({
           className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border ${
             verified || uploaded
               ? "bg-green-500/15 text-green-400 border-green-500/30"
-              : "bg-white/[0.05] text-cream/35 border-white/[0.08]"
+              : "bg-card/90 text-cream/35 border-border/20"
           }`}
         >
           {verified || uploaded ? "Confirmé" : "Manquant"}
@@ -260,10 +260,10 @@ export default function ClientProfile() {
   if (loading) {
     return (
       <div className="space-y-6 max-w-2xl animate-pulse">
-        <div className="h-8 w-48 bg-white/[0.05] rounded-lg" />
-        <div className="h-24 bg-white/[0.03] border border-white/[0.07] rounded-2xl" />
-        <div className="h-52 bg-white/[0.03] border border-white/[0.07] rounded-2xl" />
-        <div className="h-40 bg-white/[0.03] border border-white/[0.07] rounded-2xl" />
+        <div className="h-8 w-48 bg-card/90 rounded-lg" />
+        <div className="h-24 bg-card/90 border border-border/20 rounded-2xl" />
+        <div className="h-52 bg-card/90 border border-border/20 rounded-2xl" />
+        <div className="h-40 bg-card/90 border border-border/20 rounded-2xl" />
       </div>
     );
   }
@@ -278,7 +278,7 @@ export default function ClientProfile() {
       </div>
 
       {/* Avatar card */}
-      <div className="bg-white/[0.03] border border-white/[0.07] rounded-2xl p-5 flex items-center gap-4">
+      <div className="bg-card/90 border border-border/20 rounded-2xl p-5 flex items-center gap-4">
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#5b8de8] to-[#2d5fc4] flex items-center justify-center text-2xl font-extrabold text-white shrink-0">
           {initials}
         </div>
@@ -300,9 +300,9 @@ export default function ClientProfile() {
 
       {/* Missing docs alert */}
       {missingCount > 0 && (
-        <div className="flex items-start gap-3 bg-amber-500/[0.07] border border-amber-500/25 rounded-xl p-4">
+        <div className="flex items-start gap-3 bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
           <svg
-            className="text-amber-400 shrink-0 mt-0.5"
+            className="text-amber-700 shrink-0 mt-0.5"
             width="15"
             height="15"
             viewBox="0 0 24 24"
@@ -314,7 +314,7 @@ export default function ClientProfile() {
             <line x1="12" y1="8" x2="12" y2="12" />
             <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
-          <p className="text-[12px] text-amber-300/80">
+          <p className="text-[12px] text-amber-900">
             {missingCount === 1
               ? "1 document manquant."
               : `${missingCount} documents manquants.`}{" "}
@@ -324,7 +324,7 @@ export default function ClientProfile() {
       )}
 
       {/* Personal info */}
-      <div className="bg-white/[0.03] border border-white/[0.07] rounded-2xl p-5 space-y-4">
+      <div className="bg-card/90 border border-border/20 rounded-2xl p-5 space-y-4">
         <div className="flex items-center justify-between mb-1">
           <h2 className="font-semibold text-[14px]">
             Informations personnelles
@@ -399,7 +399,7 @@ export default function ClientProfile() {
       </div>
 
       {/* Documents */}
-      <div className="bg-white/[0.03] border border-white/[0.07] rounded-2xl p-5">
+      <div className="bg-card/90 border border-border/20 rounded-2xl p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold text-[14px]">Documents</h2>
           <span className="text-[11px] text-cream/35"></span>
@@ -428,7 +428,7 @@ export default function ClientProfile() {
       </div>
 
       {/* Security */}
-      <div className="bg-white/[0.03] border border-white/[0.07] rounded-2xl p-5">
+      <div className="bg-card/90 border border-border/20 rounded-2xl p-5">
         <h2 className="font-semibold text-[14px] mb-4">Sécurité</h2>
         <div className="flex items-center justify-between">
           <div className="text-[13px] text-cream/70">Mot de passe</div>

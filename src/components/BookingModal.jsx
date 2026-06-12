@@ -10,7 +10,8 @@ function AddressAutocomplete({ value, onChange, cityFilter }) {
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) setOpen(false);
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target))
+        setOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -21,13 +22,17 @@ function AddressAutocomplete({ value, onChange, cityFilter }) {
     setQuery(val);
     onChange(val);
     clearTimeout(timeoutRef.current);
-    if (val.length < 3) { setSuggestions([]); setOpen(false); return; }
+    if (val.length < 3) {
+      setSuggestions([]);
+      setOpen(false);
+      return;
+    }
     timeoutRef.current = setTimeout(async () => {
       try {
         const q = cityFilter ? `${val}, ${cityFilter}, Maroc` : `${val}, Maroc`;
         const res = await fetch(
           `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&countrycodes=ma&format=json&limit=6&addressdetails=1`,
-          { headers: { "Accept-Language": "fr" } }
+          { headers: { "Accept-Language": "fr" } },
         );
         const data = await res.json();
         setSuggestions(data);
@@ -56,7 +61,7 @@ function AddressAutocomplete({ value, onChange, cityFilter }) {
         required
       />
       {open && (
-        <ul className="absolute z-[700] top-full left-0 right-0 mt-1 bg-[#15131f] border border-white/[0.1] rounded-xl overflow-hidden shadow-2xl max-h-52 overflow-y-auto">
+        <ul className="absolute z-[700] top-full left-0 right-0 mt-1 bg-dark-bg border border-border rounded-xl overflow-hidden shadow-2xl max-h-52 overflow-y-auto">
           {suggestions.map((item) => (
             <li
               key={item.place_id}
@@ -86,7 +91,14 @@ function getCustomerDefaults() {
         deliveryAddress: cached.deliveryAddress ?? "",
       };
   } catch (_) {}
-  return { firstName: "", lastName: "", email: "", phone: "", deliveryCity: "", deliveryAddress: "" };
+  return {
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    deliveryCity: "",
+    deliveryAddress: "",
+  };
 }
 
 const TIME_SLOTS = Array.from({ length: 48 }, (_, i) => {
@@ -112,9 +124,10 @@ export default function BookingModal({
 
   // Auto-set deliveryCity when there's only one available city
   useEffect(() => {
-    const availableCities = Array.isArray(car.agency?.cities) && car.agency.cities.length > 0
-      ? car.agency.cities
-      : [car.city ?? car.agency?.city].filter(Boolean);
+    const availableCities =
+      Array.isArray(car.agency?.cities) && car.agency.cities.length > 0
+        ? car.agency.cities
+        : [car.city ?? car.agency?.city].filter(Boolean);
     if (availableCities.length === 1) {
       setForm((f) => ({ ...f, deliveryCity: availableCities[0] }));
     }
@@ -190,9 +203,9 @@ export default function BookingModal({
         onClick={onClose}
       />
 
-      <div className="relative bg-[#0f0e1a] border border-white/[0.1] rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-dark-bg border border-border rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="p-6 border-b border-white/[0.07] flex items-start justify-between gap-3">
+        <div className="p-6 border-b border-border flex items-start justify-between gap-3">
           <div>
             <h2 className="font-playfair text-xl font-bold">
               Finaliser la réservation
@@ -216,7 +229,9 @@ export default function BookingModal({
 
         {/* Dates modifiables */}
         <div className="mx-6 mt-5">
-          <label className="block text-[11px] font-semibold text-cream/50 tracking-widest uppercase mb-1.5">Dates de location</label>
+          <label className="block text-[11px] font-semibold text-cream/50 tracking-widest uppercase mb-1.5">
+            Dates de location
+          </label>
           <DateRangeButton
             pickupDate={pickupDate}
             returnDate={returnDate}
@@ -308,20 +323,25 @@ export default function BookingModal({
                 Ville de livraison *
               </label>
               {(() => {
-                const availableCities = Array.isArray(car.agency?.cities) && car.agency.cities.length > 0
-                  ? car.agency.cities
-                  : [car.city ?? car.agency?.city].filter(Boolean);
+                const availableCities =
+                  Array.isArray(car.agency?.cities) &&
+                  car.agency.cities.length > 0
+                    ? car.agency.cities
+                    : [car.city ?? car.agency?.city].filter(Boolean);
                 return availableCities.length > 1 ? (
                   <select
-                    className="input-field cursor-pointer"
+                    className="input-field cursor-pointer bg-dark-bg text-foreground"
                     value={form.deliveryCity}
                     onChange={update("deliveryCity")}
                     required
-                    style={{ background: "#0f0e1a", color: "#f5efe0" }}
                   >
-                    <option value="" style={{ background: "#0f0e1a" }}>Choisir…</option>
+                    <option value="" className="bg-dark-bg">
+                      Choisir…
+                    </option>
                     {availableCities.map((c) => (
-                      <option key={c} value={c} style={{ background: "#0f0e1a" }}>{c}</option>
+                      <option key={c} value={c} className="bg-dark-bg">
+                        {c}
+                      </option>
                     ))}
                   </select>
                 ) : (
@@ -342,7 +362,9 @@ export default function BookingModal({
             </label>
             <AddressAutocomplete
               value={form.deliveryAddress}
-              onChange={(val) => setForm((f) => ({ ...f, deliveryAddress: val }))}
+              onChange={(val) =>
+                setForm((f) => ({ ...f, deliveryAddress: val }))
+              }
               cityFilter={form.deliveryCity}
             />
           </div>
@@ -387,7 +409,7 @@ export default function BookingModal({
                   className="input-field cursor-pointer"
                 >
                   {TIME_SLOTS.map((t) => (
-                    <option key={t} value={t} className="bg-[#0f0e1a]">
+                    <option key={t} value={t} className="bg-dark-bg">
                       {t}
                     </option>
                   ))}
@@ -400,10 +422,10 @@ export default function BookingModal({
                 <select
                   value={returnTime}
                   onChange={(e) => setReturnTime(e.target.value)}
-                  className="input-field cursor-pointer"
+                  className="input-field cursor-pointer bg-dark-bg text-foreground"
                 >
                   {TIME_SLOTS.map((t) => (
-                    <option key={t} value={t} className="bg-[#0f0e1a]">
+                    <option key={t} value={t} className="bg-dark-bg">
                       {t}
                     </option>
                   ))}

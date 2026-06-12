@@ -38,11 +38,11 @@ export default function DashboardLayout() {
   const sidebarW = collapsed ? "64px" : "220px";
 
   return (
-    <div className="font-sora bg-[#07070c] text-cream h-screen flex overflow-hidden">
+    <div className="font-sora bg-dark-bg text-cream h-screen flex overflow-hidden">
       {/* Sidebar desktop */}
       {!isMobile && (
         <aside
-          className="flex-shrink-0 bg-dark-bg border-r border-white/[0.06] flex flex-col sticky top-0 h-screen overflow-hidden transition-[width] duration-300 ease-out"
+          className="flex-shrink-0 bg-dark-bg border-r border-border flex flex-col sticky top-0 h-screen overflow-hidden transition-[width] duration-300 ease-out"
           style={{ width: sidebarW }}
         >
           {/* Logo */}
@@ -76,9 +76,7 @@ export default function DashboardLayout() {
                   <div className="font-bold text-xs whitespace-nowrap overflow-hidden text-ellipsis">
                     {agency.name}
                   </div>
-                  <div className="text-[11px] text-gold">
-                    📍 {agency.city}
-                  </div>
+                  <div className="text-[11px] text-gold">📍 {agency.city}</div>
                 </div>
               </div>
             </div>

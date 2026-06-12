@@ -10,16 +10,24 @@ export default function BookingCancel() {
         <div className="w-20 h-20 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
           ✕
         </div>
-        <h1 className="font-playfair text-2xl font-bold mb-3">Paiement annulé</h1>
+        <h1 className="font-playfair text-2xl font-bold mb-3">
+          Paiement annulé
+        </h1>
         <p className="text-cream/50 text-sm mb-8 leading-relaxed">
-          Votre paiement a été annulé. Aucun montant n'a été débité.
-          Vous pouvez réessayer ou choisir un autre véhicule.
+          Votre paiement a été annulé. Aucun montant n'a été débité. Vous pouvez
+          réessayer ou choisir un autre véhicule.
         </p>
         <div className="flex flex-col gap-3">
-          <button onClick={() => window.history.back()} className="btn-primary py-3.5 text-sm cursor-pointer border-none">
+          <button
+            onClick={() => window.history.back()}
+            className="btn-primary py-3.5 text-sm cursor-pointer border-none"
+          >
             ← Réessayer
           </button>
-          <Link to="/cars" className="py-3.5 text-sm text-cream/50 hover:text-cream transition-colors no-underline">
+          <Link
+            to="/cars"
+            className="py-3.5 text-sm text-cream/50 hover:text-cream transition-colors no-underline"
+          >
             Explorer les véhicules
           </Link>
         </div>

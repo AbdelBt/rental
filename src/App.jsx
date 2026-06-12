@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./styles/globals.css";
 
@@ -32,6 +33,15 @@ import ClientProtectedRoute from "./components/ClientProtectedRoute";
 import { ClientAuthProvider } from "./hooks/ClientAuthContext";
 
 export default function App() {
+  useEffect(() => {
+    const saved = window.localStorage.getItem("drivo_theme");
+    const initialTheme =
+      saved === "light" || saved === "dark" ? saved : "light";
+
+    document.documentElement.dataset.theme = initialTheme;
+    window.localStorage.setItem("drivo_theme", initialTheme);
+  }, []);
+
   return (
     <BrowserRouter>
       <div className="font-sora bg-dark-bg text-cream min-h-screen overflow-x-hidden">
